@@ -1,0 +1,24 @@
+server_name: localhost
+listeners:
+  - port: 8008
+    tls: false
+    type: http
+    x_forwarded: true
+    resources:
+      - names:
+          - client
+database:
+  name: sqlite3
+  args:
+    database: /data/homeserver.db
+report_stats: false
+password_config:
+  enabled: false
+password_providers:
+  - module: data.decentraland_password_auth_provider.DecentralandPasswordAuthProvider
+    config:
+      enabled: true
+      trusted_servers:
+        - localhost
+media_store_path: /data/media_store
+log_config: /data/localhost.log.config
