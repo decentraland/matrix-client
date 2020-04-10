@@ -15,7 +15,7 @@ references:
 
   .base_env: &base_env
     machine:
-      - <<: *image_client
+      <<: *image_client
     working_directory: *workspace_root
 
   .all_branches_and_tags: &all_branches_and_tags
