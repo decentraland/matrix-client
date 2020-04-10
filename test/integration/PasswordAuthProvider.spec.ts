@@ -37,7 +37,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         }
     })
 
-    it.only(`When auth provider is disabled, then login isn't successful`, async () => {
+    it(`When auth provider is disabled, then login isn't successful`, async () => {
         // Set up and start the synapse server
         await buildSynapse(['password_providers.0.config.enabled', false])
 

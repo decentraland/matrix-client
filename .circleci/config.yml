@@ -79,15 +79,8 @@ jobs:
     steps:
       - <<: *attach_root
       - update_node_version
-    #   - run:
-    #       name: Install node dependencies
-    #       command: npm install
-    #   - run:
-    #       name: Build library
-    #       command: npm run build
       - run:
           name: Create mount folder
-          # echo  SYNAPSE_MOUNT_DIR
           command: |
             mkdir /tmp/synapse-mount
             chmod -R 777 /tmp/synapse-mount
