@@ -86,8 +86,11 @@ jobs:
           name: Build library
           command: npm run build
       - run:
-          name: 'Add access to folder'
+          name: Create mount folder
+          # echo  SYNAPSE_MOUNT_DIR
           command: |
+            echo {{ *working_directory_root  }}
+            echo *working_directory_root
             mkdir /tmp/repo/test/integration/containers/synapse/mount
             chmod -R 777 /tmp/repo
             ls -l /tmp
