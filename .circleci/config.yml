@@ -1,11 +1,5 @@
 version: 2.0
 
-```shell
-# load-nvm.sh
-export NVM_DIR="/opt/circleci/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-```
-
 references:
   .workspace_root: &workspace_root /tmp/repo
 
