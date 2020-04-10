@@ -29,9 +29,11 @@ references:
       tags:
         only: /^\d+\.\d+\.\d(.*)/ # semver
 
-  .update_node_version: &update_node_version |
+  .link_nvm: &link_nvm |
     echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
     echo ' [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+
+  .update_node_version: &update_node_version |
     nvm install v10.17.0
     nvm alias default v10.17.0
 
@@ -42,7 +44,10 @@ jobs:
 
     steps:
       - checkout
+      - run: *link_nvm
       - run: *update_node_version
+      - run: |
+          node -v
       - restore_cache:
           keys:
             - dependencies-{{ checksum "package-lock.json" }}
@@ -70,6 +75,7 @@ jobs:
 
     steps:
       - <<: *attach_root
+      - run: *link_nvm
       - run: *update_node_version
       - run: |
           node -v
@@ -82,7 +88,10 @@ jobs:
 
     steps:
       - <<: *attach_root
+      - run: *link_nvm
       - run: *update_node_version
+      - run: |
+          node -v
       - run:
           name: Semantic release
           command: npm run semantic-release
