@@ -50,9 +50,9 @@ jobs:
 
     steps:
       - checkout
-    #   - run:
-    #       name: 'Add access to folder'
-    #       command: chmod -R ugo+rwx /tmp/repo
+      - run:
+          name: 'Add access to folder'
+          command: chmod -R 777 /tmp/repo
       - update_node_version
       - restore_cache:
           keys:
@@ -80,6 +80,7 @@ jobs:
     <<: *base_env
 
     steps:
+      - <<: *attach_root
       - update_node_version
       - run:
           name: Install node dependencies
