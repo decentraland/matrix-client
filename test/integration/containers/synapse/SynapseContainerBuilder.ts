@@ -9,7 +9,7 @@ const DEFAULT_PORT = 8008
 /** Container builder for Synapse Matrix servers */
 export class SynapseContainerBuilder extends ServiceContainerBuilder<SynapseContainerBuilder> {
 
-    private static MOUNT_DIR: string = __dirname + '/mount'
+    private static MOUNT_DIR: string = process.env.MOUNT_DIR ?? __dirname + '/mount'
     private static RESOURCES_DIR: string = __dirname + '/resources'
     private config: any = yaml.safeLoad(fs.readFileSync(SynapseContainerBuilder.RESOURCES_DIR + '/default-homeserver.yaml', 'utf8'))
 

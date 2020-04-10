@@ -90,6 +90,9 @@ jobs:
           command: |
             chmod -R 777 /tmp/repo
             ls -l /tmp
+            ls -l /tmp/repo/test/integration/containers/synapse/
+            ls -l /tmp/repo/test/integration/containers/synapse/mount
+            users
       - run:
           name: Run tests
           command: DEBUG=testcontainers npm run test
