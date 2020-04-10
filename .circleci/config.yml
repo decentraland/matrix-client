@@ -3,10 +3,6 @@ version: 2.1
 commands:
   update_node_version:
     description: "A very simple command to update the node version"
-    parameters:
-      node_version:
-        type: string
-        default: v10.17.0
     steps:
       - run:
           name: Link nvm
@@ -16,8 +12,8 @@ commands:
       - run:
           name: Update node version
           command: |
-            nvm install << paramenters.node_version >>
-            nvm alias default << paramenters.node_version >>
+            nvm install v10.17.0
+            nvm alias default v10.17.0
 
 references:
   .workspace_root: &workspace_root /tmp/repo
@@ -57,8 +53,7 @@ jobs:
       - run:
           name: 'Add access to folder'
           command: chmod -R +w /tmp/repo
-      - update_node_version:
-        node_version: v10.17.0
+      - update_node_version
       - restore_cache:
           keys:
             - dependencies-{{ checksum "package-lock.json" }}
