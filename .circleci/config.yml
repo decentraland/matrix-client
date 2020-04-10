@@ -76,6 +76,12 @@ jobs:
       - run: *link_nvm
       - run: *update_node_version
       - run:
+          name: Install node dependencies
+          command: npm install
+      - run:
+          name: Build library
+          command: npm run build
+      - run:
           name: Run tests
           command: DEBUG=testcontainers npm run test
 
