@@ -89,7 +89,7 @@ jobs:
           name: Create mount folder
           # echo  SYNAPSE_MOUNT_DIR
           command: |
-            echo {{ *working_directory_root  }}
+            echo << *working_directory_root  >>
             echo *working_directory_root
             mkdir /tmp/repo/test/integration/containers/synapse/mount
             chmod -R 777 /tmp/repo
