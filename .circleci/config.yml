@@ -87,7 +87,9 @@ jobs:
           command: npm run build
       - run:
           name: 'Add access to folder'
-          command: chmod -R 777 /tmp/repo
+          command: |
+            chmod -R 777 /tmp/repo
+            ls -l /tmp
       - run:
           name: Run tests
           command: DEBUG=testcontainers npm run test
