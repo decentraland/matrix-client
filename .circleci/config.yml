@@ -40,6 +40,13 @@ jobs:
 
     steps:
       - checkout
+      - run:
+        name: name: Install node@v10.17.0
+        command: |
+          nvm install v10.17.0
+          nvm alias default v10.17.0
+      - run:
+          npm version
       - restore_cache:
           keys:
             - dependencies-{{ checksum "package-lock.json" }}
