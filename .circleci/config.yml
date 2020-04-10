@@ -46,8 +46,6 @@ jobs:
       - checkout
       - run: *link_nvm
       - run: *update_node_version
-      - run: |
-          node -v
       - restore_cache:
           keys:
             - dependencies-{{ checksum "package-lock.json" }}
@@ -77,8 +75,6 @@ jobs:
       - <<: *attach_root
       - run: *link_nvm
       - run: *update_node_version
-      - run: |
-          node -v
       - run:
           name: Run tests
           command: npm run test
@@ -90,8 +86,6 @@ jobs:
       - <<: *attach_root
       - run: *link_nvm
       - run: *update_node_version
-      - run: |
-          node -v
       - run:
           name: Semantic release
           command: npm run semantic-release
