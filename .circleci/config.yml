@@ -1,7 +1,12 @@
-version: 2.0
+version: 2.1
 
 commands:
   update_node_version:
+    description: "A very simple command to update the node version"
+    parameters:
+      version:
+        type: string
+        default: "v10.17.0"
     steps:
       - run:
           name: Link nvm
@@ -11,8 +16,8 @@ commands:
       - run:
           name: Update node version
           command: |
-            nvm install v10.17.0
-            nvm alias default v10.17.0
+            nvm install << paramenters.version >>
+            nvm alias default << paramenters.version >>
 
 references:
   .workspace_root: &workspace_root /tmp/repo
