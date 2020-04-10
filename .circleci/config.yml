@@ -50,9 +50,6 @@ jobs:
 
     steps:
       - checkout
-      - run:
-          name: 'Add access to folder'
-          command: chmod -R 777 /tmp/repo
       - update_node_version
       - restore_cache:
           keys:
@@ -88,6 +85,9 @@ jobs:
       - run:
           name: Build library
           command: npm run build
+      - run:
+          name: 'Add access to folder'
+          command: chmod -R 777 /tmp/repo
       - run:
           name: Run tests
           command: DEBUG=testcontainers npm run test
