@@ -1,5 +1,24 @@
 version: 2.0
 
+commands:
+    update_node_version:
+      description: "A very simple command to update the node version"
+      parameters:
+        version:
+          type: string
+          default: "v10.17.0"
+      steps:
+        run:
+          name: Link nvm
+          command: |
+            echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
+            echo ' [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+        run:
+          name: Update node version
+          command: |
+            nvm install << paramenters.version >>
+            nvm alias default << paramenters.version >>
+
 references:
   .workspace_root: &workspace_root /tmp/repo
 
@@ -29,23 +48,16 @@ references:
       tags:
         only: /^\d+\.\d+\.\d(.*)/ # semver
 
-  .link_nvm: &link_nvm |
-    echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
-    echo ' [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-
-  .update_node_version: &update_node_version |
-    nvm install v10.17.0
-    nvm alias default v10.17.0
-
-
 jobs:
   build:
     <<: *base_env
 
     steps:
       - checkout
-      - run: *link_nvm
-      - run: *update_node_version
+      - run:
+        name: 'Add access to folder'
+        command: chmod -R +w /tmp/repo
+      - update_node_version
       - restore_cache:
           keys:
             - dependencies-{{ checksum "package-lock.json" }}
@@ -72,9 +84,7 @@ jobs:
     <<: *base_env
 
     steps:
-      - <<: *attach_root
-      - run: *link_nvm
-      - run: *update_node_version
+      - update_node_version
       - run:
           name: Install node dependencies
           command: npm install
