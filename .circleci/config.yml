@@ -86,7 +86,7 @@ jobs:
             chmod -R 777 /tmp/synapse-mount
       - run:
           name: Run tests
-          command: DEBUG=testcontainers SYNAPSE_MOUNT_DIR=/tmp/synapse-mount npm run test
+          command: SYNAPSE_MOUNT_DIR=/tmp/synapse-mount npm run test
 
   release:
     <<: *base_env

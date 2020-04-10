@@ -12,8 +12,8 @@ class DecentralandPasswordAuthProvider:
         the user is who they say they are. This data will consist of a timestamp (that needs to be recent enough), and an auth
         chain that ends up signing the timestamp.
         The provider will then validate the signature, create the user if necessary, and return the qualified user id.
-        It is important to mention that the username must be only the ethereum address or localpart. The domain shouldn't
-        be passed.
+        It is important to mention that the username must be only the ethereum address (or localpart in Matrix terms). The domain
+        shouldn't be passed.
     """
 
     def __init__(self, config, account_handler):
