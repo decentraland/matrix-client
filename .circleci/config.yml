@@ -44,12 +44,8 @@ jobs:
           echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
           echo ' [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
       - run: |
-          node -v
-      - run: |
           nvm install v10.17.0
           nvm alias default v10.17.0
-      - run: |
-          node -v
       - restore_cache:
           keys:
             - dependencies-{{ checksum "package-lock.json" }}
@@ -77,6 +73,8 @@ jobs:
 
     steps:
       - <<: *attach_root
+      - run: |
+          node -v
       - run:
           name: Run tests
           command: npm run test
