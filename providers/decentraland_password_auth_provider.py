@@ -114,10 +114,10 @@ class DecentralandPasswordAuthProvider:
 
         trusted_servers = config['trusted_servers']
 
-        if not isinstance(config['trusted_servers'], list):
+        if not isinstance(trusted_servers, list):
             raise Exception('Expected the property \'trusted_servers\' to be a list.')
 
-        if len(config['trusted_servers']) == 0:
+        if len(trusted_servers) == 0:
             raise Exception('Expected the property \'trusted_servers\' to have at least one element.')
 
         return config

@@ -14,7 +14,7 @@ references:
     working_directory: *workspace_root
 
   .base_env: &base_env
-    docker:
+    machine:
       - <<: *image_client
     working_directory: *workspace_root
 
