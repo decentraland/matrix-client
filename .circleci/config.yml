@@ -9,15 +9,15 @@ commands:
           default: "v10.17.0"
       steps:
         - run:
-          name: Link nvm
-          command: |
-            echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
-            echo ' [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+            name: Link nvm
+            command: |
+              echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
+              echo ' [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
         - run:
-          name: Update node version
-          command: |
-            nvm install << paramenters.version >>
-            nvm alias default << paramenters.version >>
+            name: Update node version
+            command: |
+              nvm install << paramenters.version >>
+              nvm alias default << paramenters.version >>
 
 references:
   .workspace_root: &workspace_root /tmp/repo
@@ -55,8 +55,8 @@ jobs:
     steps:
       - checkout
       - run:
-        name: 'Add access to folder'
-        command: chmod -R +w /tmp/repo
+          name: 'Add access to folder'
+          command: chmod -R +w /tmp/repo
       - update_node_version
       - restore_cache:
           keys:
