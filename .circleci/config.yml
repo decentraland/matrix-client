@@ -57,7 +57,8 @@ jobs:
       - run:
           name: 'Add access to folder'
           command: chmod -R +w /tmp/repo
-      - update_node_version
+      - update_node_version:
+        node_version: v10.17.0
       - restore_cache:
           keys:
             - dependencies-{{ checksum "package-lock.json" }}
