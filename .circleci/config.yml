@@ -77,7 +77,7 @@ jobs:
       - run: *update_node_version
       - run:
           name: Run tests
-          command: npm run test
+          command: DEBUG=testcontainers npm run test
 
   release:
     <<: *base_env
