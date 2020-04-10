@@ -7,15 +7,11 @@ references:
     attach_workspace:
       at: *workspace_root
 
-#   .image_client: &image_client
-#     image: circleci/node:10-browsers
-
   .working_directory_root: &working_directory_root
     working_directory: *workspace_root
 
   .base_env: &base_env
     machine:
-    #   <<: *image_client
       docker_layer_caching: true
     working_directory: *workspace_root
 
@@ -33,6 +29,12 @@ references:
       tags:
         only: /^\d+\.\d+\.\d(.*)/ # semver
 
+  .update_node_version: &update_node_version |
+    echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
+    echo ' [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+    nvm install v10.17.0
+    nvm alias default v10.17.0
+
 
 jobs:
   build:
@@ -40,12 +42,7 @@ jobs:
 
     steps:
       - checkout
-      - run: |
-          echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
-          echo ' [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
-      - run: |
-          nvm install v10.17.0
-          nvm alias default v10.17.0
+      - run: *update_node_version
       - restore_cache:
           keys:
             - dependencies-{{ checksum "package-lock.json" }}
@@ -73,6 +70,7 @@ jobs:
 
     steps:
       - <<: *attach_root
+      - run: *update_node_version
       - run: |
           node -v
       - run:
@@ -84,6 +82,7 @@ jobs:
 
     steps:
       - <<: *attach_root
+      - run: *update_node_version
       - run:
           name: Semantic release
           command: npm run semantic-release
