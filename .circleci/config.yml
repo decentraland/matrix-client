@@ -89,16 +89,11 @@ jobs:
           name: Create mount folder
           # echo  SYNAPSE_MOUNT_DIR
           command: |
-            echo << *working_directory_root  >>
-            echo *working_directory_root
-            mkdir /tmp/repo/test/integration/containers/synapse/mount
-            chmod -R 777 /tmp/repo
-            ls -l /tmp
-            ls -l /tmp/repo/test/integration/containers/synapse/
-            users
+            mkdir /tmp/synapse-mount
+            chmod -R 777 /tmp/synapse-mount
       - run:
           name: Run tests
-          command: DEBUG=testcontainers npm run test
+          command: DEBUG=testcontainers SYNAPSE_MOUNT_DIR=/tmp/synapse-mount npm run test
 
   release:
     <<: *base_env

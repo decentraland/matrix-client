@@ -23,7 +23,6 @@ describe('Integration - Client login/logout & password auth provider', () => {
     beforeEach(async () => {
         dockerEnv = await new DockerEnvironmentBuilder()
             .withNetwork('some-network')
-            .withLogStreaming()
             // .withLogStreaming() Uncomment to see logs
             .build()
     })
