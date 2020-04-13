@@ -19,6 +19,6 @@ password_providers:
     config:
       enabled: true
       trusted_servers:
-        - localhost
+        - http://localhost
 media_store_path: /data/media_store
 log_config: /data/localhost.log.config
