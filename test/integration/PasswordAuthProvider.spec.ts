@@ -116,7 +116,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         assertLoginResultIsValid(ethAddress, result)
     })
 
-    it(`When a user already existed exist, it can login many times`, async () => {
+    it(`When a user already exists, it can login many times`, async () => {
         // Set up and start the servers
         await buildSynapseAndCatalyst()
 
