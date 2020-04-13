@@ -94,7 +94,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         await expect(loginResult).to.be.rejected
     })
 
-    it(`When ethAddress doesn't math the auth chain signer, then login isn't successful`, async () => {
+    it(`When ethAddress doesn't match the auth chain signer, then login isn't successful`, async () => {
         // Set up and start the servers
         await buildSynapseAndCatalyst()
 
