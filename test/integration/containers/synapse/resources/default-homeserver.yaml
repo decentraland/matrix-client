@@ -1,4 +1,7 @@
+# Set the server name
 server_name: localhost
+
+# Set the listen port
 listeners:
   - port: 8008
     tls: false
@@ -7,18 +10,49 @@ listeners:
     resources:
       - names:
           - client
+
+# Set the database
 database:
   name: sqlite3
   args:
     database: /data/homeserver.db
+
+# Don't send stats
 report_stats: false
-password_config:
-  enabled: false
+
+# Set the custom password provider. However, the trusted server will need to be overwritten with the catalyst url
 password_providers:
   - module: data.decentraland_password_auth_provider.DecentralandPasswordAuthProvider
     config:
       enabled: true
       trusted_servers:
         - http://localhost
+
+# Set media store and log config paths
 media_store_path: /data/media_store
 log_config: /data/localhost.log.config
+
+
+# Increase rate limiting, cause tests are making a lot of requests
+rc_message:
+  per_second: 1000
+  burst_count: 1000
+
+rc_registration:
+  per_second: 1000
+  burst_count: 1000
+
+rc_login:
+  address:
+    per_second: 1000
+    burst_count: 1000
+  account:
+    per_second: 1000
+    burst_count: 1000
+  failed_attempts:
+    per_second: 1000
+    burst_count: 1000
+
+rc_admin_redaction:
+  per_second: 1000
+  burst_count: 1000
