@@ -19,8 +19,25 @@ export class ConversationCursor {
     async getMessages(): Promise<TextMessage[]> {
         const latestReadTimestamp: Timestamp | undefined = await this.getLatestReadTimestamp()
 
-        return this.window.getEvents()
-            .map(event => buildTextMessage(event, this.wasMessageRead(event, latestReadTimestamp) ? MessageStatus.READ : MessageStatus.UNREAD))
+        const events = this.window.getEvents();
+        const result: TextMessage[] = new Array(events.length);
+
+        let sentNewerMessage = false
+        for (let i = events.length - 1; i >= 0; i--) {
+            const event = events[i]
+
+            // If I sent the message, then I read all that came before
+            sentNewerMessage = sentNewerMessage || event.getSender() === this.client.getUserId()
+
+            // Verify if I already read this message or not
+            const status = sentNewerMessage || (latestReadTimestamp && event.getTs() <= latestReadTimestamp) ?
+                MessageStatus.READ :
+                MessageStatus.UNREAD
+
+            result[i] = buildTextMessage(event, status)
+        }
+
+        return result
     }
 
     canExtendInDirection(direction: CursorDirection): boolean {
@@ -44,11 +61,6 @@ export class ConversationCursor {
      */
     removeFromCursor(numberOfEvents: number, oldestMessages: boolean): void {
         this.window.unpaginate(numberOfEvents, oldestMessages)
-    }
-
-    private wasMessageRead(event: Matrix.MatrixEvent, latestReadTimestamp: Timestamp | undefined) {
-        return event.getSender() === this.client.getUserId() || // If I sent the message, then I read it
-            (latestReadTimestamp && event.getTs() <= latestReadTimestamp)
     }
 
     private async getLatestReadTimestamp(): Promise<Timestamp | undefined> {
