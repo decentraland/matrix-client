@@ -17,6 +17,7 @@ export class MatrixClient {
 
     //////    SESSION - STATUS MANAGEMENT    //////
     async loginWithEthAddress(ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<LoginData> {
+        // Actual login
         const loginData: LoginData = await this.client.login('m.login.decentraland', {
             identifier: {
                 type: 'm.id.user',
@@ -28,6 +29,7 @@ export class MatrixClient {
 
         const { user_id: myUserId } = loginData
 
+        // Listen to invitations and accept them automatically
         this.client.on("RoomMember.membership", async (event, member) => {
             if (member.membership === "invite" && member.userId === myUserId) {
                 const isDirect = member.events.member.getContent().is_direct
@@ -38,6 +40,7 @@ export class MatrixClient {
             }
         });
 
+        // Start the client
         await this.client.startClient({
             pendingEventOrdering: 'detached',
             initialSyncLimit: 1, // We need at least one event for things to work, but we don't want to consider too many past events as 'live'
