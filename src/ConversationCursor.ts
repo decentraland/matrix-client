@@ -2,6 +2,10 @@ import Matrix from "matrix-js-sdk";
 import { findEventInRoom, buildTextMessage, getOnlyMessagesTimelineSetFromRoom } from "./Utils";
 import { TextMessage, Timestamp, MessageStatus, CursorOptions, CursorDirection } from "./types";
 
+/**
+ * This class can be used to navigate a conversation's history. You can load more messages
+ * my moving forwards or backwards in time.
+ */
 export class ConversationCursor {
 
     private static DEFAULT_LIMIT = 30
@@ -16,7 +20,6 @@ export class ConversationCursor {
         const latestReadTimestamp: Timestamp | undefined = await this.getLatestReadTimestamp()
 
         return this.window.getEvents()
-            .filter(event => event.getType() === 'm.room.message')
             .map(event => buildTextMessage(event, this.wasMessageRead(event, latestReadTimestamp) ? MessageStatus.READ : MessageStatus.UNREAD))
     }
 
@@ -57,7 +60,7 @@ export class ConversationCursor {
 
     static async build(client: Matrix.MatrixClient,
         roomId: string,
-        initialEventId: string | undefined | null, // If no eventId is set, then we will start at the latest message
+        initialEventId: string | undefined | null, // If no eventId is set, then we will start at the last message
         options?: CursorOptions) {
             const limit = ConversationCursor.calculateLimit(options)
             const initialSize = options?.initialSize ?? this.DEFAULT_INITIAL_SIZE
