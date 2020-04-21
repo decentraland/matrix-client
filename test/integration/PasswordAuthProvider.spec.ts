@@ -4,7 +4,7 @@ import chaiAsPromised from 'chai-as-promised'
 import EthCrypto from 'eth-crypto'
 import ms from 'ms'
 import { Authenticator, AuthChain } from 'dcl-crypto'
-import { Client } from 'Client'
+import { SocialClient } from 'SocialClient'
 import { SynapseContainerBuilder } from './containers/synapse/SynapseContainerBuilder'
 import { DockerEnvironment, DockerEnvironmentBuilder } from './containers/commons/DockerEnvironment'
 import { ServiceContainer } from './containers/commons/ServiceContainer'
@@ -18,7 +18,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
     let dockerEnv: DockerEnvironment
     let synapseContainer: ServiceContainer
     let catalystContainer: ServiceContainer
-    let client: Client
+    let client: SocialClient
 
     beforeEach(async () => {
         dockerEnv = await new DockerEnvironmentBuilder()
@@ -43,7 +43,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Attempt to login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const loginResult = client.login(ethAddress, timestamp, authChain)
+        const loginResult = client.loginWithEthAddress(ethAddress, timestamp, authChain)
 
         await expect(loginResult).to.be.rejected
     })
@@ -54,7 +54,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Attempt to login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const loginResult = client.login(ethAddress, timestamp, authChain)
+        const loginResult = client.loginWithEthAddress(ethAddress, timestamp, authChain)
 
         await expect(loginResult).to.be.rejected
     })
@@ -66,7 +66,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         // Attempt to login
         const now = Date.now()
         const { ethAddress, authChain } = getLoginData(now)
-        const loginResult = client.login(ethAddress, now - ms('20s'), authChain)
+        const loginResult = client.loginWithEthAddress(ethAddress, now - ms('20s'), authChain)
 
         await expect(loginResult).to.be.rejected
     })
@@ -78,7 +78,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         // Attempt to login
         const now = Date.now()
         const { ethAddress, authChain } = getLoginData(now)
-        const loginResult = client.login(ethAddress, now + ms('40s'), authChain)
+        const loginResult = client.loginWithEthAddress(ethAddress, now + ms('40s'), authChain)
 
         await expect(loginResult).to.be.rejected
     })
@@ -89,7 +89,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Attempt to login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const loginResult = client.login(ethAddress, timestamp, authChain.slice(1))
+        const loginResult = client.loginWithEthAddress(ethAddress, timestamp, authChain.slice(1))
 
         await expect(loginResult).to.be.rejected
     })
@@ -100,7 +100,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Attempt to login
         const { timestamp, authChain } = getLoginData()
-        const loginResult = client.login('someEthAddress', timestamp, authChain)
+        const loginResult = client.loginWithEthAddress('someEthAddress', timestamp, authChain)
 
         await expect(loginResult).to.be.rejected
     })
@@ -111,7 +111,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const result = await client.login(ethAddress, timestamp, authChain)
+        const result = await client.loginWithEthAddress(ethAddress, timestamp, authChain)
 
         assertLoginResultIsValid(ethAddress, result)
     })
@@ -125,7 +125,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Login
         const { timestamp, authChain } = getLoginData(Date.now(), identity)
-        const result = await client.login(identity.address, timestamp, authChain)
+        const result = await client.loginWithEthAddress(identity.address, timestamp, authChain)
 
         // Assert login was successful
         assertLoginResultIsValid(identity.address, result)
@@ -135,7 +135,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Login again
         const { timestamp: timestamp2, authChain: authChain2 } = getLoginData(Date.now(), identity)
-        const result2 = await client.login(identity.address, timestamp2, authChain2)
+        const result2 = await client.loginWithEthAddress(identity.address, timestamp2, authChain2)
 
         // Assert login was successful
         assertLoginResultIsValid(identity.address, result2)
@@ -159,7 +159,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         }
 
         synapseContainer = await builder.start()
-        client = new Client(synapseContainer.getAddress())
+        client = new SocialClient(synapseContainer.getAddress())
     }
 
     async function buildSynapseAndCatalyst() {
