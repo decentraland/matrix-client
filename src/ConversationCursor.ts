@@ -4,7 +4,7 @@ import { TextMessage, Timestamp, MessageStatus, CursorOptions, CursorDirection, 
 
 /**
  * This class can be used to navigate a conversation's history. You can load more messages
- * my moving forwards or backwards in time.
+ * by moving forwards or backwards in time.
  */
 export class ConversationCursor {
 
@@ -61,13 +61,16 @@ export class ConversationCursor {
 
             // It could happen that the initial size of the window isn't respected. That's why we will try to fix it
             let windowSize = window.getEvents().length
-            if (windowSize < initialSize) {
-                await window.paginate(Matrix.EventTimeline.BACKWARDS, initialSize - windowSize)
+            let gotResults = true
+            while (windowSize < initialSize && gotResults) {
+                gotResults = await window.paginate(Matrix.EventTimeline.BACKWARDS, initialSize - windowSize)
+                windowSize = window.getEvents().length
             }
 
-            windowSize = window.getEvents().length
-            if (windowSize < initialSize) {
-                await window.paginate(Matrix.EventTimeline.FORWARDS, initialSize - windowSize)
+            gotResults = true
+            while (windowSize < initialSize && gotResults) {
+                gotResults = await window.paginate(Matrix.EventTimeline.FORWARDS, initialSize - windowSize)
+                windowSize = window.getEvents().length
             }
 
             return new ConversationCursor(roomId, window, lastReadMessageTimestampFetch)

@@ -44,7 +44,7 @@ export class MatrixClient {
         // Start the client
         await this.client.startClient({
             pendingEventOrdering: 'detached',
-            initialSyncLimit: 1, // We need at least one event for things to work, but we don't want to consider too many past events as 'live'
+            initialSyncLimit: 0, // We don't want to consider past events as 'live'
         });
 
         return loginData
