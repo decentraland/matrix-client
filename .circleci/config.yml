@@ -117,8 +117,7 @@ workflows:
           requires:
             - build
 
-    # WE DON'T WANT TO RELEASE THE LIB YET
-    #   - release:
-    #       <<: *master_and_tags
-    #       requires:
-    #         - test
+      - release:
+          <<: *master_and_tags
+          requires:
+            - test
