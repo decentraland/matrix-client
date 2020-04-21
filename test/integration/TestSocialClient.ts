@@ -1,9 +1,9 @@
-import { MatrixClient } from "MatrixClient";
+import { SocialClient } from "SocialClient";
 import EthCrypto from 'eth-crypto'
 import { getDataToLogin } from "./Utils";
 
 /** An extension to the MatrixClient, to make testing easier */
-export class TestMatrixClient extends MatrixClient {
+export class TestMatrixClient extends SocialClient {
 
     private loggedIn = false
 

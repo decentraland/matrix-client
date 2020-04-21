@@ -1,4 +1,4 @@
-import { TestMatrixClient } from './TestMatrixClient'
+import { TestMatrixClient } from './TestSocialClient'
 import { DockerEnvironment, DockerEnvironmentBuilder } from './containers/commons/DockerEnvironment'
 import { ServiceContainer } from './containers/commons/ServiceContainer'
 import { CatalystContainerBuilder } from './containers/catalyst/CatalystContainerBuilder'

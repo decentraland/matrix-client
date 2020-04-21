@@ -1,7 +1,7 @@
 {
-  "name": "dcl-matrix-client",
+  "name": "dcl-social-client",
   "version": "0.0.0-development",
-  "description": "A client to connect to Matrix homeservers",
+  "description": "A client to handle messaging and friendship between Decentraland users",
   "main": "dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {

@@ -4,7 +4,7 @@ import chaiAsPromised from 'chai-as-promised'
 import EthCrypto from 'eth-crypto'
 import ms from 'ms'
 import { Authenticator, AuthChain } from 'dcl-crypto'
-import { MatrixClient } from 'MatrixClient'
+import { SocialClient } from 'SocialClient'
 import { SynapseContainerBuilder } from './containers/synapse/SynapseContainerBuilder'
 import { DockerEnvironment, DockerEnvironmentBuilder } from './containers/commons/DockerEnvironment'
 import { ServiceContainer } from './containers/commons/ServiceContainer'
@@ -18,7 +18,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
     let dockerEnv: DockerEnvironment
     let synapseContainer: ServiceContainer
     let catalystContainer: ServiceContainer
-    let client: MatrixClient
+    let client: SocialClient
 
     beforeEach(async () => {
         dockerEnv = await new DockerEnvironmentBuilder()
@@ -159,7 +159,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         }
 
         synapseContainer = await builder.start()
-        client = new MatrixClient(synapseContainer.getAddress())
+        client = new SocialClient(synapseContainer.getAddress())
     }
 
     async function buildSynapseAndCatalyst() {

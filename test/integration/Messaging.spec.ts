@@ -4,7 +4,7 @@ import sinonChai from 'sinon-chai'
 import sinon from 'sinon'
 import ms from 'ms'
 import EthCrypto from 'eth-crypto'
-import { MatrixClient } from 'MatrixClient'
+import { SocialClient } from 'SocialClient'
 import { ConversationType, MessageStatus, Conversation, MessageId } from 'types'
 import { sleep, createUserInServer } from './Utils'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
@@ -129,7 +129,7 @@ describe('Integration - Messaging', () => {
     })
 
     /** Assert that the message was received, and return the message id */
-    function assertMessageWasReceivedByEvent(spy, sender: MatrixClient, conversation: Conversation, message: string): MessageId {
+    function assertMessageWasReceivedByEvent(spy, sender: SocialClient, conversation: Conversation, message: string): MessageId {
         // Make sure that the spy was called
         expect(spy).to.have.been.calledOnce
 

@@ -4,7 +4,7 @@ import { Timestamp, LoginData, Conversation, ConversationType, MatrixId, TextMes
 import { getConversationTypeFromRoom, findEventInRoom, buildTextMessage, getOnlyMessagesTimelineSetFromRoom, getOnlyMessagesSentByMeTimelineSetFromRoom, matrixEventToBasicEventInfo } from './Utils';
 import { ConversationCursor } from './ConversationCursor';
 
-export class MatrixClient {
+export class SocialClient {
 
     private readonly client: Matrix.MatrixClient;
     private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()

@@ -1,6 +1,6 @@
 
 import chai from 'chai'
-import { MatrixClient } from 'MatrixClient'
+import { SocialClient } from 'SocialClient'
 import { Conversation, TextMessage, MessageStatus, CursorDirection } from 'types'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
 import { sleep } from './Utils'
@@ -225,7 +225,7 @@ describe('Integration - Conversation cursor', () => {
         return `Message #${index}`
     }
 
-    async function sendMessages(sender: MatrixClient, conversation: Conversation, from: number, amount: number): Promise<void> {
+    async function sendMessages(sender: SocialClient, conversation: Conversation, from: number, amount: number): Promise<void> {
         for (let i = 0; i < amount; i++) {
             await sender.sendMessageTo(conversation, getMessageTextForIndex(from + i))
         }
