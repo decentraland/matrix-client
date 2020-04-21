@@ -1,12 +1,13 @@
 import Matrix from 'matrix-js-sdk';
 import { AuthChain, EthAddress } from 'dcl-crypto'
-import { Timestamp, LoginData, Conversation, ConversationType, MatrixId, TextMessage, MessageType, MessageStatus, MessageId, CursorOptions } from './types';
-import { getConversationTypeFromRoom, findEventInRoom, buildTextMessage, getOnlyMessagesTimelineSetFromRoom } from './Utils';
+import { Timestamp, LoginData, Conversation, ConversationType, MatrixId, TextMessage, MessageType, MessageStatus, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
+import { getConversationTypeFromRoom, findEventInRoom, buildTextMessage, getOnlyMessagesTimelineSetFromRoom, getOnlyMessagesSentByMeTimelineSetFromRoom, matrixEventToBasicEventInfo } from './Utils';
 import { ConversationCursor } from './ConversationCursor';
 
 export class MatrixClient {
 
     private readonly client: Matrix.MatrixClient;
+    private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()
 
     constructor(synapseUrl: string) {
         this.client = Matrix.createClient({
@@ -97,9 +98,17 @@ export class MatrixClient {
         this.client.on("Room.timeline", (event, room, toStartOfTimeline, _, data) => {
 
             if (event.getType() !== "m.room.message" || // Make sure that it is in fact a message
-                event.getSender() === this.client.getUserId() || // Make sure that I wasn't the sender
                 event.getContent().msgtype !== MessageType.TEXT) { // Make sure that the message is text typed
                 return;
+            }
+
+            // Update the last sent message
+            if (event.getSender() === this.getUserId()) {
+                const currentLastSentMessage = this.lastSentMessage.get(room.roomId)
+                if (!currentLastSentMessage || currentLastSentMessage.timestamp < event.getTs()) {
+                    this.lastSentMessage.set(room.roomId, matrixEventToBasicEventInfo(event))
+                }
+                return; // Don't raise an event if I was the sender
             }
 
             // ignore anything but real-time updates at the end of the room:
@@ -116,26 +125,63 @@ export class MatrixClient {
         });
     }
 
+    /**
+     * Return basic information about the last read message. Since we don't mark messages sent by me as read,
+     * we also check against the last sent message.
+     */
+    async getLastReadMessage(conversationId: ConversationId): Promise<BasicMessageInfo | undefined> {
+        // Fetch last message marked as read
+        const room = this.client.getRoom(conversationId)
+        const lastReadEventId: string | null = room.getEventReadUpTo(this.getUserId(), false)
+        const lastReadMatrixEvent: Matrix.Event | undefined = lastReadEventId ? await findEventInRoom(this.client, conversationId, lastReadEventId) : undefined
+        const lastReadEvent: BasicMessageInfo | undefined = lastReadMatrixEvent ? matrixEventToBasicEventInfo(lastReadMatrixEvent) : undefined
+
+        // Fetch last message sent by me
+        let lastEventSentByMe: BasicMessageInfo | undefined
+        const knownLastSentMessage: BasicMessageInfo | undefined = this.lastSentMessage.get(conversationId)
+        if (knownLastSentMessage) {
+            lastEventSentByMe = knownLastSentMessage
+        } else {
+            const timelineSet = getOnlyMessagesSentByMeTimelineSetFromRoom(this.client, room)
+            const events = timelineSet.getLiveTimeline().getEvents()
+            const lastMatrixEventSentByMe = events[events.length - 1]
+            if (lastMatrixEventSentByMe) {
+                lastEventSentByMe = matrixEventToBasicEventInfo(lastMatrixEventSentByMe)
+                this.lastSentMessage.set(conversationId, lastEventSentByMe)
+            }
+        }
+
+        // Compare and return the latest
+        if (lastReadEvent && lastEventSentByMe) {
+            return lastReadEvent.timestamp > lastEventSentByMe.timestamp ? lastReadEvent : lastEventSentByMe
+        } else if (lastReadEvent) {
+            return lastReadEvent
+        } else if (lastEventSentByMe) {
+            return lastEventSentByMe
+        }
+
+        return Promise.resolve(undefined)
+    }
+
     /** Returns a cursor located on the given message */
     getCursorOnMessage(conversation: Conversation, messageId: MessageId, options?: CursorOptions): Promise<ConversationCursor> {
-        return ConversationCursor.build(this.client, conversation.id, messageId, options)
+        return ConversationCursor.build(this.client, conversation.id, messageId, roomId => this.getLastReadMessage(roomId), options)
     }
 
     /**
      * Returns a cursor located on the last read message. If no messages were read, then
      * it is located at the end of the conversation.
      */
-    getCursorOnLastRead(conversation: Conversation, options?: CursorOptions): Promise<ConversationCursor> {
-        const room = this.client.getRoom(conversation.id)
-        const lastReadEvent: string | null = room.getEventReadUpTo(this.client.getUserId(), false)
-        return ConversationCursor.build(this.client, conversation.id, lastReadEvent, options)
+    async getCursorOnLastRead(conversation: Conversation, options?: CursorOptions): Promise<ConversationCursor> {
+        const lastReadMessage = await this.getLastReadMessage(conversation.id)
+        return ConversationCursor.build(this.client, conversation.id, lastReadMessage?.id, roomId => this.getLastReadMessage(roomId), options)
     }
 
     /**
      * Returns a cursor located at the end of the conversation
      */
     getCursorOnLastMessage(conversation: Conversation, options?: CursorOptions): Promise<ConversationCursor> {
-        return ConversationCursor.build(this.client, conversation.id, undefined, options)
+        return ConversationCursor.build(this.client, conversation.id, undefined, roomId => this.getLastReadMessage(roomId), options)
     }
 
     /** Get or create a direct conversation with the given user */
@@ -157,7 +203,7 @@ export class MatrixClient {
     }
 
     /** Return whether a conversation has unread messages or not */
-    doesConversationHaveUnreadMessages(conversation: Conversation): boolean {
+    doesConversationHaveUnreadMessages(conversation: Conversation): Promise<boolean> {
         const room = this.client.getRoom(conversation.id)
         return this.doesRoomHaveUnreadMessages(room)
     }
@@ -234,32 +280,24 @@ export class MatrixClient {
         }
     }
 
-    // Logic copied from Matrix React SDK
-    private doesRoomHaveUnreadMessages(room): boolean {
+    private async doesRoomHaveUnreadMessages(room): Promise<boolean> {
         // Fetch message events
         const timelineSet = getOnlyMessagesTimelineSetFromRoom(this.client, room)
         const timeline = timelineSet.getLiveTimeline().getEvents()
 
         // If there are no messages, then there are no unread messages
         if (timeline.length === 0) {
-            return false
+            return Promise.resolve(false)
         }
 
         const lastMessageEvent = timeline[timeline.length - 1]
+        const lastReadMessage = await this.getLastReadMessage(room.getRoomId)
 
-        // If I was the last to send a message, then there are no unread messages
-        if (lastMessageEvent.getSender() === this.getUserId()) {
-            return false
+        if (!lastReadMessage) {
+            return Promise.resolve(true)
+        } else {
+            return lastMessageEvent.getTs() !== lastReadMessage.timestamp
         }
-
-        const readUpToId = room.getEventReadUpTo(this.getUserId());
-
-        // If I already read the last message, then there are no unread messages
-        if (lastMessageEvent.getId() === readUpToId) {
-            return false
-        }
-
-        return true
     }
 
 }

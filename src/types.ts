@@ -14,12 +14,15 @@ export type Conversation = {
     id: ConversationId,
 }
 
-export type TextMessage = {
-    text: string,
+export type BasicMessageInfo = {
+    id: MessageId,
     timestamp: Timestamp,
+}
+
+export type TextMessage = BasicMessageInfo & {
+    text: string,
     sender: MatrixId,
     status: MessageStatus,
-    id: MessageId,
 }
 
 export enum MessageStatus {

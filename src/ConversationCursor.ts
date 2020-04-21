@@ -1,6 +1,6 @@
 import Matrix from "matrix-js-sdk";
-import { findEventInRoom, buildTextMessage, getOnlyMessagesTimelineSetFromRoom } from "./Utils";
-import { TextMessage, Timestamp, MessageStatus, CursorOptions, CursorDirection } from "./types";
+import { buildTextMessage, getOnlyMessagesTimelineSetFromRoom } from "./Utils";
+import { TextMessage, Timestamp, MessageStatus, CursorOptions, CursorDirection, BasicMessageInfo } from "./types";
 
 /**
  * This class can be used to navigate a conversation's history. You can load more messages
@@ -12,32 +12,16 @@ export class ConversationCursor {
     private static DEFAULT_INITIAL_SIZE = 20
 
     private constructor(
-        private readonly client: Matrix.MatrixClient,
         private readonly roomId: string,
-        private readonly window: Matrix.TimelineWindow) { }
+        private readonly window: Matrix.TimelineWindow,
+        private readonly lastReadMessageTimestampFetch: (roomId: string) => Promise<BasicMessageInfo | undefined>) { }
 
     async getMessages(): Promise<TextMessage[]> {
-        const latestReadTimestamp: Timestamp | undefined = await this.getLatestReadTimestamp()
+        const latestReadTimestamp: Timestamp | undefined = (await this.lastReadMessageTimestampFetch(this.roomId))?.timestamp
 
         const events = this.window.getEvents();
-        const result: TextMessage[] = new Array(events.length);
-
-        let sentNewerMessage = false
-        for (let i = events.length - 1; i >= 0; i--) {
-            const event = events[i]
-
-            // If I sent the message, then I read all that came before
-            sentNewerMessage = sentNewerMessage || event.getSender() === this.client.getUserId()
-
-            // Verify if I already read this message or not
-            const status = sentNewerMessage || (latestReadTimestamp && event.getTs() <= latestReadTimestamp) ?
-                MessageStatus.READ :
-                MessageStatus.UNREAD
-
-            result[i] = buildTextMessage(event, status)
-        }
-
-        return result
+        return events
+            .map(event => buildTextMessage(event, (latestReadTimestamp && event.getTs() <= latestReadTimestamp) ? MessageStatus.READ : MessageStatus.UNREAD));
     }
 
     canExtendInDirection(direction: CursorDirection): boolean {
@@ -63,21 +47,15 @@ export class ConversationCursor {
         this.window.unpaginate(numberOfEvents, oldestMessages)
     }
 
-    private async getLatestReadTimestamp(): Promise<Timestamp | undefined> {
-        const room = this.client.getRoom(this.roomId)
-        const latestReadEventId: string | null = room.getEventReadUpTo(this.client.getUserId(), false)
-        const latestReadEvent: Matrix.Event | undefined = latestReadEventId ? await findEventInRoom(this.client, this.roomId, latestReadEventId) : undefined
-        return latestReadEvent?.getTs()
-    }
-
     static async build(client: Matrix.MatrixClient,
         roomId: string,
         initialEventId: string | undefined | null, // If no eventId is set, then we will start at the last message
+        lastReadMessageTimestampFetch: (roomId: string) => Promise<BasicMessageInfo | undefined>,
         options?: CursorOptions) {
             const limit = ConversationCursor.calculateLimit(options)
             const initialSize = options?.initialSize ?? this.DEFAULT_INITIAL_SIZE
             const room = client.getRoom(roomId)
-            const timelineSet = getOnlyMessagesTimelineSetFromRoom(client, room)
+            const timelineSet = getOnlyMessagesTimelineSetFromRoom(client, room, limit)
             const window = new Matrix.TimelineWindow(client, timelineSet, { windowLimit: limit })
             await window.load(initialEventId, initialSize)
 
@@ -92,7 +70,7 @@ export class ConversationCursor {
                 await window.paginate(Matrix.EventTimeline.FORWARDS, initialSize - windowSize)
             }
 
-            return new ConversationCursor(client, roomId, window)
+            return new ConversationCursor(roomId, window, lastReadMessageTimestampFetch)
         }
 
     private static calculateLimit(options: CursorOptions | undefined): number {
