@@ -38,13 +38,16 @@ export class SocialClient implements MessagingAPI, SessionManagementAPI, Friends
             auth_chain: authChain
         });
 
+        // Create the client before starting the matrix client, so our event hooks can detect all events during the initial sync
+        const socialClient = new SocialClient(matrixClient)
+
         // Start the client
         await matrixClient.startClient({
             pendingEventOrdering: 'detached',
             initialSyncLimit: 20, // This is the value that the Matrix React SDK uses
         });
 
-        return new SocialClient(matrixClient)
+        return socialClient
     }
 
     //////    SESSION - STATUS MANAGEMENT    //////
