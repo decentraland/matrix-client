@@ -50,6 +50,20 @@ export async function getOrCreateConversation(client: Matrix.MatrixClient, type:
     }
 }
 
+export function getConversationTypeFromRoom(client: Matrix.MatrixClient, room: Matrix.Room): ConversationType {
+    if (room.getInvitedAndJoinedMemberCount() === 2 ) {
+        const membersWhoAreNotMe = room.currentState.getMembers().filter(member => member.userId !== client.getUserId());
+        const otherMember = membersWhoAreNotMe[0].userId
+        const mDirectEvent = client.getAccountData('m.direct')
+        const directRoomMap = mDirectEvent ? mDirectEvent.getContent() : { }
+        const directRoomsToClient = directRoomMap[otherMember] ?? []
+        if (directRoomsToClient.includes(room.roomId)) {
+            return ConversationType.DIRECT
+        }
+    }
+    return ConversationType.GROUP
+}
+
 function buildAliasForConversationWithUsers(userIds: (MatrixId | MatrixIdLocalpart)[]): string {
     if (userIds.length < 2) {
         throw new Error('Conversation must have two users or more.')

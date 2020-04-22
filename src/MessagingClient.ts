@@ -1,6 +1,6 @@
 import Matrix from 'matrix-js-sdk';
 import { Conversation, ConversationType, MatrixId, TextMessage, MessageType, MessageStatus, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
-import { findEventInRoom, buildTextMessage, getOnlyMessagesTimelineSetFromRoom, getOnlyMessagesSentByMeTimelineSetFromRoom, matrixEventToBasicEventInfo, getOrCreateConversation } from './Utils';
+import { findEventInRoom, buildTextMessage, getOnlyMessagesTimelineSetFromRoom, getOnlyMessagesSentByMeTimelineSetFromRoom, matrixEventToBasicEventInfo, getOrCreateConversation, getConversationTypeFromRoom } from './Utils';
 import { ConversationCursor } from './ConversationCursor';
 import { MessagingAPI } from './MessagingAPI';
 
@@ -42,7 +42,7 @@ export class MessagingClient implements MessagingAPI {
                 unreadMessages: this.doesRoomHaveUnreadMessages(room),
                 conversation: {
                     id: room.roomId,
-                    type: this.getConversationTypeFromRoom(this.client, room),
+                    type: getConversationTypeFromRoom(this.client, room),
                 }
             }))
     }
@@ -79,7 +79,7 @@ export class MessagingClient implements MessagingAPI {
             if (toStartOfTimeline || !data || !data.liveEvent) return;
 
             const conversation = {
-                type: this.getConversationTypeFromRoom(this.client, room),
+                type: getConversationTypeFromRoom(this.client, room),
                 id: room.roomId
             }
 
@@ -179,20 +179,6 @@ export class MessagingClient implements MessagingAPI {
         const directRoomMap = mDirectEvent ? mDirectEvent.getContent() : { }
         directRoomMap[userId] = [roomId]
         await this.client.setAccountData('m.direct', directRoomMap)
-    }
-
-    private getConversationTypeFromRoom(client: Matrix.MatrixClient, room: Matrix.Room): ConversationType {
-        if (room.getInvitedAndJoinedMemberCount() === 2 ) {
-            const membersWhoAreNotMe = room.currentState.getMembers().filter(member => member.userId !== client.getUserId());
-            const otherMember = membersWhoAreNotMe[0].userId
-            const mDirectEvent = client.getAccountData('m.direct')
-            const directRoomMap = mDirectEvent ? mDirectEvent.getContent() : { }
-            const directRoomsToClient = directRoomMap[otherMember] ?? []
-            if (directRoomsToClient.includes(room.roomId)) {
-                return ConversationType.DIRECT
-            }
-        }
-        return ConversationType.GROUP
     }
 
     private async doesRoomHaveUnreadMessages(room): Promise<boolean> {

@@ -12,7 +12,7 @@ import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
 chai.use(sinonChai)
 const expect = chai.expect
 
-describe('Integration - Messaging', () => {
+describe('Integration - Messaging Client', () => {
 
     const testEnv: TestEnvironment = loadTestEnvironment()
 
