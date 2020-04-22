@@ -1,20 +1,24 @@
 import Matrix from 'matrix-js-sdk';
 import { AuthChain, EthAddress } from 'dcl-crypto'
-import { Timestamp, Conversation, MatrixId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
+import { Timestamp, Conversation, MatrixId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo, FriendshipRequest } from './types';
 import { ConversationCursor } from './ConversationCursor';
 import { MessagingAPI } from './MessagingAPI';
 import { SessionManagementAPI } from './SessionManagementAPI';
 import { MessagingClient } from './MessagingClient';
 import { SessionManagementClient } from './SessionManagementClient';
+import { FriendsManagementAPI } from 'FriendsManagementAPI';
+import { FriendsManagementClient } from 'FriendsManagementClient';
 
-export class SocialClient implements MessagingAPI, SessionManagementAPI {
+export class SocialClient implements MessagingAPI, SessionManagementAPI, FriendsManagementAPI {
 
     private readonly sessionManagement: SessionManagementAPI;
     private readonly messaging: MessagingAPI;
+    private readonly friendsManagement: FriendsManagementAPI;
 
     private constructor(matrixClient: Matrix.MatrixClient) {
         this.sessionManagement = new SessionManagementClient(matrixClient)
         this.messaging = new MessagingClient(matrixClient)
+        this.friendsManagement = new FriendsManagementClient(matrixClient, this)
     }
 
     static async loginToServer(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<SocialClient> {
@@ -104,6 +108,55 @@ export class SocialClient implements MessagingAPI, SessionManagementAPI {
 
     doesConversationHaveUnreadMessages(conversation: Conversation): Promise<boolean> {
         return this.messaging.doesConversationHaveUnreadMessages(conversation)
+    }
+
+    //////        FRIENDS MANAGEMENT         //////
+    getAllFriends(): Promise<MatrixId[]> {
+        return this.friendsManagement.getAllFriends()
+    }
+
+    getPendingRequests(): Promise<FriendshipRequest[]> {
+        return this.friendsManagement.getPendingRequests()
+    }
+
+    addAsFriend(userId: MatrixId): Promise<void> {
+        return this.friendsManagement.addAsFriend(userId)
+    }
+
+    deleteFriendshipWith(userId: MatrixId): Promise<void> {
+        return this.friendsManagement.deleteFriendshipWith(userId)
+    }
+
+    approveFriendshipRequestFrom(userId: MatrixId): Promise<void> {
+        return this.friendsManagement.approveFriendshipRequestFrom(userId)
+    }
+
+    rejectFriendshipRequestFrom(userId: MatrixId): Promise<void> {
+        return this.friendsManagement.rejectFriendshipRequestFrom(userId)
+    }
+
+    cancelFriendshipRequestTo(userId: MatrixId): Promise<void> {
+        return this.friendsManagement.cancelFriendshipRequestTo(userId)
+    }
+
+    onFriendshipRequest(listener: (requestedBy: MatrixId) => void): void {
+        return this.friendsManagement.onFriendshipRequest(listener)
+    }
+
+    onFriendshipRequestCancellation(listener: (canceledBy: MatrixId) => void): void {
+        return this.friendsManagement.onFriendshipRequestCancellation(listener)
+    }
+
+    onFriendshipRequestRejection(listener: (rejectedBy: MatrixId) => void): void {
+        return this.friendsManagement.onFriendshipRequestRejection(listener)
+    }
+
+    onFriendshipRequestApproval(listener: (approvedBy: MatrixId) => void): void {
+        return this.friendsManagement.onFriendshipRequestApproval(listener)
+    }
+
+    onFriendshipDeletion(listener: (deletedBy: MatrixId) => void): void {
+        return this.friendsManagement.onFriendshipDeletion(listener)
     }
 
 }
