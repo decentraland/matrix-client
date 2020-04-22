@@ -18,7 +18,6 @@ describe('Integration - Client login/logout & password auth provider', () => {
     let dockerEnv: DockerEnvironment
     let synapseContainer: ServiceContainer
     let catalystContainer: ServiceContainer
-    let client: SocialClient
 
     beforeEach(async () => {
         dockerEnv = await new DockerEnvironmentBuilder()
@@ -43,7 +42,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Attempt to login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const loginResult = client.loginWithEthAddress(ethAddress, timestamp, authChain)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain)
 
         await expect(loginResult).to.be.rejected
     })
@@ -54,7 +53,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Attempt to login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const loginResult = client.loginWithEthAddress(ethAddress, timestamp, authChain)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain)
 
         await expect(loginResult).to.be.rejected
     })
@@ -66,7 +65,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         // Attempt to login
         const now = Date.now()
         const { ethAddress, authChain } = getLoginData(now)
-        const loginResult = client.loginWithEthAddress(ethAddress, now - ms('20s'), authChain)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, now - ms('20s'), authChain)
 
         await expect(loginResult).to.be.rejected
     })
@@ -78,7 +77,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         // Attempt to login
         const now = Date.now()
         const { ethAddress, authChain } = getLoginData(now)
-        const loginResult = client.loginWithEthAddress(ethAddress, now + ms('40s'), authChain)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, now + ms('40s'), authChain)
 
         await expect(loginResult).to.be.rejected
     })
@@ -89,7 +88,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Attempt to login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const loginResult = client.loginWithEthAddress(ethAddress, timestamp, authChain.slice(1))
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain.slice(1))
 
         await expect(loginResult).to.be.rejected
     })
@@ -100,7 +99,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Attempt to login
         const { timestamp, authChain } = getLoginData()
-        const loginResult = client.loginWithEthAddress('someEthAddress', timestamp, authChain)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), 'someEthAddress', timestamp, authChain)
 
         await expect(loginResult).to.be.rejected
     })
@@ -111,9 +110,12 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const result = await client.loginWithEthAddress(ethAddress, timestamp, authChain)
+        const client = await SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain)
 
-        assertLoginResultIsValid(ethAddress, result)
+        assertLoginWasSuccessful(ethAddress, client)
+
+        // Logout
+        await client.logout()
     })
 
     it(`When a user already exists, it can login many times`, async () => {
@@ -125,29 +127,28 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Login
         const { timestamp, authChain } = getLoginData(Date.now(), identity)
-        const result = await client.loginWithEthAddress(identity.address, timestamp, authChain)
+        const client = await SocialClient.loginToServer(synapseContainer.getAddress(), identity.address, timestamp, authChain)
 
         // Assert login was successful
-        assertLoginResultIsValid(identity.address, result)
+        assertLoginWasSuccessful(identity.address, client)
 
         // Logout
         await client.logout()
 
         // Login again
         const { timestamp: timestamp2, authChain: authChain2 } = getLoginData(Date.now(), identity)
-        const result2 = await client.loginWithEthAddress(identity.address, timestamp2, authChain2)
+        const client2 = await SocialClient.loginToServer(synapseContainer.getAddress(), identity.address, timestamp2, authChain2)
 
         // Assert login was successful
-        assertLoginResultIsValid(identity.address, result2)
+        assertLoginWasSuccessful(identity.address, client2)
 
-        // Make sure the logins were treated as different
-        expect(result.access_token).to.not.equal(result2.access_token)
+        // Logout
+        await client2.logout()
     })
 
-    function assertLoginResultIsValid(ethAddress: string, { user_id, access_token, home_server }) {
-        expect(user_id).to.equal(`@${ethAddress.toLowerCase()}:localhost`)
-        expect(home_server).to.equal('localhost')
-        expect(access_token).to.not.be.undefined
+    function assertLoginWasSuccessful(ethAddress: string, client: SocialClient) {
+        expect(client.getUserId()).to.equal(`@${ethAddress.toLowerCase()}:localhost`)
+        expect(client.getDomain()).to.equal('localhost')
     }
 
     async function buildSynapse(config?: [string, any]) {
@@ -159,7 +160,6 @@ describe('Integration - Client login/logout & password auth provider', () => {
         }
 
         synapseContainer = await builder.start()
-        client = new SocialClient(synapseContainer.getAddress())
     }
 
     async function buildSynapseAndCatalyst() {

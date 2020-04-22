@@ -1,5 +1,5 @@
 import Matrix from 'matrix-js-sdk';
-import { ConversationType, MessageStatus, TextMessage, MatrixId, BasicMessageInfo, Conversation } from './types';
+import { ConversationType, MessageStatus, TextMessage, MatrixId, BasicMessageInfo } from './types';
 
 export async function findEventInRoom(client: Matrix.MatrixClient, roomId: string, eventId: string): Promise<Event> {
     const eventRaw = await client.fetchRoomEvent(roomId, eventId)
@@ -16,40 +16,6 @@ export function buildTextMessage(event: Matrix.Event, status: MessageStatus): Te
     }
 }
 
- /**
-  * Find or create a conversation for the given other users. There is no need to include the
-  * current user id.
-  */
-export async function getOrCreateConversation(client: Matrix.MatrixClient, type: ConversationType, userIds: MatrixId[], conversationName?: string): Promise<{ conversation: Conversation, created: boolean }> {
-    const allUsersInConversation = [client.getUserIdLocalpart(), ...userIds]
-    const alias = buildAliasForConversationWithUsers(allUsersInConversation)
-    const result: { room_id: string } | undefined = await undefinedIfError(() => client.getRoomIdForAlias(`#${alias}:${client.getDomain()}`))
-    let roomId: string
-    let created: boolean
-    if (!result) {
-        const creationResult = await client.createRoom({
-            room_alias_name: alias,
-            preset: 'trusted_private_chat',
-            is_direct: type === ConversationType.DIRECT,
-            invite: userIds,
-            name: conversationName,
-        })
-        roomId = creationResult.room_id
-        created = true
-    } else {
-        roomId = result.room_id
-        created = false
-    }
-
-    return {
-        conversation: {
-            type,
-            id: roomId
-        },
-        created
-    }
-}
-
 export function getConversationTypeFromRoom(client: Matrix.MatrixClient, room: Matrix.Room): ConversationType {
     if (room.getInvitedAndJoinedMemberCount() === 2 ) {
         const membersWhoAreNotMe = room.currentState.getMembers().filter(member => member.userId !== client.getUserId());
@@ -62,31 +28,6 @@ export function getConversationTypeFromRoom(client: Matrix.MatrixClient, room: M
         }
     }
     return ConversationType.GROUP
-}
-
-function buildAliasForConversationWithUsers(userIds: (MatrixId | MatrixIdLocalpart)[]): string {
-    if (userIds.length < 2) {
-        throw new Error('Conversation must have two users or more.')
-    }
-    return userIds.map(userId => toLocalpart(userId))
-        .filter((elem, pos, array) => array.indexOf(elem) === pos)
-        .sort()
-        .join('+')
-}
-
-function toLocalpart(userId: MatrixId): MatrixIdLocalpart {
-    if (!userId.includes(':')) {
-        return userId
-    }
-    return userId.split(":")[0].substring(1);
-}
-
-async function undefinedIfError<T>(call: () => Promise<T>): Promise<T | undefined>  {
-    try {
-        return await call()
-    } catch (error) {
-        return undefined
-    }
 }
 
 export function getOnlyMessagesTimelineSetFromRoom(client: Matrix.MatrixClient, room, limit?: number) {
@@ -128,5 +69,3 @@ const GET_ONLY_MESSAGES_SENT_BY_ME_FILTER = (userId: MatrixId, limit?: number) =
         },
     },
 })
-
-type MatrixIdLocalpart = string

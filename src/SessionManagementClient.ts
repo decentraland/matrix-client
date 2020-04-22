@@ -1,38 +1,29 @@
 import Matrix from 'matrix-js-sdk';
-import { AuthChain, EthAddress } from 'dcl-crypto'
-import { Timestamp, LoginData, MatrixId } from './types';
+import { MatrixId } from './types';
+import { SessionManagementAPI } from 'SessionManagementAPI';
 
-export class SessionManagementClient {
+export class SessionManagementClient implements SessionManagementAPI{
 
-    constructor(private readonly client: Matrix.MatrixClient) { }
+    private loggedIn: boolean = true
 
-    async loginWithEthAddress(ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<LoginData> {
-        // Actual login
-        const loginData: LoginData = await this.client.login('m.login.decentraland', {
-            identifier: {
-                type: 'm.id.user',
-                user: ethAddress.toLowerCase(),
-            },
-            timestamp: timestamp.toString(),
-            auth_chain: authChain
-        });
+    constructor(private readonly matrixClient: Matrix.MatrixClient) { }
 
-        // Start the client
-        await this.client.startClient({
-            pendingEventOrdering: 'detached',
-            initialSyncLimit: 0, // We don't want to consider past events as 'live'
-        });
-
-        return loginData
+    isLoggedIn(): boolean {
+        return this.loggedIn
     }
 
     async logout(): Promise<void> {
-        await this.client.stopClient()
-        await this.client.logout();
+        this.loggedIn = false
+        await this.matrixClient.stopClient()
+        await this.matrixClient.logout();
     }
 
     getUserId(): MatrixId {
-        return this.client.getUserId()
+        return this.matrixClient.getUserId()
+    }
+
+    getDomain(): string {
+        return this.matrixClient.getDomain()
     }
 
 }

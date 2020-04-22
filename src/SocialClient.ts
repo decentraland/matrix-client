@@ -1,30 +1,52 @@
 import Matrix from 'matrix-js-sdk';
 import { AuthChain, EthAddress } from 'dcl-crypto'
-import { Timestamp, LoginData, Conversation, MatrixId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
+import { Timestamp, Conversation, MatrixId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
 import { ConversationCursor } from './ConversationCursor';
 import { MessagingAPI } from './MessagingAPI';
 import { SessionManagementAPI } from './SessionManagementAPI';
 import { MessagingClient } from './MessagingClient';
 import { SessionManagementClient } from './SessionManagementClient';
 
-export class SocialClient implements MessagingAPI, SessionManagementAPI{
+export class SocialClient implements MessagingAPI, SessionManagementAPI {
 
     private readonly sessionManagement: SessionManagementAPI;
     private readonly messaging: MessagingAPI;
 
-    constructor(synapseUrl: string) {
+    private constructor(matrixClient: Matrix.MatrixClient) {
+        this.sessionManagement = new SessionManagementClient(matrixClient)
+        this.messaging = new MessagingClient(matrixClient)
+    }
+
+    static async loginToServer(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<SocialClient> {
+        // Create the client
         const matrixClient: Matrix.MatrixClient = Matrix.createClient({
             baseUrl: synapseUrl,
             timelineSupport: true,
         })
 
-        this.sessionManagement = new SessionManagementClient(matrixClient)
-        this.messaging = new MessagingClient(matrixClient)
+        // Actual login
+        await matrixClient.login('m.login.decentraland', {
+            identifier: {
+                type: 'm.id.user',
+                user: ethAddress.toLowerCase(),
+            },
+            timestamp: timestamp.toString(),
+            auth_chain: authChain
+        });
+
+        // Start the client
+        await matrixClient.startClient({
+            pendingEventOrdering: 'detached',
+            initialSyncLimit: 20, // This is the value that the Matrix React SDK uses
+        });
+
+        return new SocialClient(matrixClient)
     }
 
     //////    SESSION - STATUS MANAGEMENT    //////
-    loginWithEthAddress(ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<LoginData> {
-        return this.sessionManagement.loginWithEthAddress(ethAddress, timestamp, authChain)
+
+    isLoggedIn(): boolean {
+        return this.sessionManagement.isLoggedIn()
     }
 
     logout(): Promise<void> {
@@ -33,6 +55,10 @@ export class SocialClient implements MessagingAPI, SessionManagementAPI{
 
     getUserId(): MatrixId {
         return this.sessionManagement.getUserId()
+    }
+
+    getDomain(): string {
+        return this.sessionManagement.getDomain()
     }
 
     //////             MESSAGING             //////

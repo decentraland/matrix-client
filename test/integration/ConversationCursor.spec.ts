@@ -12,8 +12,8 @@ describe('Integration - Conversation cursor', () => {
     const testEnv: TestEnvironment = loadTestEnvironment()
 
     it(`When using a cursor on a specific message, the reported messages are the expected`, async () => {
-        const sender = await testEnv.getLoggedInRandomClient()
-        const receiver = await testEnv.getLoggedInRandomClient()
+        const sender = await testEnv.getRandomClient()
+        const receiver = await testEnv.getRandomClient()
 
         // Create a conversation
         const conversation = await sender.createDirectConversation(receiver.getUserId())
@@ -41,8 +41,8 @@ describe('Integration - Conversation cursor', () => {
     })
 
     it(`When using a cursor on the last read message, the reported messages are the expected`, async () => {
-        const sender = await testEnv.getLoggedInRandomClient()
-        const receiver = await testEnv.getLoggedInRandomClient()
+        const sender = await testEnv.getRandomClient()
+        const receiver = await testEnv.getRandomClient()
 
         // Create a conversation
         const conversation = await sender.createDirectConversation(receiver.getUserId())
@@ -73,8 +73,8 @@ describe('Integration - Conversation cursor', () => {
     })
 
     it(`When using a cursor on the last message, the reported messages are the expected`, async () => {
-        const sender = await testEnv.getLoggedInRandomClient()
-        const receiver = await testEnv.getLoggedInRandomClient()
+        const sender = await testEnv.getRandomClient()
+        const receiver = await testEnv.getRandomClient()
 
         // Create a conversation
         const conversation = await sender.createDirectConversation(receiver.getUserId())
@@ -109,8 +109,8 @@ describe('Integration - Conversation cursor', () => {
     })
 
     it(`When moving the cursor around, reported messages are also moved`, async () => {
-        const sender = await testEnv.getLoggedInRandomClient()
-        const receiver = await testEnv.getLoggedInRandomClient()
+        const sender = await testEnv.getRandomClient()
+        const receiver = await testEnv.getRandomClient()
 
         // Create a conversation
         const conversation = await sender.createDirectConversation(receiver.getUserId())
@@ -141,8 +141,8 @@ describe('Integration - Conversation cursor', () => {
     })
 
     it(`When getting messages, the read status is calculated correctly`, async () => {
-        const sender = await testEnv.getLoggedInRandomClient()
-        const receiver = await testEnv.getLoggedInRandomClient()
+        const sender = await testEnv.getRandomClient()
+        const receiver = await testEnv.getRandomClient()
 
         // Create a conversation
         const conversation = await sender.createDirectConversation(receiver.getUserId())
@@ -177,8 +177,8 @@ describe('Integration - Conversation cursor', () => {
     })
 
     it(`When messages are removed from the cursor, then they are not reported anymore`, async () => {
-        const sender = await testEnv.getLoggedInRandomClient()
-        const receiver = await testEnv.getLoggedInRandomClient()
+        const sender = await testEnv.getRandomClient()
+        const receiver = await testEnv.getRandomClient()
 
         // Create a conversation
         const conversation = await sender.createDirectConversation(receiver.getUserId())

@@ -16,8 +16,7 @@ export function getDataToLogin(timestamp: number = Date.now(), identity = EthCry
 
 /** In order to create a user, we need to login */
 export async function createUserInServer(testEnv: TestEnvironment, identity) {
-    const receiver = testEnv.getClient()
-    await receiver.loginWithIdentity(identity)
+    const receiver = await testEnv.getClientWithIdentity(identity)
     const userId = receiver.getUserId()
     await receiver.logout()
     return userId

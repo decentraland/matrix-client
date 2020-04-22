@@ -1,4 +1,6 @@
-import { TestMatrixClient } from './TestSocialClient'
+import EthCrypto from 'eth-crypto'
+import { SocialClient } from 'SocialClient'
+import { getDataToLogin } from './Utils'
 import { DockerEnvironment, DockerEnvironmentBuilder } from './containers/commons/DockerEnvironment'
 import { ServiceContainer } from './containers/commons/ServiceContainer'
 import { CatalystContainerBuilder } from './containers/catalyst/CatalystContainerBuilder'
@@ -15,7 +17,7 @@ export class TestEnvironment {
     private dockerEnv: DockerEnvironment
     private synapseContainer: ServiceContainer
     private catalystContainer: ServiceContainer
-    private clients: TestMatrixClient[]
+    private clients: SocialClient[]
 
     async start(): Promise<void> {
         this.dockerEnv = await new DockerEnvironmentBuilder()
@@ -41,18 +43,17 @@ export class TestEnvironment {
     }
 
     async clearClientList() {
-        await Promise.all(this.clients.map(client => client.logout()))
+        await Promise.all(this.clients.filter(client => client.isLoggedIn()).map(client => client.logout()))
         this.clients = []
     }
 
-    async getLoggedInRandomClient(): Promise<TestMatrixClient> {
-        const client = this.getClient()
-        await client.loginWithRandomIdentity()
-        return client
+    async getRandomClient(): Promise<SocialClient> {
+        return this.getClientWithIdentity(EthCrypto.createIdentity())
     }
 
-    getClient(): TestMatrixClient {
-        const client = new TestMatrixClient(this.synapseContainer.getAddress())
+    async getClientWithIdentity(identity): Promise<SocialClient> {
+        const { ethAddress, timestamp, authChain } = getDataToLogin(Date.now(), identity)
+        const client = await SocialClient.loginToServer(this.synapseContainer.getAddress(), ethAddress, timestamp, authChain)
         this.clients.push(client)
         return client
     }

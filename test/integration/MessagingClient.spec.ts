@@ -17,8 +17,8 @@ describe('Integration - Messaging Client', () => {
     const testEnv: TestEnvironment = loadTestEnvironment()
 
     it(`When a direct conversation is started, then both participants can see it`, async () => {
-        const client1 = await testEnv.getLoggedInRandomClient()
-        const client2 = await testEnv.getLoggedInRandomClient()
+        const client1 = await testEnv.getRandomClient()
+        const client2 = await testEnv.getRandomClient()
 
         // Check that neither of the clients report having conversations
         const conversations1 = await client1.getAllCurrentConversations()
@@ -48,8 +48,8 @@ describe('Integration - Messaging Client', () => {
     })
 
     it(`When a direct conversation is started again between the same users, then the same conversation is reused`, async () => {
-        const client1 = await testEnv.getLoggedInRandomClient()
-        const client2 = await testEnv.getLoggedInRandomClient()
+        const client1 = await testEnv.getRandomClient()
+        const client2 = await testEnv.getRandomClient()
 
         // Create a conversation
         const commonConversation = await client1.createDirectConversation(client2.getUserId())
@@ -64,8 +64,8 @@ describe('Integration - Messaging Client', () => {
     })
 
     it(`When a user sends another one a message, then the message is correctly received`, async () => {
-        const client1 = await testEnv.getLoggedInRandomClient()
-        const client2 = await testEnv.getLoggedInRandomClient()
+        const client1 = await testEnv.getRandomClient()
+        const client2 = await testEnv.getRandomClient()
 
         // Prepare spies
         const spy1 = sinon.spy()
@@ -95,7 +95,7 @@ describe('Integration - Messaging Client', () => {
     })
 
     it(`When a user logs in, they don't get message events for past events`, async () => {
-        const sender = await testEnv.getLoggedInRandomClient()
+        const sender = await testEnv.getRandomClient()
 
         // Create receiver
         const receiverIdentity = EthCrypto.createIdentity()
@@ -108,13 +108,14 @@ describe('Integration - Messaging Client', () => {
         await sender.sendMessageTo(conversation, 'Hi there!')
 
         // Log in the receiver
-        const spy = sinon.spy()
-        const receiver = testEnv.getClient()
-        receiver.onMessage(spy)
-        await receiver.loginWithIdentity(receiverIdentity)
+        const receiver = await testEnv.getClientWithIdentity(receiverIdentity)
 
         // Wait for sync
         await sleep('1s')
+
+        // Set the listener
+        const spy = sinon.spy()
+        receiver.onMessage(spy)
 
         // Assert that the message was received
         expect(spy).to.not.have.been.called
