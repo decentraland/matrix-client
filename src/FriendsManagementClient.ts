@@ -4,8 +4,16 @@ import { FriendsManagementAPI } from 'FriendsManagementAPI';
 import { getConversationTypeFromRoom } from 'Utils';
 import { SocialClient } from 'SocialClient';
 
+enum FriendshipStatus {
+    NOT_FRIENDS = 'not friends',
+    REQUEST_SENT_BY_ME_PENDING = 'request sent my me pending',
+    REQUEST_SENT_TO_ME_PENDING = 'request sent to me pending',
+    FRIENDS = 'friends',
+}
+
 export class FriendsManagementClient implements FriendsManagementAPI {
 
+    private static readonly PENDING_STATUSES = [FriendshipStatus.REQUEST_SENT_TO_ME_PENDING, FriendshipStatus.REQUEST_SENT_BY_ME_PENDING]
     private static readonly FRIENDSHIP_EVENT_TYPE = 'org.decentraland.friendship'
 
     constructor(private readonly matrixClient: Matrix.MatrixClient,
@@ -19,11 +27,10 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     }
 
     async getPendingRequests(): Promise<FriendshipRequest[]> {
-        const pendingStatuses = [FriendshipStatus.REQUEST_SENT_TO_ME_PENDING, FriendshipStatus.REQUEST_SENT_BY_ME_PENDING]
         const rooms = await this.matrixClient.getVisibleRooms()
         return rooms.filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
             .map(room => [room, this.getFriendshipStatusInRoom(room)])
-            .filter(([, status]) => pendingStatuses.includes(status))
+            .filter(([, status]) => FriendsManagementClient.PENDING_STATUSES.includes(status))
             .map(([room, status]) => {
                 const other = room.guessDMUserId()
                 if (status === FriendshipStatus.REQUEST_SENT_BY_ME_PENDING) {
@@ -116,7 +123,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     }
 
     /**
-     * Perform an action according to the current friendship status to the given user id.
+     * Perform an action according to the current friendship status between the logged in user, and the given user id.
      * If an action for the current status isn't provided, then nothing will be done
      */
     private async actByStatus(userId: MatrixId, ...actions: ActionByStatus[]): Promise<void> {
@@ -175,11 +182,4 @@ enum FriendshipEvent {
     ACCEPT = 'accept', // Accept a friendship request
     REJECT = 'reject', // Reject a friendship request
     DELETE = 'delete', // Delete an existing friendship
-}
-
-enum FriendshipStatus {
-    NOT_FRIENDS = 'not friends',
-    REQUEST_SENT_BY_ME_PENDING = 'request sent my me pending',
-    REQUEST_SENT_TO_ME_PENDING = 'request sent to me pending',
-    FRIENDS = 'friends',
 }
