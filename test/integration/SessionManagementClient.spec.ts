@@ -148,8 +148,8 @@ describe('Integration - Session Management Client', () => {
         // Log out
         await client2.logout()
 
-        // Matrix server waits for 30s to determine that a user has went offline
-        await sleep('45s')
+        // Matrix server waits for 30s to determine that a user has went offline, so we need to wait more to avoid flakiness
+        await sleep('1m')
 
         // Assert that the status is set as offline
         const newClient2Status = await getCurrentStatus(client1, client2)
