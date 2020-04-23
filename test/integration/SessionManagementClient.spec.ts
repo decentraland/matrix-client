@@ -127,7 +127,8 @@ describe('Integration - Session Management Client', () => {
         assertCurrentStatusIsTheExpected(newClient2Status, updateStatus2)
     })
 
-    it(`When a user logs out, then the status is changed to offline`, async () => {
+    // Skipping because it takes too long
+    it.skip(`When a user logs out, then the status is changed to offline`, async () => {
         const client1 = await testEnv.getRandomClient()
         const client2 = await testEnv.getRandomClient()
 
