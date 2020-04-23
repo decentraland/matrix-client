@@ -44,7 +44,7 @@ export class SocialClient implements MessagingAPI, SessionManagementAPI, Friends
         // Start the client
         await matrixClient.startClient({
             pendingEventOrdering: 'detached', // Necessary for the SDK to work
-            initialSyncLimit: 20, // This is the value that the Matrix React SDK uses,
+            initialSyncLimit: 20, // This is the value that the Matrix React SDK uses
             disablePresence: true, // Don't consider me online just because I continue to sync with Matrix
         });
 

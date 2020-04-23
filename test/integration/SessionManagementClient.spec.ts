@@ -97,7 +97,7 @@ describe('Integration - Session Management Client', () => {
         expect(client2Status.position).to.be.undefined
     })
 
-    it(`When status is changes, then change is also detected`, async () => {
+    it(`When status is changed, then change is also detected`, async () => {
         const client1 = await testEnv.getRandomClient()
         const client2 = await testEnv.getRandomClient()
 
