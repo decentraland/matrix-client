@@ -4,6 +4,7 @@ export interface FriendsManagementAPI {
 
     getAllFriends(): Promise<MatrixId[]>;
     getPendingRequests(): Promise<FriendshipRequest[]>;
+    isUserMyFriend(userId: MatrixId): Promise<boolean>;
 
     addAsFriend(userId: MatrixId): Promise<void>
     deleteFriendshipWith(userId: MatrixId): Promise<void>

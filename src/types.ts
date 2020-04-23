@@ -34,7 +34,6 @@ export enum MessageType {
     TEXT = 'm.text',
 }
 
-
 export enum CursorDirection {
     BACKWARDS,
     FORWARDS
@@ -48,4 +47,33 @@ export type CursorOptions = {
 export type FriendshipRequest = {
     from: MatrixId,
     to: MatrixId,
+}
+
+export type UpdateUserStatus = {
+    presence: PresenceType,
+    realm: Realm,
+    position: UserPosition,
+}
+
+export type CurrentUserStatus = {
+    presence: PresenceType,
+    lastActiveAgo: Timestamp | undefined, // The time elapsed in ms since the user interacted proactively with the server, or we saw a message from the user
+    realm?: Realm,
+    position?: UserPosition,
+}
+
+export enum PresenceType {
+    OFFLINE = 'offline',
+    ONLINE = 'online',
+    UNAVAILABLE = 'unavailable', // For example, idle
+}
+
+export type Realm = {
+    serverName: string,
+    layer: string
+}
+
+export type UserPosition = {
+    x: number,
+    y: number,
 }

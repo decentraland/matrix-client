@@ -41,6 +41,12 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             })
     }
 
+    async isUserMyFriend(userId: MatrixId): Promise<boolean> {
+        const { id: roomId } = await this.socialClient.createDirectConversation(userId)
+        const room = this.matrixClient.getRoom(roomId)
+        return this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS;
+    }
+
     async addAsFriend(userId: MatrixId): Promise<void> {
         return this.actByStatus(userId,
             // Send request
