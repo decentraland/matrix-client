@@ -6,10 +6,11 @@ import { MessagingAPI } from './MessagingAPI';
 import { SessionManagementAPI } from './SessionManagementAPI';
 import { MessagingClient } from './MessagingClient';
 import { SessionManagementClient } from './SessionManagementClient';
-import { FriendsManagementAPI } from 'FriendsManagementAPI';
-import { FriendsManagementClient } from 'FriendsManagementClient';
+import { FriendsManagementAPI } from './FriendsManagementAPI';
+import { FriendsManagementClient } from './FriendsManagementClient';
+import { SocialClientAPI } from './SocialClientAPI';
 
-export class SocialClient implements MessagingAPI, SessionManagementAPI, FriendsManagementAPI {
+export class SocialClient implements SocialClientAPI {
 
     private readonly sessionManagement: SessionManagementAPI;
     private readonly messaging: MessagingAPI;
