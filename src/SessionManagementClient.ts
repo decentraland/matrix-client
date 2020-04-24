@@ -1,7 +1,7 @@
 import Matrix from 'matrix-js-sdk';
 import { SocialId, PresenceType, CurrentUserStatus, UpdateUserStatus } from './types';
-import { SessionManagementAPI } from 'SessionManagementAPI';
-import { SocialClient } from 'SocialClient';
+import { SessionManagementAPI } from './SessionManagementAPI';
+import { SocialClient } from './SocialClient';
 
 export class SessionManagementClient implements SessionManagementAPI {
 
