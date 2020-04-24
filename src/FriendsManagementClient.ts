@@ -1,8 +1,8 @@
 import Matrix from 'matrix-js-sdk';
 import { SocialId, ConversationType, FriendshipRequest } from './types';
-import { FriendsManagementAPI } from 'FriendsManagementAPI';
-import { getConversationTypeFromRoom } from 'Utils';
-import { SocialClient } from 'SocialClient';
+import { FriendsManagementAPI } from './FriendsManagementAPI';
+import { getConversationTypeFromRoom } from './Utils';
+import { SocialClient } from './SocialClient';
 
 enum FriendshipStatus {
     NOT_FRIENDS = 'not friends',
