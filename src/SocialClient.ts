@@ -1,6 +1,6 @@
 import Matrix from 'matrix-js-sdk';
 import { AuthChain, EthAddress } from 'dcl-crypto'
-import { Timestamp, Conversation, MatrixId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo, FriendshipRequest } from './types';
+import { Timestamp, Conversation, MatrixId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo, FriendshipRequest, CurrentUserStatus, UpdateUserStatus } from './types';
 import { ConversationCursor } from './ConversationCursor';
 import { MessagingAPI } from './MessagingAPI';
 import { SessionManagementAPI } from './SessionManagementAPI';
@@ -16,7 +16,7 @@ export class SocialClient implements MessagingAPI, SessionManagementAPI, Friends
     private readonly friendsManagement: FriendsManagementAPI;
 
     private constructor(matrixClient: Matrix.MatrixClient) {
-        this.sessionManagement = new SessionManagementClient(matrixClient)
+        this.sessionManagement = new SessionManagementClient(matrixClient, this)
         this.messaging = new MessagingClient(matrixClient)
         this.friendsManagement = new FriendsManagementClient(matrixClient, this)
     }
@@ -43,8 +43,9 @@ export class SocialClient implements MessagingAPI, SessionManagementAPI, Friends
 
         // Start the client
         await matrixClient.startClient({
-            pendingEventOrdering: 'detached',
+            pendingEventOrdering: 'detached', // Necessary for the SDK to work
             initialSyncLimit: 20, // This is the value that the Matrix React SDK uses
+            disablePresence: true, // Don't consider me online just because I continue to sync with Matrix
         });
 
         return socialClient
@@ -66,6 +67,18 @@ export class SocialClient implements MessagingAPI, SessionManagementAPI, Friends
 
     getDomain(): string {
         return this.sessionManagement.getDomain()
+    }
+
+    setStatus(status: UpdateUserStatus): Promise<void> {
+        return this.sessionManagement.setStatus(status)
+    }
+
+    getUserStatuses(...users: MatrixId[]): Promise<Map<MatrixId, CurrentUserStatus>> {
+        return this.sessionManagement.getUserStatuses(...users)
+    }
+
+    onStatusChange(listener: (userId: MatrixId, status: CurrentUserStatus) => void): void {
+        return this.sessionManagement.onStatusChange(listener)
     }
 
     //////             MESSAGING             //////
@@ -120,6 +133,10 @@ export class SocialClient implements MessagingAPI, SessionManagementAPI, Friends
 
     getPendingRequests(): Promise<FriendshipRequest[]> {
         return this.friendsManagement.getPendingRequests()
+    }
+
+    isUserMyFriend(userId: MatrixId): Promise<boolean> {
+        return this.friendsManagement.isUserMyFriend(userId)
     }
 
     addAsFriend(userId: MatrixId): Promise<void> {
