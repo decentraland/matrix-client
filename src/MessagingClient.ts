@@ -22,13 +22,23 @@ export class MessagingClient implements MessagingAPI {
         });
 
         // Listen to invitations and accept them automatically
-        matrixClient.on("RoomMember.membership", async (event, member) => {
+        matrixClient.on("RoomMember.membership", async (_, member) => {
             if (member.membership === "invite" && member.userId === this.matrixClient.getUserId()) {
-                const isDirect = member.events.member.getContent().is_direct
-                if (isDirect) {
-                    await this.addDirectRoomToUser(event.getSender(), member.roomId)
-                }
-                await this.matrixClient.joinRoom(member.roomId)
+                await this.joinRoom(member)
+            }
+        });
+
+        // Listen to when the sync is finishes, and join all rooms I was invited to
+        matrixClient.once('sync', async (state) => {
+            if (state === 'PREPARED') {
+                const rooms = await this.matrixClient.getVisibleRooms()
+                const join: Promise<void>[] = rooms
+                    .filter(room => room.getMyMembership() === 'invite') // Consider rooms that I have been invited to
+                    .map(room => {
+                        const member = room.getMember(this.matrixClient.getUserId())
+                        return this.joinRoom(member)
+                    })
+                await Promise.all(join)
             }
         });
     }
@@ -205,6 +215,16 @@ export class MessagingClient implements MessagingAPI {
             created
         }
     }
+
+    private async joinRoom(member): Promise<void> {
+        const event = member.events.member;
+        const isDirect = event.getContent().is_direct
+        if (isDirect) {
+            await this.addDirectRoomToUser(event.getSender(), member.roomId)
+        }
+        await this.matrixClient.joinRoom(member.roomId)
+    }
+
     private buildAliasForConversationWithUsers(userIds: (MatrixId | MatrixIdLocalpart)[]): string {
         if (userIds.length < 2) {
             throw new Error('Conversation must have two users or more.')
