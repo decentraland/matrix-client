@@ -76,13 +76,13 @@ describe('Integration - Messaging Client', () => {
         client2.onMessage(spy2)
 
         // Create a conversation
-        const conversation = await client1.createDirectConversation(client2.getUserId())
+        const conversation= await client1.createDirectConversation(client2.getUserId())
 
         // Wait for sync
         await sleep('1s')
 
         // Send message
-        await client1.sendMessageTo(conversation, 'Hi there!')
+        await client1.sendMessageTo(conversation.id, 'Hi there!')
 
         // Wait for sync
         await sleep('1s')
@@ -105,7 +105,7 @@ describe('Integration - Messaging Client', () => {
         const conversation = await sender.createDirectConversation(receiverUserId)
 
         // Send message
-        await sender.sendMessageTo(conversation, 'Hi there!')
+        await sender.sendMessageTo(conversation.id, 'Hi there!')
 
         // Log in the receiver
         const receiver = await testEnv.getClientWithIdentity(receiverIdentity)
@@ -135,29 +135,29 @@ describe('Integration - Messaging Client', () => {
         const client2 = await testEnv.getRandomClient()
 
         // Create a conversation
-        const conversation = await client1.createDirectConversation(client2.getUserId())
+        const { id: conversationId } = await client1.createDirectConversation(client2.getUserId())
 
         // Wait for sync
         await sleep('1s')
 
         // Send message
-        const messageId = await client1.sendMessageTo(conversation, 'Hi there!')
+        const messageId = await client1.sendMessageTo(conversationId, 'Hi there!')
 
         // Wait for sync
         await sleep('1s')
 
         // Assert that client2 has unread messages
-        const unreadMessages1 = await client2.doesConversationHaveUnreadMessages(conversation)
+        const unreadMessages1 = await client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages1).to.be.true
 
         // Mark message as read
-        await client2.markAsRead(conversation, messageId)
+        await client2.markAsRead(conversationId, messageId)
 
         // Wait for sync
         await sleep('1s')
 
         // Assert that client2 doesn't have unread messages
-        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversation)
+        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages2).to.be.false
     })
 
@@ -166,29 +166,29 @@ describe('Integration - Messaging Client', () => {
         const client2 = await testEnv.getRandomClient()
 
         // Create a conversation
-        const conversation = await client1.createDirectConversation(client2.getUserId())
+        const { id: conversationId } = await client1.createDirectConversation(client2.getUserId())
 
         // Wait for sync
         await sleep('1s')
 
         // Send message
-        const messageId = await client1.sendMessageTo(conversation, 'Hi there!')
+        const messageId = await client1.sendMessageTo(conversationId, 'Hi there!')
 
         // Wait for sync
         await sleep('1s')
 
         // Assert that client2 has unread messages
-        const unreadMessages1 = await client2.doesConversationHaveUnreadMessages(conversation)
+        const unreadMessages1 = await client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages1).to.be.true
 
         // Mark message as read
-        await client2.markAsRead(conversation, messageId)
+        await client2.markAsRead(conversationId, messageId)
 
         // Wait for sync
         await sleep('1s')
 
         // Assert that client2 doesn't have unread messages
-        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversation)
+        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages2).to.be.false
     })
 
@@ -197,29 +197,29 @@ describe('Integration - Messaging Client', () => {
         const client2 = await testEnv.getRandomClient()
 
         // Create a conversation
-        const conversation = await client1.createDirectConversation(client2.getUserId())
+        const { id: conversationId } = await client1.createDirectConversation(client2.getUserId())
 
         // Wait for sync
         await sleep('1s')
 
         // Send message
-        await client1.sendMessageTo(conversation, 'Hi there!')
+        await client1.sendMessageTo(conversationId, 'Hi there!')
 
         // Wait for sync
         await sleep('1s')
 
         // Assert that client2 has unread messages
-        const unreadMessages1 = await client2.doesConversationHaveUnreadMessages(conversation)
+        const unreadMessages1 = await client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages1).to.be.true
 
         // Respond to the message
-        await client2.sendMessageTo(conversation, 'Hello back!')
+        await client2.sendMessageTo(conversationId, 'Hello back!')
 
         // Wait for sync
         await sleep('1s')
 
         // Assert that client2 doesn't have unread messages
-        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversation)
+        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages2).to.be.false
     })
 
@@ -228,13 +228,13 @@ describe('Integration - Messaging Client', () => {
         const client2 = await testEnv.getRandomClient()
 
         // Create a conversation
-        const conversation = await client1.createDirectConversation(client2.getUserId())
+        const { id: conversationId }  = await client1.createDirectConversation(client2.getUserId())
 
         // Wait for sync
         await sleep('1s')
 
         // Assert that client2 doesn't have unread messages
-        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversation)
+        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages2).to.be.false
     })
 

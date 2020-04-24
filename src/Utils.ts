@@ -1,5 +1,5 @@
 import Matrix from 'matrix-js-sdk';
-import { ConversationType, MessageStatus, TextMessage, MatrixId, BasicMessageInfo } from './types';
+import { ConversationType, MessageStatus, TextMessage, SocialId, BasicMessageInfo } from './types';
 
 export async function findEventInRoom(client: Matrix.MatrixClient, roomId: string, eventId: string): Promise<Event> {
     const eventRaw = await client.fetchRoomEvent(roomId, eventId)
@@ -45,7 +45,7 @@ export function matrixEventToBasicEventInfo(event: Matrix.MatrixEvent): BasicMes
 }
 
 /** Build a filter that only keeps messages in a room */
-const GET_ONLY_MESSAGES_FILTER = (userId: MatrixId, limit?: number) => Matrix.Filter.fromJson(userId, 'ONLY_MESSAGES_FILTER',
+const GET_ONLY_MESSAGES_FILTER = (userId: SocialId, limit?: number) => Matrix.Filter.fromJson(userId, 'ONLY_MESSAGES_FILTER',
 {
     room: {
         timeline: {
@@ -57,7 +57,7 @@ const GET_ONLY_MESSAGES_FILTER = (userId: MatrixId, limit?: number) => Matrix.Fi
     },
 })
 
-const GET_ONLY_MESSAGES_SENT_BY_ME_FILTER = (userId: MatrixId, limit?: number) => Matrix.Filter.fromJson(userId, 'ONLY_MESSAGES_SENT_BY_ME_FILTER',
+const GET_ONLY_MESSAGES_SENT_BY_ME_FILTER = (userId: SocialId, limit?: number) => Matrix.Filter.fromJson(userId, 'ONLY_MESSAGES_SENT_BY_ME_FILTER',
 {
     room: {
         timeline: {

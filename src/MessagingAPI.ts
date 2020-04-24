@@ -1,4 +1,4 @@
-import { Conversation, MatrixId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
+import { Conversation, SocialId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
 import { ConversationCursor } from './ConversationCursor';
 
 export interface MessagingAPI {
@@ -10,10 +10,10 @@ export interface MessagingAPI {
      * Send a text message  to a conversation.
      * Returns the message id
      */
-    sendMessageTo(conversation: Conversation, message: string): Promise<MessageId>;
+    sendMessageTo(conversationId: ConversationId, message: string): Promise<MessageId>;
 
     /** Mark a message (and all those that came before it on the conversation) as read */
-    markAsRead(conversation: Conversation, messageId: MessageId): Promise<void>;
+    markAsRead(conversationId: ConversationId, messageId: MessageId): Promise<void>;
 
     /** Listen to new messages */
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void;
@@ -25,23 +25,20 @@ export interface MessagingAPI {
     getLastReadMessage(conversationId: ConversationId): Promise<BasicMessageInfo | undefined>;
 
     /** Returns a cursor located on the given message */
-    getCursorOnMessage(conversation: Conversation, messageId: MessageId, options?: CursorOptions): Promise<ConversationCursor>;
+    getCursorOnMessage(conversationId: ConversationId, messageId: MessageId, options?: CursorOptions): Promise<ConversationCursor>;
 
     /**
      * Returns a cursor located on the last read message. If no messages were read, then
      * it is located at the end of the conversation.
      */
-    getCursorOnLastRead(conversation: Conversation, options?: CursorOptions): Promise<ConversationCursor>;
+    getCursorOnLastRead(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor>;
 
     /** Returns a cursor located at the end of the conversation */
-    getCursorOnLastMessage(conversation: Conversation, options?: CursorOptions): Promise<ConversationCursor>;
+    getCursorOnLastMessage(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor>;
 
     /** Get or create a direct conversation with the given user */
-    createDirectConversation(userId: MatrixId): Promise<Conversation>;
-
-    /** Get or create a group conversation with the given users */
-    createGroupConversation(conversationName: string, userIds: MatrixId[]): Promise<Conversation>;
+    createDirectConversation(userId: SocialId): Promise<Conversation>;
 
     /** Return whether a conversation has unread messages or not */
-    doesConversationHaveUnreadMessages(conversation: Conversation): Promise<boolean>;
+    doesConversationHaveUnreadMessages(conversationId: ConversationId): Promise<boolean>;
 }

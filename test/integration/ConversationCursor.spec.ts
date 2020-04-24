@@ -1,7 +1,7 @@
 
 import chai from 'chai'
 import { SocialClient } from 'SocialClient'
-import { Conversation, TextMessage, MessageStatus, CursorDirection } from 'types'
+import { TextMessage, MessageStatus, CursorDirection, ConversationId } from 'types'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
 import { sleep } from './Utils'
 
@@ -16,18 +16,18 @@ describe('Integration - Conversation cursor', () => {
         const receiver = await testEnv.getRandomClient()
 
         // Create a conversation
-        const conversation = await sender.createDirectConversation(receiver.getUserId())
+        const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
 
         // Send messages
-        await sendMessages(sender, conversation, 0, 10)
-        const messageId = await sender.sendMessageTo(conversation, getMessageTextForIndex(10))
-        await sendMessages(sender, conversation, 11, 9)
+        await sendMessages(sender, conversationId, 0, 10)
+        const messageId = await sender.sendMessageTo(conversationId, getMessageTextForIndex(10))
+        await sendMessages(sender, conversationId, 11, 9)
 
         // Wait for sync
         await sleep('1s')
 
         // Get cursor on specific message
-        const cursor = await receiver.getCursorOnMessage(conversation, messageId, { initialSize: 3 })
+        const cursor = await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 3 })
 
         // Read the messages
         const messages = await cursor.getMessages()
@@ -45,21 +45,21 @@ describe('Integration - Conversation cursor', () => {
         const receiver = await testEnv.getRandomClient()
 
         // Create a conversation
-        const conversation = await sender.createDirectConversation(receiver.getUserId())
+        const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
 
         // Send messages
-        await sendMessages(sender, conversation, 0, 10)
-        const messageId = await sender.sendMessageTo(conversation, getMessageTextForIndex(10))
-        await sendMessages(sender, conversation, 11, 9)
+        await sendMessages(sender, conversationId, 0, 10)
+        const messageId = await sender.sendMessageTo(conversationId, getMessageTextForIndex(10))
+        await sendMessages(sender, conversationId, 11, 9)
 
         // Wait for sync
         await sleep('1s')
 
         // Mark message as read
-        await receiver.markAsRead(conversation, messageId)
+        await receiver.markAsRead(conversationId, messageId)
 
         // Get cursor on specific message
-        const cursor = await receiver.getCursorOnLastRead(conversation, { initialSize: 3 })
+        const cursor = await receiver.getCursorOnLastRead(conversationId, { initialSize: 3 })
 
         // Read the messages
         const messages = await cursor.getMessages()
@@ -77,16 +77,16 @@ describe('Integration - Conversation cursor', () => {
         const receiver = await testEnv.getRandomClient()
 
         // Create a conversation
-        const conversation = await sender.createDirectConversation(receiver.getUserId())
+        const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
 
         // Send messages
-        await sendMessages(sender, conversation, 0, 20)
+        await sendMessages(sender, conversationId, 0, 20)
 
         // Wait for sync
         await sleep('1s')
 
         // Get cursor on last message
-        const cursor = await receiver.getCursorOnLastMessage(conversation, { initialSize: 10 })
+        const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 10 })
 
         // Read the messages
         const messages = await cursor.getMessages()
@@ -99,7 +99,7 @@ describe('Integration - Conversation cursor', () => {
         expect(cursor.canExtendInDirection(CursorDirection.BACKWARDS)).to.be.true
 
         // Send a new message
-        await sendMessages(sender, conversation, 20, 1)
+        await sendMessages(sender, conversationId, 20, 1)
 
         // Wait for sync
         await sleep('1s')
@@ -113,16 +113,16 @@ describe('Integration - Conversation cursor', () => {
         const receiver = await testEnv.getRandomClient()
 
         // Create a conversation
-        const conversation = await sender.createDirectConversation(receiver.getUserId())
+        const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
 
         // Send messages
-        await sendMessages(sender, conversation, 0, 20)
+        await sendMessages(sender, conversationId, 0, 20)
 
         // Wait for sync
         await sleep('1s')
 
         // Get cursor on last message
-        const cursor = await receiver.getCursorOnLastMessage(conversation, { initialSize: 5, limit: 5 })
+        const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 5, limit: 5 })
 
         // Assert that the available messages are the expected ones
         assertMessagesAre(await cursor.getMessages(), 15, 19)
@@ -145,22 +145,22 @@ describe('Integration - Conversation cursor', () => {
         const receiver = await testEnv.getRandomClient()
 
         // Create a conversation
-        const conversation = await sender.createDirectConversation(receiver.getUserId())
+        const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
 
         // Send messages
-        await sendMessages(sender, conversation, 0, 10)
-        const messageId = await sender.sendMessageTo(conversation, getMessageTextForIndex(10))
-        await sendMessages(sender, conversation, 11, 9)
+        await sendMessages(sender, conversationId, 0, 10)
+        const messageId = await sender.sendMessageTo(conversationId, getMessageTextForIndex(10))
+        await sendMessages(sender, conversationId, 11, 9)
 
         // Wait for sync
         await sleep('1s')
 
         // Get cursors that reads all the messages
-        const senderCursor = await sender.getCursorOnMessage(conversation, messageId, { initialSize: 20 })
-        const receiverCursor = await receiver.getCursorOnMessage(conversation, messageId, { initialSize: 20 })
+        const senderCursor = await sender.getCursorOnMessage(conversationId, messageId, { initialSize: 20 })
+        const receiverCursor = await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 20 })
 
         // Mark message as read
-        await receiver.markAsRead(conversation, messageId)
+        await receiver.markAsRead(conversationId, messageId)
 
         // Read the messages
         const senderMessages = await senderCursor.getMessages()
@@ -181,16 +181,16 @@ describe('Integration - Conversation cursor', () => {
         const receiver = await testEnv.getRandomClient()
 
         // Create a conversation
-        const conversation = await sender.createDirectConversation(receiver.getUserId())
+        const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
 
         // Send messages
-        await sendMessages(sender, conversation, 0, 20)
+        await sendMessages(sender, conversationId, 0, 20)
 
         // Wait for sync
         await sleep('1s')
 
         // Get cursor on last message
-        const cursor = await receiver.getCursorOnLastMessage(conversation, { initialSize: 20 })
+        const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 20 })
 
         // Assert that the available messages are the expected ones
         assertMessagesAre(await cursor.getMessages(), 0, 19)
@@ -225,9 +225,9 @@ describe('Integration - Conversation cursor', () => {
         return `Message #${index}`
     }
 
-    async function sendMessages(sender: SocialClient, conversation: Conversation, from: number, amount: number): Promise<void> {
+    async function sendMessages(sender: SocialClient, conversationId: ConversationId, from: number, amount: number): Promise<void> {
         for (let i = 0; i < amount; i++) {
-            await sender.sendMessageTo(conversation, getMessageTextForIndex(from + i))
+            await sender.sendMessageTo(conversationId, getMessageTextForIndex(from + i))
         }
     }
 

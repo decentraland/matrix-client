@@ -1,5 +1,5 @@
 import Matrix from 'matrix-js-sdk';
-import { MatrixId, ConversationType, FriendshipRequest } from './types';
+import { SocialId, ConversationType, FriendshipRequest } from './types';
 import { FriendsManagementAPI } from 'FriendsManagementAPI';
 import { getConversationTypeFromRoom } from 'Utils';
 import { SocialClient } from 'SocialClient';
@@ -19,7 +19,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     constructor(private readonly matrixClient: Matrix.MatrixClient,
         private readonly socialClient: SocialClient) { }
 
-    async getAllFriends(): Promise<MatrixId[]> {
+    async getAllFriends(): Promise<SocialId[]> {
         const rooms = await this.matrixClient.getVisibleRooms()
         return rooms.filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
             .filter(room => this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS)
@@ -41,13 +41,13 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             })
     }
 
-    async isUserMyFriend(userId: MatrixId): Promise<boolean> {
+    async isUserMyFriend(userId: SocialId): Promise<boolean> {
         const { id: roomId } = await this.socialClient.createDirectConversation(userId)
         const room = this.matrixClient.getRoom(roomId)
         return this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS;
     }
 
-    async addAsFriend(userId: MatrixId): Promise<void> {
+    async addAsFriend(userId: SocialId): Promise<void> {
         return this.actByStatus(userId,
             // Send request
             this.action(FriendshipStatus.NOT_FRIENDS,
@@ -59,7 +59,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         )
     }
 
-    deleteFriendshipWith(userId: MatrixId): Promise<void> {
+    deleteFriendshipWith(userId: SocialId): Promise<void> {
         return this.actByStatus(userId,
             // Delete friendship
             this.action(FriendshipStatus.FRIENDS,
@@ -67,7 +67,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         )
     }
 
-    approveFriendshipRequestFrom(userId: MatrixId): Promise<void> {
+    approveFriendshipRequestFrom(userId: SocialId): Promise<void> {
         return this.actByStatus(userId,
             // Accept friendship
             this.action(FriendshipStatus.REQUEST_SENT_TO_ME_PENDING,
@@ -75,7 +75,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         )
     }
 
-    rejectFriendshipRequestFrom(userId: MatrixId): Promise<void> {
+    rejectFriendshipRequestFrom(userId: SocialId): Promise<void> {
         return this.actByStatus(userId,
             // Reject friendship
             this.action(FriendshipStatus.REQUEST_SENT_TO_ME_PENDING,
@@ -83,7 +83,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         )
     }
 
-    cancelFriendshipRequestTo(userId: MatrixId): Promise<void> {
+    cancelFriendshipRequestTo(userId: SocialId): Promise<void> {
         return this.actByStatus(userId,
             // Cancel friendship request
             this.action(FriendshipStatus.REQUEST_SENT_BY_ME_PENDING,
@@ -91,27 +91,27 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         )
     }
 
-    onFriendshipRequest(listener: (requestedBy: MatrixId) => void): void {
+    onFriendshipRequest(listener: (requestedBy: SocialId) => void): void {
         return this.listenToEvent(FriendshipEvent.REQUEST, listener)
     }
 
-    onFriendshipRequestCancellation(listener: (canceledBy: MatrixId) => void): void {
+    onFriendshipRequestCancellation(listener: (canceledBy: SocialId) => void): void {
         return this.listenToEvent(FriendshipEvent.CANCEL, listener)
     }
 
-    onFriendshipRequestRejection(listener: (rejectedBy: MatrixId) => void): void {
+    onFriendshipRequestRejection(listener: (rejectedBy: SocialId) => void): void {
         return this.listenToEvent(FriendshipEvent.REJECT, listener)
     }
 
-    onFriendshipRequestApproval(listener: (approvedBy: MatrixId) => void): void {
+    onFriendshipRequestApproval(listener: (approvedBy: SocialId) => void): void {
         return this.listenToEvent(FriendshipEvent.ACCEPT, listener)
     }
 
-    onFriendshipDeletion(listener: (deletedBy: MatrixId) => void): void {
+    onFriendshipDeletion(listener: (deletedBy: SocialId) => void): void {
         return this.listenToEvent(FriendshipEvent.DELETE, listener)
     }
 
-    private listenToEvent(eventToListenTo: FriendshipEvent, listener: (from: MatrixId) => void): void {
+    private listenToEvent(eventToListenTo: FriendshipEvent, listener: (from: SocialId) => void): void {
         this.matrixClient.on('Room.timeline', (event) => {
             if (event.getType() === FriendsManagementClient.FRIENDSHIP_EVENT_TYPE && event.getStateKey() === '') {
                 const { type } = event.getContent()
@@ -122,7 +122,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         })
     }
 
-    private async sendFriendshipEvent(event: FriendshipEvent, otherUser: MatrixId): Promise<void> {
+    private async sendFriendshipEvent(event: FriendshipEvent, otherUser: SocialId): Promise<void> {
         const { id: roomId } = await this.socialClient.createDirectConversation(otherUser)
         const content = { type: event }
         await this.matrixClient.sendStateEvent(roomId, FriendsManagementClient.FRIENDSHIP_EVENT_TYPE, content, '')
@@ -133,9 +133,9 @@ export class FriendsManagementClient implements FriendsManagementAPI {
      * Perform an action according to the current friendship status between the logged in user, and the given user id.
      * If an action for the current status isn't provided, then nothing will be done
      */
-    private async actByStatus(userId: MatrixId, ...actions: ActionByStatus[]): Promise<void> {
-        const actionsAsEntries: [FriendshipStatus, (userId: MatrixId) => Promise<void>][] = actions.map(({ status, action }) => [ status, action ])
-        const actionMap: Map<FriendshipStatus, (userId: MatrixId) => Promise<void>> = new Map(actionsAsEntries)
+    private async actByStatus(userId: SocialId, ...actions: ActionByStatus[]): Promise<void> {
+        const actionsAsEntries: [FriendshipStatus, (userId: SocialId) => Promise<void>][] = actions.map(({ status, action }) => [ status, action ])
+        const actionMap: Map<FriendshipStatus, (userId: SocialId) => Promise<void>> = new Map(actionsAsEntries)
         const { id: roomId } = await this.socialClient.createDirectConversation(userId)
         const room = this.matrixClient.getRoom(roomId)
         const status = this.getFriendshipStatusInRoom(room)
@@ -181,7 +181,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return FriendshipStatus.NOT_FRIENDS
     }
 
-    private getLastFriendshipEventInRoomByUser(room, userId: MatrixId): Matrix.MatrixEvent | undefined {
+    private getLastFriendshipEventInRoomByUser(room, userId: SocialId): Matrix.MatrixEvent | undefined {
         const lastFriendshipEvent: Matrix.MatrixEvent | null = this.getLastFriendshipEventInRoom(room, userId)
         // Make sure that the sender was the actual user
         if (lastFriendshipEvent && lastFriendshipEvent.getSender() === userId) {
@@ -194,7 +194,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return room.currentState.getStateEvents(FriendsManagementClient.FRIENDSHIP_EVENT_TYPE, key)
     }
 
-    private action(status: FriendshipStatus, action: (userId: MatrixId) => Promise<void>): ActionByStatus {
+    private action(status: FriendshipStatus, action: (userId: SocialId) => Promise<void>): ActionByStatus {
         return {
             status,
             action,
@@ -204,7 +204,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
 
 type ActionByStatus = {
     status: FriendshipStatus
-    action: (userId: MatrixId) => Promise<void>
+    action: (userId: SocialId) => Promise<void>
 }
 
 enum FriendshipEvent {

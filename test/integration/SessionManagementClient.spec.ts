@@ -3,7 +3,7 @@ import chai from 'chai'
 import sinonChai from 'sinon-chai'
 import sinon from 'sinon'
 import { SocialClient } from 'SocialClient'
-import { PresenceType, UpdateUserStatus, CurrentUserStatus, MatrixId } from 'types'
+import { PresenceType, UpdateUserStatus, CurrentUserStatus, SocialId } from 'types'
 import { sleep } from './Utils'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
 
@@ -165,7 +165,7 @@ describe('Integration - Session Management Client', () => {
         expect(spy).to.have.been.calledOnce
 
         // Assert that the event received was sent by the actual sender
-        const sender: MatrixId = spy.firstCall.args[0]
+        const sender: SocialId = spy.firstCall.args[0]
         const status: CurrentUserStatus = spy.firstCall.args[1]
 
         expect(sender).to.equal(expectedSender.getUserId())

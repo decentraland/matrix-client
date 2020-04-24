@@ -1,20 +1,20 @@
-import { MatrixId, FriendshipRequest } from './types';
+import { SocialId, FriendshipRequest } from './types';
 
 export interface FriendsManagementAPI {
 
-    getAllFriends(): Promise<MatrixId[]>;
+    getAllFriends(): Promise<SocialId[]>;
     getPendingRequests(): Promise<FriendshipRequest[]>;
-    isUserMyFriend(userId: MatrixId): Promise<boolean>;
+    isUserMyFriend(userId: SocialId): Promise<boolean>;
 
-    addAsFriend(userId: MatrixId): Promise<void>
-    deleteFriendshipWith(userId: MatrixId): Promise<void>
-    approveFriendshipRequestFrom(userId: MatrixId): Promise<void>
-    rejectFriendshipRequestFrom(userId: MatrixId): Promise<void>
-    cancelFriendshipRequestTo(userId: MatrixId): Promise<void>
+    addAsFriend(userId: SocialId): Promise<void>
+    deleteFriendshipWith(userId: SocialId): Promise<void>
+    approveFriendshipRequestFrom(userId: SocialId): Promise<void>
+    rejectFriendshipRequestFrom(userId: SocialId): Promise<void>
+    cancelFriendshipRequestTo(userId: SocialId): Promise<void>
 
-    onFriendshipRequest(listener: (requestedBy: MatrixId) => void): void
-    onFriendshipRequestCancellation(listener: (canceledBy: MatrixId) => void): void
-    onFriendshipRequestRejection(listener: (rejectedBy: MatrixId) => void): void
-    onFriendshipRequestApproval(listener: (approvedBy: MatrixId) => void): void
-    onFriendshipDeletion(listener: (deletedBy: MatrixId) => void): void
+    onFriendshipRequest(listener: (requestedBy: SocialId) => void): void
+    onFriendshipRequestCancellation(listener: (canceledBy: SocialId) => void): void
+    onFriendshipRequestRejection(listener: (rejectedBy: SocialId) => void): void
+    onFriendshipRequestApproval(listener: (approvedBy: SocialId) => void): void
+    onFriendshipDeletion(listener: (deletedBy: SocialId) => void): void
 }

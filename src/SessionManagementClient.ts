@@ -1,5 +1,5 @@
 import Matrix from 'matrix-js-sdk';
-import { MatrixId, PresenceType, CurrentUserStatus, UpdateUserStatus } from './types';
+import { SocialId, PresenceType, CurrentUserStatus, UpdateUserStatus } from './types';
 import { SessionManagementAPI } from 'SessionManagementAPI';
 import { SocialClient } from 'SocialClient';
 
@@ -20,7 +20,7 @@ export class SessionManagementClient implements SessionManagementAPI {
         await this.matrixClient.logout();
     }
 
-    getUserId(): MatrixId {
+    getUserId(): SocialId {
         return this.matrixClient.getUserId()
     }
 
@@ -37,16 +37,16 @@ export class SessionManagementClient implements SessionManagementAPI {
         return this.matrixClient.setPresence(input)
     }
 
-    async getUserStatuses(...users: MatrixId[]): Promise<Map<MatrixId, CurrentUserStatus>> {
+    async getUserStatuses(...users: SocialId[]): Promise<Map<SocialId, CurrentUserStatus>> {
         const friends = await this.socialClient.getAllFriends()
-        const entries: [MatrixId, CurrentUserStatus][] = users.filter(userId => friends.includes(userId))
+        const entries: [SocialId, CurrentUserStatus][] = users.filter(userId => friends.includes(userId))
             .map(userId => this.matrixClient.getUser(userId))
             .filter(user => !!user)
             .map(user => [user.userId, SessionManagementClient.userToStatus(user)])
         return new Map(entries)
     }
 
-    onStatusChange(listener: (userId: MatrixId, status: CurrentUserStatus) => void): void {
+    onStatusChange(listener: (userId: SocialId, status: CurrentUserStatus) => void): void {
         const socialClient = this.socialClient
         this.matrixClient.on("User.lastPresenceTs", async function(_, user: Matrix.User) {
             if (await socialClient.isUserMyFriend(user.userId)) {

@@ -1,5 +1,5 @@
 import Matrix from 'matrix-js-sdk';
-import { Conversation, ConversationType, MatrixId, TextMessage, MessageType, MessageStatus, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
+import { Conversation, ConversationType, SocialId, TextMessage, MessageType, MessageStatus, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
 import { findEventInRoom, buildTextMessage, getOnlyMessagesTimelineSetFromRoom, getOnlyMessagesSentByMeTimelineSetFromRoom, matrixEventToBasicEventInfo, getConversationTypeFromRoom } from './Utils';
 import { ConversationCursor } from './ConversationCursor';
 import { MessagingAPI } from './MessagingAPI';
@@ -61,15 +61,14 @@ export class MessagingClient implements MessagingAPI {
      * Send a message text to a conversation.
      * Returns the message id
      */
-    async sendMessageTo(conversation: Conversation, message: string): Promise<MessageId> {
-        const { event_id } = await this.matrixClient.sendTextMessage(conversation.id, message);
+    async sendMessageTo(conversationId: ConversationId, message: string): Promise<MessageId> {
+        const { event_id } = await this.matrixClient.sendTextMessage(conversationId, message);
         return event_id
     }
 
     /** Mark a message (and all those that came before it on the conversation) as read */
-    async markAsRead(conversation: Conversation, messageId: MessageId): Promise<void> {
-        const { id: roomId } = conversation
-        const event = await findEventInRoom(this.matrixClient, roomId, messageId)
+    async markAsRead(conversationId: ConversationId, messageId: MessageId): Promise<void> {
+        const event = await findEventInRoom(this.matrixClient, conversationId, messageId)
         return this.matrixClient.sendReadReceipt(event)
     }
 
@@ -138,28 +137,28 @@ export class MessagingClient implements MessagingAPI {
     }
 
     /** Returns a cursor located on the given message */
-    getCursorOnMessage(conversation: Conversation, messageId: MessageId, options?: CursorOptions): Promise<ConversationCursor> {
-        return ConversationCursor.build(this.matrixClient, conversation.id, messageId, roomId => this.getLastReadMessage(roomId), options)
+    getCursorOnMessage(conversationId: ConversationId, messageId: MessageId, options?: CursorOptions): Promise<ConversationCursor> {
+        return ConversationCursor.build(this.matrixClient, conversationId, messageId, roomId => this.getLastReadMessage(roomId), options)
     }
 
     /**
      * Returns a cursor located on the last read message. If no messages were read, then
      * it is located at the end of the conversation.
      */
-    async getCursorOnLastRead(conversation: Conversation, options?: CursorOptions): Promise<ConversationCursor> {
-        const lastReadMessage = await this.getLastReadMessage(conversation.id)
-        return ConversationCursor.build(this.matrixClient, conversation.id, lastReadMessage?.id, roomId => this.getLastReadMessage(roomId), options)
+    async getCursorOnLastRead(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor> {
+        const lastReadMessage = await this.getLastReadMessage(conversationId)
+        return ConversationCursor.build(this.matrixClient, conversationId, lastReadMessage?.id, roomId => this.getLastReadMessage(roomId), options)
     }
 
     /**
      * Returns a cursor located at the end of the conversation
      */
-    getCursorOnLastMessage(conversation: Conversation, options?: CursorOptions): Promise<ConversationCursor> {
-        return ConversationCursor.build(this.matrixClient, conversation.id, undefined, roomId => this.getLastReadMessage(roomId), options)
+    getCursorOnLastMessage(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor> {
+        return ConversationCursor.build(this.matrixClient, conversationId, undefined, roomId => this.getLastReadMessage(roomId), options)
     }
 
     /** Get or create a direct conversation with the given user */
-    async createDirectConversation(userId: MatrixId): Promise<Conversation> {
+    async createDirectConversation(userId: SocialId): Promise<Conversation> {
         const { conversation, created } = await this.getOrCreateConversation(this.matrixClient, ConversationType.DIRECT, [userId])
         if (created) {
             await this.addDirectRoomToUser(userId, conversation.id)
@@ -168,7 +167,7 @@ export class MessagingClient implements MessagingAPI {
     }
 
     /** Get or create a group conversation with the given users */
-    async createGroupConversation(conversationName: string, userIds: MatrixId[]): Promise<Conversation> {
+    async createGroupConversation(conversationName: string, userIds: SocialId[]): Promise<Conversation> {
         if (userIds.length < 2) {
             throw new Error('Group conversations must include two or more people.')
         }
@@ -177,8 +176,8 @@ export class MessagingClient implements MessagingAPI {
     }
 
     /** Return whether a conversation has unread messages or not */
-    doesConversationHaveUnreadMessages(conversation: Conversation): Promise<boolean> {
-        const room = this.matrixClient.getRoom(conversation.id)
+    doesConversationHaveUnreadMessages(conversationId: ConversationId): Promise<boolean> {
+        const room = this.matrixClient.getRoom(conversationId)
         return this.doesRoomHaveUnreadMessages(room)
     }
 
@@ -186,7 +185,7 @@ export class MessagingClient implements MessagingAPI {
      * Find or create a conversation for the given other users. There is no need to include the
      * current user id.
      */
-    private async getOrCreateConversation(client: Matrix.MatrixClient, type: ConversationType, userIds: MatrixId[], conversationName?: string): Promise<{ conversation: Conversation, created: boolean }> {
+    private async getOrCreateConversation(client: Matrix.MatrixClient, type: ConversationType, userIds: SocialId[], conversationName?: string): Promise<{ conversation: Conversation, created: boolean }> {
         const allUsersInConversation = [client.getUserIdLocalpart(), ...userIds]
         const alias = this.buildAliasForConversationWithUsers(allUsersInConversation)
         const result: { room_id: string } | undefined = await this.undefinedIfError(() => client.getRoomIdForAlias(`#${alias}:${client.getDomain()}`))
@@ -225,7 +224,7 @@ export class MessagingClient implements MessagingAPI {
         await this.matrixClient.joinRoom(member.roomId)
     }
 
-    private buildAliasForConversationWithUsers(userIds: (MatrixId | MatrixIdLocalpart)[]): string {
+    private buildAliasForConversationWithUsers(userIds: (SocialId | MatrixIdLocalpart)[]): string {
         if (userIds.length < 2) {
             throw new Error('Conversation must have two users or more.')
         }
@@ -235,7 +234,7 @@ export class MessagingClient implements MessagingAPI {
             .join('+')
     }
 
-    private toLocalpart(userId: MatrixId): MatrixIdLocalpart {
+    private toLocalpart(userId: SocialId): MatrixIdLocalpart {
         if (!userId.includes(':')) {
             return userId
         }
@@ -250,7 +249,7 @@ export class MessagingClient implements MessagingAPI {
         }
     }
 
-    private async addDirectRoomToUser(userId: MatrixId, roomId: string): Promise<void> {
+    private async addDirectRoomToUser(userId: SocialId, roomId: string): Promise<void> {
         // The documentation specifies that we should store a map from user to direct rooms in the 'm.direct' event
         // However, we only support having one direct room to each user, so the list will only have one element
         const mDirectEvent = this.matrixClient.getAccountData('m.direct')

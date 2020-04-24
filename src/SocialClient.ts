@@ -1,6 +1,6 @@
 import Matrix from 'matrix-js-sdk';
 import { AuthChain, EthAddress } from 'dcl-crypto'
-import { Timestamp, Conversation, MatrixId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo, FriendshipRequest, CurrentUserStatus, UpdateUserStatus } from './types';
+import { Timestamp, Conversation, SocialId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo, FriendshipRequest, CurrentUserStatus, UpdateUserStatus } from './types';
 import { ConversationCursor } from './ConversationCursor';
 import { MessagingAPI } from './MessagingAPI';
 import { SessionManagementAPI } from './SessionManagementAPI';
@@ -8,9 +8,9 @@ import { MessagingClient } from './MessagingClient';
 import { SessionManagementClient } from './SessionManagementClient';
 import { FriendsManagementAPI } from './FriendsManagementAPI';
 import { FriendsManagementClient } from './FriendsManagementClient';
-import { SocialClientAPI } from './SocialClientAPI';
+import { SocialAPI } from './SocialAPI';
 
-export class SocialClient implements SocialClientAPI {
+export class SocialClient implements SocialAPI {
 
     private readonly sessionManagement: SessionManagementAPI;
     private readonly messaging: MessagingAPI;
@@ -62,7 +62,7 @@ export class SocialClient implements SocialClientAPI {
         return this.sessionManagement.logout()
     }
 
-    getUserId(): MatrixId {
+    getUserId(): SocialId {
         return this.sessionManagement.getUserId()
     }
 
@@ -74,11 +74,11 @@ export class SocialClient implements SocialClientAPI {
         return this.sessionManagement.setStatus(status)
     }
 
-    getUserStatuses(...users: MatrixId[]): Promise<Map<MatrixId, CurrentUserStatus>> {
+    getUserStatuses(...users: SocialId[]): Promise<Map<SocialId, CurrentUserStatus>> {
         return this.sessionManagement.getUserStatuses(...users)
     }
 
-    onStatusChange(listener: (userId: MatrixId, status: CurrentUserStatus) => void): void {
+    onStatusChange(listener: (userId: SocialId, status: CurrentUserStatus) => void): void {
         return this.sessionManagement.onStatusChange(listener)
     }
 
@@ -87,12 +87,12 @@ export class SocialClient implements SocialClientAPI {
        return this.messaging.getAllCurrentConversations()
     }
 
-    sendMessageTo(conversation: Conversation, message: string): Promise<MessageId> {
-        return this.messaging.sendMessageTo(conversation, message)
+    sendMessageTo(conversationId: ConversationId, message: string): Promise<MessageId> {
+        return this.messaging.sendMessageTo(conversationId, message)
     }
 
-    markAsRead(conversation: Conversation, messageId: MessageId): Promise<void> {
-        return this.messaging.markAsRead(conversation, messageId)
+    markAsRead(conversationId: ConversationId, messageId: MessageId): Promise<void> {
+        return this.messaging.markAsRead(conversationId, messageId)
     }
 
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void {
@@ -103,32 +103,28 @@ export class SocialClient implements SocialClientAPI {
         return this.messaging.getLastReadMessage(conversationId)
     }
 
-    getCursorOnMessage(conversation: Conversation, messageId: MessageId, options?: CursorOptions): Promise<ConversationCursor> {
-        return this.messaging.getCursorOnMessage(conversation, messageId, options)
+    getCursorOnMessage(conversationId: ConversationId, messageId: MessageId, options?: CursorOptions): Promise<ConversationCursor> {
+        return this.messaging.getCursorOnMessage(conversationId, messageId, options)
     }
 
-    getCursorOnLastRead(conversation: Conversation, options?: CursorOptions): Promise<ConversationCursor> {
-        return this.messaging.getCursorOnLastRead(conversation, options)
+    getCursorOnLastRead(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor> {
+        return this.messaging.getCursorOnLastRead(conversationId, options)
     }
 
-    getCursorOnLastMessage(conversation: Conversation, options?: CursorOptions): Promise<ConversationCursor> {
-        return this.messaging.getCursorOnLastMessage(conversation, options)
+    getCursorOnLastMessage(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor> {
+        return this.messaging.getCursorOnLastMessage(conversationId, options)
     }
 
-    createDirectConversation(userId: MatrixId): Promise<Conversation> {
+    createDirectConversation(userId: SocialId): Promise<Conversation> {
         return this.messaging.createDirectConversation(userId)
     }
 
-    createGroupConversation(conversationName: string, userIds: MatrixId[]): Promise<Conversation> {
-        return this.messaging.createGroupConversation(conversationName, userIds)
-    }
-
-    doesConversationHaveUnreadMessages(conversation: Conversation): Promise<boolean> {
-        return this.messaging.doesConversationHaveUnreadMessages(conversation)
+    doesConversationHaveUnreadMessages(conversationId: ConversationId): Promise<boolean> {
+        return this.messaging.doesConversationHaveUnreadMessages(conversationId)
     }
 
     //////        FRIENDS MANAGEMENT         //////
-    getAllFriends(): Promise<MatrixId[]> {
+    getAllFriends(): Promise<SocialId[]> {
         return this.friendsManagement.getAllFriends()
     }
 
@@ -136,47 +132,47 @@ export class SocialClient implements SocialClientAPI {
         return this.friendsManagement.getPendingRequests()
     }
 
-    isUserMyFriend(userId: MatrixId): Promise<boolean> {
+    isUserMyFriend(userId: SocialId): Promise<boolean> {
         return this.friendsManagement.isUserMyFriend(userId)
     }
 
-    addAsFriend(userId: MatrixId): Promise<void> {
+    addAsFriend(userId: SocialId): Promise<void> {
         return this.friendsManagement.addAsFriend(userId)
     }
 
-    deleteFriendshipWith(userId: MatrixId): Promise<void> {
+    deleteFriendshipWith(userId: SocialId): Promise<void> {
         return this.friendsManagement.deleteFriendshipWith(userId)
     }
 
-    approveFriendshipRequestFrom(userId: MatrixId): Promise<void> {
+    approveFriendshipRequestFrom(userId: SocialId): Promise<void> {
         return this.friendsManagement.approveFriendshipRequestFrom(userId)
     }
 
-    rejectFriendshipRequestFrom(userId: MatrixId): Promise<void> {
+    rejectFriendshipRequestFrom(userId: SocialId): Promise<void> {
         return this.friendsManagement.rejectFriendshipRequestFrom(userId)
     }
 
-    cancelFriendshipRequestTo(userId: MatrixId): Promise<void> {
+    cancelFriendshipRequestTo(userId: SocialId): Promise<void> {
         return this.friendsManagement.cancelFriendshipRequestTo(userId)
     }
 
-    onFriendshipRequest(listener: (requestedBy: MatrixId) => void): void {
+    onFriendshipRequest(listener: (requestedBy: SocialId) => void): void {
         return this.friendsManagement.onFriendshipRequest(listener)
     }
 
-    onFriendshipRequestCancellation(listener: (canceledBy: MatrixId) => void): void {
+    onFriendshipRequestCancellation(listener: (canceledBy: SocialId) => void): void {
         return this.friendsManagement.onFriendshipRequestCancellation(listener)
     }
 
-    onFriendshipRequestRejection(listener: (rejectedBy: MatrixId) => void): void {
+    onFriendshipRequestRejection(listener: (rejectedBy: SocialId) => void): void {
         return this.friendsManagement.onFriendshipRequestRejection(listener)
     }
 
-    onFriendshipRequestApproval(listener: (approvedBy: MatrixId) => void): void {
+    onFriendshipRequestApproval(listener: (approvedBy: SocialId) => void): void {
         return this.friendsManagement.onFriendshipRequestApproval(listener)
     }
 
-    onFriendshipDeletion(listener: (deletedBy: MatrixId) => void): void {
+    onFriendshipDeletion(listener: (deletedBy: SocialId) => void): void {
         return this.friendsManagement.onFriendshipDeletion(listener)
     }
 

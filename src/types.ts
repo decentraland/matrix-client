@@ -1,6 +1,6 @@
 
 export type Timestamp = number
-export type MatrixId = string
+export type SocialId = string
 export type ConversationId = string
 export type MessageId = string
 
@@ -21,7 +21,7 @@ export type BasicMessageInfo = {
 
 export type TextMessage = BasicMessageInfo & {
     text: string,
-    sender: MatrixId,
+    sender: SocialId,
     status: MessageStatus,
 }
 
@@ -45,8 +45,8 @@ export type CursorOptions = {
 }
 
 export type FriendshipRequest = {
-    from: MatrixId,
-    to: MatrixId,
+    from: SocialId,
+    to: SocialId,
 }
 
 export type UpdateUserStatus = {
