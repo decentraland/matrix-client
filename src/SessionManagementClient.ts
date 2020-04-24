@@ -64,14 +64,16 @@ export class SessionManagementClient implements SessionManagementAPI {
         }
 
         if (presence !== PresenceType.OFFLINE && user.presenceStatusMsg) {
-            const parseResult = JSON.parse(user.presenceStatusMsg)
-            if (parseResult?.realm) {
-                userStatus.realm = parseResult?.realm
-            }
+            try {
+                const parseResult = JSON.parse(user.presenceStatusMsg)
+                if (parseResult?.realm) {
+                    userStatus.realm = parseResult?.realm
+                }
 
-            if (parseResult?.position) {
-                userStatus.position = parseResult?.position
-            }
+                if (parseResult?.position) {
+                    userStatus.position = parseResult?.position
+                }
+            } catch(error) { }
         }
 
         return userStatus

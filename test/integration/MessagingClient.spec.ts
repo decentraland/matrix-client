@@ -120,13 +120,122 @@ describe('Integration - Messaging Client', () => {
         // Assert that the message was received
         expect(spy).to.not.have.been.called
 
-        // Assert that the receiver sees the conversation with unread messages
+        // Assert that the receiver sees the conversation
         const receiverConversations = await receiver.getAllCurrentConversations()
         expect(receiverConversations.length).to.equal(1)
-        const [{ conversation: receiverConversation }] = receiverConversations
+        const [{ conversation: receiverConversation, unreadMessages }] = receiverConversations
         expect(receiverConversation).to.deep.equal(conversation)
 
-        // TODO: Test that the conversation says that there are unread messages
+        // Since the message was sent before the user could see the conversation for the first time, there are no unread messages
+        expect(unreadMessages).to.be.false
+    })
+
+    it(`When a user reads all messages, then it is reported correctly`, async () => {
+        const client1 = await testEnv.getRandomClient()
+        const client2 = await testEnv.getRandomClient()
+
+        // Create a conversation
+        const conversation = await client1.createDirectConversation(client2.getUserId())
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Send message
+        const messageId = await client1.sendMessageTo(conversation, 'Hi there!')
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that client2 has unread messages
+        const unreadMessages1 = await client2.doesConversationHaveUnreadMessages(conversation)
+        expect(unreadMessages1).to.be.true
+
+        // Mark message as read
+        await client2.markAsRead(conversation, messageId)
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that client2 doesn't have unread messages
+        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversation)
+        expect(unreadMessages2).to.be.false
+    })
+
+    it(`When a user reads all messages, then it is reported correctly`, async () => {
+        const client1 = await testEnv.getRandomClient()
+        const client2 = await testEnv.getRandomClient()
+
+        // Create a conversation
+        const conversation = await client1.createDirectConversation(client2.getUserId())
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Send message
+        const messageId = await client1.sendMessageTo(conversation, 'Hi there!')
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that client2 has unread messages
+        const unreadMessages1 = await client2.doesConversationHaveUnreadMessages(conversation)
+        expect(unreadMessages1).to.be.true
+
+        // Mark message as read
+        await client2.markAsRead(conversation, messageId)
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that client2 doesn't have unread messages
+        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversation)
+        expect(unreadMessages2).to.be.false
+    })
+
+    it(`When a user sends a message, then the conversation is considered to have no unread messages`, async () => {
+        const client1 = await testEnv.getRandomClient()
+        const client2 = await testEnv.getRandomClient()
+
+        // Create a conversation
+        const conversation = await client1.createDirectConversation(client2.getUserId())
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Send message
+        await client1.sendMessageTo(conversation, 'Hi there!')
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that client2 has unread messages
+        const unreadMessages1 = await client2.doesConversationHaveUnreadMessages(conversation)
+        expect(unreadMessages1).to.be.true
+
+        // Respond to the message
+        await client2.sendMessageTo(conversation, 'Hello back!')
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that client2 doesn't have unread messages
+        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversation)
+        expect(unreadMessages2).to.be.false
+    })
+
+    it(`When there are no messages on the conversation, then it is considered that it doesn't have unread messages`, async () => {
+        const client1 = await testEnv.getRandomClient()
+        const client2 = await testEnv.getRandomClient()
+
+        // Create a conversation
+        const conversation = await client1.createDirectConversation(client2.getUserId())
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that client2 doesn't have unread messages
+        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversation)
+        expect(unreadMessages2).to.be.false
     })
 
     /** Assert that the message was received, and return the message id */

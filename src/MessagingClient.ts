@@ -36,15 +36,15 @@ export class MessagingClient implements MessagingAPI {
     /** Get all conversation the user has joined */
     async getAllCurrentConversations(): Promise<{ conversation: Conversation, unreadMessages: boolean }[]> {
         const rooms = await this.matrixClient.getVisibleRooms()
-        return rooms
+        return Promise.all(rooms
             .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
-            .map(room => ({
-                unreadMessages: this.doesRoomHaveUnreadMessages(room),
+            .map(async room => ({
+                unreadMessages: await this.doesRoomHaveUnreadMessages(room),
                 conversation: {
                     id: room.roomId,
                     type: getConversationTypeFromRoom(this.matrixClient, room),
                 }
-            }))
+            })))
     }
 
     /**
@@ -250,12 +250,13 @@ export class MessagingClient implements MessagingAPI {
         }
 
         const lastMessageEvent = timeline[timeline.length - 1]
-        const lastReadMessage = await this.getLastReadMessage(room.getRoomId)
+
+        const lastReadMessage = await this.getLastReadMessage(room.roomId)
 
         if (!lastReadMessage) {
             return Promise.resolve(true)
         } else {
-            return lastMessageEvent.getTs() !== lastReadMessage.timestamp
+            return lastMessageEvent.getTs() > lastReadMessage.timestamp
         }
     }
 
