@@ -6,7 +6,10 @@ import fs from 'fs-extra'
 import { SocialId } from 'types'
 import { createUser, loginWithIdentity } from '../utils/Utils';
 
-
+/**
+ * This script will create some users on the server, and make them all friends between each other.
+ * Then, it will make all of them send each other some messages.
+ */
 async function run(serverUrl: string, amountOfUsers: number) {
     // Uncomment this to use the already existing entities
     // const identities = JSON.parse(fs.readFileSync(`${__dirname}/resources/identities.json`).toString())

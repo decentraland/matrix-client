@@ -6,7 +6,7 @@ import { SocialClient } from 'SocialClient'
 import { UpdateUserStatus, PresenceType } from 'types'
 import { loginWithIdentity, createUser } from '../utils/Utils'
 
-describe.skip('Performance', () => {
+describe.skip('Performance Test', () => {
 
     const N = 100
     const serverUrl = 'https://matrix.decentraland.zone'

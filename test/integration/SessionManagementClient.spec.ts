@@ -4,8 +4,8 @@ import sinonChai from 'sinon-chai'
 import sinon from 'sinon'
 import { SocialClient } from 'SocialClient'
 import { PresenceType, UpdateUserStatus, CurrentUserStatus, SocialId } from 'types'
-import { sleep } from './Utils'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
+import { sleep } from '../utils/Utils'
 
 chai.use(sinonChai)
 const expect = chai.expect

@@ -9,7 +9,7 @@ import { SessionManagementClient } from './SessionManagementClient';
 import { FriendsManagementAPI } from './FriendsManagementAPI';
 import { FriendsManagementClient } from './FriendsManagementClient';
 import { SocialAPI } from './SocialAPI';
-import { login } from 'Utils';
+import { login } from './Utils';
 
 export class SocialClient implements SocialAPI {
 
