@@ -3,7 +3,7 @@ import chai from 'chai'
 import { SocialClient } from 'SocialClient'
 import { TextMessage, MessageStatus, CursorDirection, ConversationId } from 'types'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
-import { sleep } from './Utils'
+import { sleep } from '../utils/Utils'
 
 const expect = chai.expect
 
@@ -30,7 +30,7 @@ describe('Integration - Conversation cursor', () => {
         const cursor = await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 3 })
 
         // Read the messages
-        const messages = await cursor.getMessages()
+        const messages = cursor.getMessages()
 
         // Assert that the messages are the expected ones
         assertMessagesAre(messages, 9, 11)
@@ -62,7 +62,7 @@ describe('Integration - Conversation cursor', () => {
         const cursor = await receiver.getCursorOnLastRead(conversationId, { initialSize: 3 })
 
         // Read the messages
-        const messages = await cursor.getMessages()
+        const messages = cursor.getMessages()
 
         // Assert that the messages are the expected ones
         assertMessagesAre(messages, 9, 11)
@@ -89,7 +89,7 @@ describe('Integration - Conversation cursor', () => {
         const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 10 })
 
         // Read the messages
-        const messages = await cursor.getMessages()
+        const messages = cursor.getMessages()
 
         // Assert that the messages are the last 10
         assertMessagesAre(messages, 10, 19)
@@ -125,19 +125,19 @@ describe('Integration - Conversation cursor', () => {
         const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 5, limit: 5 })
 
         // Assert that the available messages are the expected ones
-        assertMessagesAre(await cursor.getMessages(), 15, 19)
+        assertMessagesAre(cursor.getMessages(), 15, 19)
 
         // Move 12 messages back
         await cursor.moveInDirection(CursorDirection.BACKWARDS, 12)
 
         // Assert that the available messages are the expected ones
-        assertMessagesAre(await cursor.getMessages(), 3, 7)
+        assertMessagesAre(cursor.getMessages(), 3, 7)
 
         // Move 7 messages forward
         await cursor.moveInDirection(CursorDirection.FORWARDS, 7)
 
         // Assert that the available messages are the expected ones
-        assertMessagesAre(await cursor.getMessages(), 10, 14)
+        assertMessagesAre(cursor.getMessages(), 10, 14)
     })
 
     it(`When getting messages, the read status is calculated correctly`, async () => {
@@ -163,8 +163,8 @@ describe('Integration - Conversation cursor', () => {
         await receiver.markAsRead(conversationId, messageId)
 
         // Read the messages
-        const senderMessages = await senderCursor.getMessages()
-        const receiverMessages = await receiverCursor.getMessages()
+        const senderMessages = senderCursor.getMessages()
+        const receiverMessages = receiverCursor.getMessages()
 
         // Assert that the messages are the expected ones
         assertMessagesAre(senderMessages, 0, 19)
@@ -193,19 +193,19 @@ describe('Integration - Conversation cursor', () => {
         const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 20 })
 
         // Assert that the available messages are the expected ones
-        assertMessagesAre(await cursor.getMessages(), 0, 19)
+        assertMessagesAre(cursor.getMessages(), 0, 19)
 
         // Remove the 5 oldest messages
         cursor.removeFromCursor(5, true)
 
         // Assert that the available messages are the expected ones
-        assertMessagesAre(await cursor.getMessages(), 5, 19)
+        assertMessagesAre(cursor.getMessages(), 5, 19)
 
         // Remove the 5 newest messages
         cursor.removeFromCursor(5, false)
 
         // Assert that the available messages are the expected ones
-        assertMessagesAre(await cursor.getMessages(), 5, 14)
+        assertMessagesAre(cursor.getMessages(), 5, 14)
     })
 
     function assertMessagesStatusIs(messages: TextMessage[], from: number, to: number, expectedStatus: MessageStatus) {

@@ -6,8 +6,8 @@ import ms from 'ms'
 import EthCrypto from 'eth-crypto'
 import { SocialClient } from 'SocialClient'
 import { ConversationType, MessageStatus, Conversation, MessageId } from 'types'
-import { sleep, createUserInServer } from './Utils'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
+import { sleep } from '../utils/Utils'
 
 chai.use(sinonChai)
 const expect = chai.expect
@@ -21,10 +21,10 @@ describe('Integration - Messaging Client', () => {
         const client2 = await testEnv.getRandomClient()
 
         // Check that neither of the clients report having conversations
-        const conversations1 = await client1.getAllCurrentConversations()
+        const conversations1 = client1.getAllCurrentConversations()
         expect(conversations1).to.be.empty
 
-        const conversations2 = await client2.getAllCurrentConversations()
+        const conversations2 = client2.getAllCurrentConversations()
         expect(conversations2).to.be.empty
 
         // Create a conversation
@@ -36,12 +36,12 @@ describe('Integration - Messaging Client', () => {
         await sleep('1s')
 
         // Assert that both clients see the conversation
-        const conversations1Again = await client1.getAllCurrentConversations()
+        const conversations1Again = client1.getAllCurrentConversations()
         expect(conversations1Again.length).to.equal(1)
         const [ {conversation: conversation1} ] = conversations1Again
         expect(conversation1).to.deep.equal(commonConversation)
 
-        const conversations2Again = await client2.getAllCurrentConversations()
+        const conversations2Again = client2.getAllCurrentConversations()
         expect(conversations2Again.length).to.equal(1)
         const [ {conversation: conversation2} ] = conversations2Again
         expect(conversation2).to.deep.equal(commonConversation)
@@ -99,7 +99,7 @@ describe('Integration - Messaging Client', () => {
 
         // Create receiver
         const receiverIdentity = EthCrypto.createIdentity()
-        const receiverUserId = await createUserInServer(testEnv, receiverIdentity)
+        const receiverUserId = await testEnv.createUserOnServer(receiverIdentity)
 
         // Create a conversation
         const conversation = await sender.createDirectConversation(receiverUserId)
@@ -121,7 +121,7 @@ describe('Integration - Messaging Client', () => {
         expect(spy).to.not.have.been.called
 
         // Assert that the receiver sees the conversation
-        const receiverConversations = await receiver.getAllCurrentConversations()
+        const receiverConversations = receiver.getAllCurrentConversations()
         expect(receiverConversations.length).to.equal(1)
         const [{ conversation: receiverConversation, unreadMessages }] = receiverConversations
         expect(receiverConversation).to.deep.equal(conversation)
@@ -147,7 +147,7 @@ describe('Integration - Messaging Client', () => {
         await sleep('1s')
 
         // Assert that client2 has unread messages
-        const unreadMessages1 = await client2.doesConversationHaveUnreadMessages(conversationId)
+        const unreadMessages1 = client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages1).to.be.true
 
         // Mark message as read
@@ -157,7 +157,7 @@ describe('Integration - Messaging Client', () => {
         await sleep('1s')
 
         // Assert that client2 doesn't have unread messages
-        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversationId)
+        const unreadMessages2 = client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages2).to.be.false
     })
 
@@ -188,7 +188,7 @@ describe('Integration - Messaging Client', () => {
         await sleep('1s')
 
         // Assert that client2 doesn't have unread messages
-        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversationId)
+        const unreadMessages2 = client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages2).to.be.false
     })
 
@@ -209,7 +209,7 @@ describe('Integration - Messaging Client', () => {
         await sleep('1s')
 
         // Assert that client2 has unread messages
-        const unreadMessages1 = await client2.doesConversationHaveUnreadMessages(conversationId)
+        const unreadMessages1 = client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages1).to.be.true
 
         // Respond to the message
@@ -219,7 +219,7 @@ describe('Integration - Messaging Client', () => {
         await sleep('1s')
 
         // Assert that client2 doesn't have unread messages
-        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversationId)
+        const unreadMessages2 = client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages2).to.be.false
     })
 
@@ -234,7 +234,7 @@ describe('Integration - Messaging Client', () => {
         await sleep('1s')
 
         // Assert that client2 doesn't have unread messages
-        const unreadMessages2 = await client2.doesConversationHaveUnreadMessages(conversationId)
+        const unreadMessages2 = client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages2).to.be.false
     })
 

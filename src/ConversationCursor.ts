@@ -14,10 +14,10 @@ export class ConversationCursor {
     private constructor(
         private readonly roomId: string,
         private readonly window: Matrix.TimelineWindow,
-        private readonly lastReadMessageTimestampFetch: (roomId: string) => Promise<BasicMessageInfo | undefined>) { }
+        private readonly lastReadMessageTimestampFetch: (roomId: string) => BasicMessageInfo | undefined) { }
 
-    async getMessages(): Promise<TextMessage[]> {
-        const latestReadTimestamp: Timestamp | undefined = (await this.lastReadMessageTimestampFetch(this.roomId))?.timestamp
+    getMessages(): TextMessage[] {
+        const latestReadTimestamp: Timestamp | undefined = this.lastReadMessageTimestampFetch(this.roomId)?.timestamp
 
         const events = this.window.getEvents();
         return events
@@ -50,7 +50,7 @@ export class ConversationCursor {
     static async build(client: Matrix.MatrixClient,
         roomId: string,
         initialEventId: string | undefined | null, // If no eventId is set, then we will start at the last message
-        lastReadMessageTimestampFetch: (roomId: string) => Promise<BasicMessageInfo | undefined>,
+        lastReadMessageTimestampFetch: (roomId: string) => BasicMessageInfo | undefined,
         options?: CursorOptions) {
             const limit = ConversationCursor.calculateLimit(options)
             const initialSize = options?.initialSize ?? this.DEFAULT_INITIAL_SIZE

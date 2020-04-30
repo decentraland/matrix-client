@@ -3,8 +3,8 @@ import chai from 'chai'
 import sinonChai from 'sinon-chai'
 import sinon from 'sinon'
 import { SocialClient } from 'SocialClient'
-import { sleep } from './Utils'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
+import { sleep } from '../utils/Utils'
 
 chai.use(sinonChai)
 const expect = chai.expect
@@ -24,8 +24,8 @@ describe('Integration - Friends Management Client', () => {
         client2.onFriendshipRequest(spy2)
 
         // Check that neither of the clients report having friendship requests
-        await assertNoPendingRequests(client1, client2)
-        await assertNoFriends(client1, client2)
+        assertNoPendingRequests(client1, client2)
+        assertNoFriends(client1, client2)
 
         // Ask for friendship
         await client1.addAsFriend(client2.getUserId())
@@ -38,8 +38,8 @@ describe('Integration - Friends Management Client', () => {
         assertEventWasReceived(spy2, client1)
 
         // Check that they both see the request, but that they are not friends yet
-        await assertPendingRequest(client1, client2)
-        await assertNoFriends(client1, client2)
+        assertPendingRequest(client1, client2)
+        assertNoFriends(client1, client2)
     })
 
     it(`When a friendship request is canceled, then the other user listens to the cancellation event and both stop seeing the pending request`, async () => {
@@ -59,7 +59,7 @@ describe('Integration - Friends Management Client', () => {
         await sleep('1s')
 
         // Assert that they both see the pending request
-        await assertPendingRequest(client1, client2)
+        assertPendingRequest(client1, client2)
 
         // Cancel the request
         await client1.cancelFriendshipRequestTo(client2.getUserId())
@@ -72,8 +72,8 @@ describe('Integration - Friends Management Client', () => {
         assertEventWasReceived(spy2, client1)
 
         // Check that they have no pending requests
-        await assertNoPendingRequests(client1, client2)
-        await assertNoFriends(client1, client2)
+        assertNoPendingRequests(client1, client2)
+        assertNoFriends(client1, client2)
     })
 
     it(`When a friendship request is rejected, then the user who sent the request sees the event, and both stop seeing the pending request`, async () => {
@@ -93,7 +93,7 @@ describe('Integration - Friends Management Client', () => {
         await sleep('1s')
 
         // Assert that they both see the pending request
-        await assertPendingRequest(client1, client2)
+        assertPendingRequest(client1, client2)
 
         // Reject the request
         await client2.rejectFriendshipRequestFrom(client1.getUserId())
@@ -106,8 +106,8 @@ describe('Integration - Friends Management Client', () => {
         assertEventWasReceived(spy1, client2)
 
         // Check that they have no pending requests
-        await assertNoPendingRequests(client1, client2)
-        await assertNoFriends(client1, client2)
+        assertNoPendingRequests(client1, client2)
+        assertNoFriends(client1, client2)
     })
 
     it(`When a friendship request is approved, then the user who sent the request sees the event, both stop seeping the pending request and both see each other as friends`, async () => {
@@ -127,7 +127,7 @@ describe('Integration - Friends Management Client', () => {
         await sleep('1s')
 
         // Assert that they both see the pending request
-        await assertPendingRequest(client1, client2)
+        assertPendingRequest(client1, client2)
 
         // Approve the request
         await client2.approveFriendshipRequestFrom(client1.getUserId())
@@ -140,8 +140,8 @@ describe('Integration - Friends Management Client', () => {
         assertEventWasReceived(spy1, client2)
 
         // Check that they have no pending requests
-        await assertNoPendingRequests(client1, client2)
-        await assertUsersAreFriends(client1, client2)
+        assertNoPendingRequests(client1, client2)
+        assertUsersAreFriends(client1, client2)
     })
 
     it(`When a friendship request is made from B to A, after A had already requested B, then it is considered as an approval`, async () => {
@@ -161,7 +161,7 @@ describe('Integration - Friends Management Client', () => {
         await sleep('1s')
 
         // Assert that they both see the pending request
-        await assertPendingRequest(client1, client2)
+        assertPendingRequest(client1, client2)
 
         // Ask for friendship
         await client2.addAsFriend(client1.getUserId())
@@ -174,8 +174,8 @@ describe('Integration - Friends Management Client', () => {
         assertEventWasReceived(spy1, client2)
 
         // Check that they have no pending requests
-        await assertNoPendingRequests(client1, client2)
-        await assertUsersAreFriends(client1, client2)
+        assertNoPendingRequests(client1, client2)
+        assertUsersAreFriends(client1, client2)
     })
 
     it(`When a friendship is deleted, then the other user listens to the event, and both stop seeing each other as friends`, async () => {
@@ -211,13 +211,13 @@ describe('Integration - Friends Management Client', () => {
         assertEventWasReceived(spy1, client2)
 
         // Check that they have no pending requests
-        await assertNoPendingRequests(client1, client2)
-        await assertNoFriends(client1, client2)
+        assertNoPendingRequests(client1, client2)
+        assertNoFriends(client1, client2)
     })
 
-    async function assertPendingRequest(from: SocialClient, to: SocialClient) {
-        const fromPendingRequests = await from.getPendingRequests()
-        const toPendingRequests = await to.getPendingRequests()
+    function assertPendingRequest(from: SocialClient, to: SocialClient) {
+        const fromPendingRequests = from.getPendingRequests()
+        const toPendingRequests = to.getPendingRequests()
 
         expect(fromPendingRequests.length).to.equal(1)
         expect(toPendingRequests.length).to.equal(1)
@@ -230,23 +230,23 @@ describe('Integration - Friends Management Client', () => {
         expect(fromPendingRequest.to).to.equal(to.getUserId())
     }
 
-    async function assertNoPendingRequests(...clients: SocialClient[]): Promise<void> {
+    function assertNoPendingRequests(...clients: SocialClient[]): void {
         for (const client of clients) {
-            const pendingRequests = await client.getPendingRequests()
+            const pendingRequests = client.getPendingRequests()
             expect(pendingRequests).to.be.empty
         }
     }
 
-    async function assertNoFriends(...clients: SocialClient[]): Promise<void> {
+    function assertNoFriends(...clients: SocialClient[]): void {
         for (const client of clients) {
-            const myFriends = await client.getAllFriends()
+            const myFriends = client.getAllFriends()
             expect(myFriends).to.be.empty
         }
     }
 
-    async function assertUsersAreFriends(client1: SocialClient, client2: SocialClient): Promise<void> {
-        const client1Friends = await client1.getAllFriends()
-        const client2Friends = await client2.getAllFriends()
+    function assertUsersAreFriends(client1: SocialClient, client2: SocialClient): void {
+        const client1Friends = client1.getAllFriends()
+        const client2Friends = client2.getAllFriends()
 
         expect(client1Friends).to.contain(client2.getUserId())
         expect(client2Friends).to.contain(client1.getUserId())

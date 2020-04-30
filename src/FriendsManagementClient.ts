@@ -19,15 +19,15 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     constructor(private readonly matrixClient: Matrix.MatrixClient,
         private readonly socialClient: SocialClient) { }
 
-    async getAllFriends(): Promise<SocialId[]> {
-        const rooms = await this.matrixClient.getVisibleRooms()
+    getAllFriends(): SocialId[] {
+        const rooms = this.matrixClient.getVisibleRooms()
         return rooms.filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
             .filter(room => this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS)
             .map(room => room.guessDMUserId())
     }
 
-    async getPendingRequests(): Promise<FriendshipRequest[]> {
-        const rooms = await this.matrixClient.getVisibleRooms()
+    getPendingRequests(): FriendshipRequest[] {
+        const rooms = this.matrixClient.getVisibleRooms()
         return rooms.filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
             .map(room => [room, this.getFriendshipStatusInRoom(room)])
             .filter(([, status]) => FriendsManagementClient.PENDING_STATUSES.includes(status))
@@ -41,10 +41,9 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             })
     }
 
-    async isUserMyFriend(userId: SocialId): Promise<boolean> {
-        const { id: roomId } = await this.socialClient.createDirectConversation(userId)
-        const room = this.matrixClient.getRoom(roomId)
-        return this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS;
+    isUserMyFriend(userId: SocialId): boolean {
+        const friends = this.getAllFriends()
+        return friends.includes(userId)
     }
 
     async addAsFriend(userId: SocialId): Promise<void> {

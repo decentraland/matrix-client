@@ -31,7 +31,7 @@ export class MessagingClient implements MessagingAPI {
         // Listen to when the sync is finishes, and join all rooms I was invited to
         matrixClient.once('sync', async (state) => {
             if (state === 'PREPARED') {
-                const rooms = await this.matrixClient.getVisibleRooms()
+                const rooms = this.matrixClient.getVisibleRooms()
                 const join: Promise<void>[] = rooms
                     .filter(room => room.getMyMembership() === 'invite') // Consider rooms that I have been invited to
                     .map(room => {
@@ -44,17 +44,17 @@ export class MessagingClient implements MessagingAPI {
     }
 
     /** Get all conversation the user has joined */
-    async getAllCurrentConversations(): Promise<{ conversation: Conversation, unreadMessages: boolean }[]> {
-        const rooms = await this.matrixClient.getVisibleRooms()
-        return Promise.all(rooms
+    getAllCurrentConversations(): { conversation: Conversation, unreadMessages: boolean }[] {
+        const rooms = this.matrixClient.getVisibleRooms()
+        return rooms
             .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
-            .map(async room => ({
-                unreadMessages: await this.doesRoomHaveUnreadMessages(room),
+            .map(room => ({
+                unreadMessages: this.doesRoomHaveUnreadMessages(room),
                 conversation: {
                     id: room.roomId,
                     type: getConversationTypeFromRoom(this.matrixClient, room),
                 }
-            })))
+            }))
     }
 
     /**
@@ -68,7 +68,12 @@ export class MessagingClient implements MessagingAPI {
 
     /** Mark a message (and all those that came before it on the conversation) as read */
     async markAsRead(conversationId: ConversationId, messageId: MessageId): Promise<void> {
-        const event = await findEventInRoom(this.matrixClient, conversationId, messageId)
+        let event = findEventInRoom(this.matrixClient, conversationId, messageId)
+        if (!event) {
+            // If I couldn't find it locally, then fetch it from the server
+            const eventRaw = await this.matrixClient.fetchRoomEvent(conversationId, messageId)
+            event = new Matrix.MatrixEvent(eventRaw)
+        }
         return this.matrixClient.sendReadReceipt(event)
     }
 
@@ -102,11 +107,11 @@ export class MessagingClient implements MessagingAPI {
      * Return basic information about the last read message. Since we don't mark messages sent by me as read,
      * we also check against the last sent message.
      */
-    async getLastReadMessage(conversationId: ConversationId): Promise<BasicMessageInfo | undefined> {
+    getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined {
         // Fetch last message marked as read
         const room = this.matrixClient.getRoom(conversationId)
         const lastReadEventId: string | null = room.getEventReadUpTo(this.matrixClient.getUserId(), false)
-        const lastReadMatrixEvent: Matrix.Event | undefined = lastReadEventId ? await findEventInRoom(this.matrixClient, conversationId, lastReadEventId) : undefined
+        const lastReadMatrixEvent: Matrix.Event | undefined = lastReadEventId ? findEventInRoom(this.matrixClient, conversationId, lastReadEventId) : undefined
         const lastReadEvent: BasicMessageInfo | undefined = lastReadMatrixEvent ? matrixEventToBasicEventInfo(lastReadMatrixEvent) : undefined
 
         // Fetch last message sent by me
@@ -133,7 +138,7 @@ export class MessagingClient implements MessagingAPI {
             return lastEventSentByMe
         }
 
-        return Promise.resolve(undefined)
+        return undefined
     }
 
     /** Returns a cursor located on the given message */
@@ -145,8 +150,8 @@ export class MessagingClient implements MessagingAPI {
      * Returns a cursor located on the last read message. If no messages were read, then
      * it is located at the end of the conversation.
      */
-    async getCursorOnLastRead(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor> {
-        const lastReadMessage = await this.getLastReadMessage(conversationId)
+    getCursorOnLastRead(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor> {
+        const lastReadMessage = this.getLastReadMessage(conversationId)
         return ConversationCursor.build(this.matrixClient, conversationId, lastReadMessage?.id, roomId => this.getLastReadMessage(roomId), options)
     }
 
@@ -176,7 +181,7 @@ export class MessagingClient implements MessagingAPI {
     }
 
     /** Return whether a conversation has unread messages or not */
-    doesConversationHaveUnreadMessages(conversationId: ConversationId): Promise<boolean> {
+    doesConversationHaveUnreadMessages(conversationId: ConversationId): boolean {
         const room = this.matrixClient.getRoom(conversationId)
         return this.doesRoomHaveUnreadMessages(room)
     }
@@ -188,22 +193,31 @@ export class MessagingClient implements MessagingAPI {
     private async getOrCreateConversation(client: Matrix.MatrixClient, type: ConversationType, userIds: SocialId[], conversationName?: string): Promise<{ conversation: Conversation, created: boolean }> {
         const allUsersInConversation = [client.getUserIdLocalpart(), ...userIds]
         const alias = this.buildAliasForConversationWithUsers(allUsersInConversation)
-        const result: { room_id: string } | undefined = await this.undefinedIfError(() => client.getRoomIdForAlias(`#${alias}:${client.getDomain()}`))
         let roomId: string
         let created: boolean
-        if (!result) {
-            const creationResult = await client.createRoom({
-                room_alias_name: alias,
-                preset: 'trusted_private_chat',
-                is_direct: type === ConversationType.DIRECT,
-                invite: userIds,
-                name: conversationName,
-            })
-            roomId = creationResult.room_id
-            created = true
-        } else {
-            roomId = result.room_id
+        // First, try to find the alias locally
+        const room: Matrix.Room | undefined = this.findRoomByAliasLocally(`#${alias}:${client.getDomain()}`)
+        if (room) {
+            roomId = room.roomId
             created = false
+        } else {
+            // Try to find alias on the server
+            const result: { room_id: string } | undefined = await this.undefinedIfError(() => client.getRoomIdForAlias(`#${alias}:${client.getDomain()}`))
+            if (result) {
+                roomId = result.room_id
+                created = false
+            } else {
+                // If alias wasn't found, then create the room
+                const creationResult = await client.createRoom({
+                    room_alias_name: alias,
+                    preset: 'trusted_private_chat',
+                    is_direct: type === ConversationType.DIRECT,
+                    invite: userIds,
+                    name: conversationName,
+                })
+                roomId = creationResult.room_id
+                created = true
+            }
         }
 
         return {
@@ -213,6 +227,11 @@ export class MessagingClient implements MessagingAPI {
             },
             created
         }
+    }
+
+    private findRoomByAliasLocally(alias: string): Matrix.Room | undefined {
+        return this.matrixClient.getVisibleRooms()
+            .filter(room => room.getCanonicalAlias() === alias)[0]
     }
 
     private async joinRoom(member): Promise<void> {
@@ -258,22 +277,22 @@ export class MessagingClient implements MessagingAPI {
         await this.matrixClient.setAccountData('m.direct', directRoomMap)
     }
 
-    private async doesRoomHaveUnreadMessages(room): Promise<boolean> {
+    private doesRoomHaveUnreadMessages(room): boolean {
         // Fetch message events
         const timelineSet = getOnlyMessagesTimelineSetFromRoom(this.matrixClient, room)
         const timeline = timelineSet.getLiveTimeline().getEvents()
 
         // If there are no messages, then there are no unread messages
         if (timeline.length === 0) {
-            return Promise.resolve(false)
+            return false
         }
 
         const lastMessageEvent = timeline[timeline.length - 1]
 
-        const lastReadMessage = await this.getLastReadMessage(room.roomId)
+        const lastReadMessage = this.getLastReadMessage(room.roomId)
 
         if (!lastReadMessage) {
-            return Promise.resolve(true)
+            return true
         } else {
             return lastMessageEvent.getTs() > lastReadMessage.timestamp
         }
