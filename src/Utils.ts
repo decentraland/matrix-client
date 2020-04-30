@@ -1,9 +1,31 @@
 import Matrix from 'matrix-js-sdk';
-import { ConversationType, MessageStatus, TextMessage, SocialId, BasicMessageInfo } from './types';
+import { EthAddress, AuthChain } from 'dcl-crypto';
+import { ConversationType, MessageStatus, TextMessage, SocialId, BasicMessageInfo, Timestamp } from './types';
 
-export async function findEventInRoom(client: Matrix.MatrixClient, roomId: string, eventId: string): Promise<Event> {
-    const eventRaw = await client.fetchRoomEvent(roomId, eventId)
-    return new Matrix.MatrixEvent(eventRaw)
+export async function login(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<Matrix.MatrixClient> {
+    // Create the client
+    const matrixClient: Matrix.MatrixClient = Matrix.createClient({
+        baseUrl: synapseUrl,
+        timelineSupport: true,
+    })
+
+    // Actual login
+    await matrixClient.login('m.login.decentraland', {
+        identifier: {
+            type: 'm.id.user',
+            user: ethAddress.toLowerCase(),
+        },
+        timestamp: timestamp.toString(),
+        auth_chain: authChain
+    });
+
+    return matrixClient
+}
+
+export function findEventInRoom(client: Matrix.MatrixClient, roomId: string, eventId: string): Event | undefined {
+    const room = client.getRoom(roomId)
+    const timelineSet = room.getUnfilteredTimelineSet()
+    return timelineSet.findEventById(eventId)
 }
 
 export function buildTextMessage(event: Matrix.Event, status: MessageStatus): TextMessage {

@@ -37,8 +37,8 @@ export class SessionManagementClient implements SessionManagementAPI {
         return this.matrixClient.setPresence(input)
     }
 
-    async getUserStatuses(...users: SocialId[]): Promise<Map<SocialId, CurrentUserStatus>> {
-        const friends = await this.socialClient.getAllFriends()
+    getUserStatuses(...users: SocialId[]): Map<SocialId, CurrentUserStatus> {
+        const friends = this.socialClient.getAllFriends()
         const entries: [SocialId, CurrentUserStatus][] = users.filter(userId => friends.includes(userId))
             .map(userId => this.matrixClient.getUser(userId))
             .filter(user => !!user)
@@ -49,7 +49,7 @@ export class SessionManagementClient implements SessionManagementAPI {
     onStatusChange(listener: (userId: SocialId, status: CurrentUserStatus) => void): void {
         const socialClient = this.socialClient
         this.matrixClient.on("User.lastPresenceTs", async function(_, user: Matrix.User) {
-            if (await socialClient.isUserMyFriend(user.userId)) {
+            if (socialClient.isUserMyFriend(user.userId)) {
                 listener(user.userId, SessionManagementClient.userToStatus(user))
             }
         });

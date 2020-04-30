@@ -9,6 +9,7 @@ import { SessionManagementClient } from './SessionManagementClient';
 import { FriendsManagementAPI } from './FriendsManagementAPI';
 import { FriendsManagementClient } from './FriendsManagementClient';
 import { SocialAPI } from './SocialAPI';
+import { login } from 'Utils';
 
 export class SocialClient implements SocialAPI {
 
@@ -23,21 +24,19 @@ export class SocialClient implements SocialAPI {
     }
 
     static async loginToServer(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<SocialClient> {
-        // Create the client
-        const matrixClient: Matrix.MatrixClient = Matrix.createClient({
-            baseUrl: synapseUrl,
-            timelineSupport: true,
-        })
+        // Login
+        const matrixClient = await login(synapseUrl, ethAddress, timestamp, authChain)
 
-        // Actual login
-        await matrixClient.login('m.login.decentraland', {
-            identifier: {
-                type: 'm.id.user',
-                user: ethAddress.toLowerCase(),
-            },
-            timestamp: timestamp.toString(),
-            auth_chain: authChain
-        });
+        // Listen to initial sync
+        const waitForInitialSync = new Promise((resolve, reject) => {
+            matrixClient.once('sync', async (state) => {
+                if (state === 'PREPARED') {
+                    resolve()
+                } else {
+                    reject()
+                }
+            });
+        })
 
         // Create the client before starting the matrix client, so our event hooks can detect all events during the initial sync
         const socialClient = new SocialClient(matrixClient)
@@ -48,6 +47,9 @@ export class SocialClient implements SocialAPI {
             initialSyncLimit: 20, // This is the value that the Matrix React SDK uses
             disablePresence: true, // Don't consider me online just because I continue to sync with Matrix
         });
+
+        // Wait for initial sync
+        await waitForInitialSync
 
         return socialClient
     }
@@ -74,7 +76,7 @@ export class SocialClient implements SocialAPI {
         return this.sessionManagement.setStatus(status)
     }
 
-    getUserStatuses(...users: SocialId[]): Promise<Map<SocialId, CurrentUserStatus>> {
+    getUserStatuses(...users: SocialId[]): Map<SocialId, CurrentUserStatus> {
         return this.sessionManagement.getUserStatuses(...users)
     }
 
@@ -83,7 +85,7 @@ export class SocialClient implements SocialAPI {
     }
 
     //////             MESSAGING             //////
-    getAllCurrentConversations(): Promise<{ conversation: Conversation, unreadMessages: boolean }[]> {
+    getAllCurrentConversations(): { conversation: Conversation, unreadMessages: boolean }[] {
        return this.messaging.getAllCurrentConversations()
     }
 
@@ -99,7 +101,7 @@ export class SocialClient implements SocialAPI {
         return this.messaging.onMessage(listener)
     }
 
-    getLastReadMessage(conversationId: ConversationId): Promise<BasicMessageInfo | undefined> {
+    getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined {
         return this.messaging.getLastReadMessage(conversationId)
     }
 
@@ -119,20 +121,20 @@ export class SocialClient implements SocialAPI {
         return this.messaging.createDirectConversation(userId)
     }
 
-    doesConversationHaveUnreadMessages(conversationId: ConversationId): Promise<boolean> {
+    doesConversationHaveUnreadMessages(conversationId: ConversationId): boolean {
         return this.messaging.doesConversationHaveUnreadMessages(conversationId)
     }
 
     //////        FRIENDS MANAGEMENT         //////
-    getAllFriends(): Promise<SocialId[]> {
+    getAllFriends(): SocialId[] {
         return this.friendsManagement.getAllFriends()
     }
 
-    getPendingRequests(): Promise<FriendshipRequest[]> {
+    getPendingRequests(): FriendshipRequest[] {
         return this.friendsManagement.getPendingRequests()
     }
 
-    isUserMyFriend(userId: SocialId): Promise<boolean> {
+    isUserMyFriend(userId: SocialId): boolean {
         return this.friendsManagement.isUserMyFriend(userId)
     }
 

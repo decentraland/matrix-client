@@ -65,7 +65,7 @@ describe('Integration - Session Management Client', () => {
         await client2.setStatus(updateStatus)
 
         // Assert that the status is not reported
-        const status = await client1.getUserStatuses(client2.getUserId())
+        const status = client1.getUserStatuses(client2.getUserId())
         expect(status).to.be.empty
 
         // Make client1 and client2 become friends
@@ -75,7 +75,7 @@ describe('Integration - Session Management Client', () => {
         await sleep('1s')
 
         // Assert that the status is now reported
-        const client2Status = await getCurrentStatus(client1, client2)
+        const client2Status = getCurrentStatus(client1, client2)
         assertCurrentStatusIsTheExpected(client2Status, updateStatus)
     })
 
@@ -90,7 +90,7 @@ describe('Integration - Session Management Client', () => {
         await sleep('1s')
 
         // Assert that the status is set as offline
-        const client2Status = await getCurrentStatus(client1, client2)
+        const client2Status = getCurrentStatus(client1, client2)
         expect(client2Status.presence).to.equal(PresenceType.OFFLINE)
         expect(client2Status.lastActiveAgo).to.be.undefined
         expect(client2Status.realm).to.be.undefined
@@ -112,7 +112,7 @@ describe('Integration - Session Management Client', () => {
         await sleep('1s')
 
         // Assert that the status is correctly reported
-        const client2Status = await getCurrentStatus(client1, client2)
+        const client2Status = getCurrentStatus(client1, client2)
         assertCurrentStatusIsTheExpected(client2Status, updateStatus1)
 
         // Set new status
@@ -123,7 +123,7 @@ describe('Integration - Session Management Client', () => {
         await sleep('1s')
 
         // Assert that the status has changed
-        const newClient2Status = await getCurrentStatus(client1, client2)
+        const newClient2Status = getCurrentStatus(client1, client2)
         assertCurrentStatusIsTheExpected(newClient2Status, updateStatus2)
     })
 
@@ -143,7 +143,7 @@ describe('Integration - Session Management Client', () => {
         await sleep('1s')
 
         // Assert that the status is correctly reported
-        const client2Status = await getCurrentStatus(client1, client2)
+        const client2Status = getCurrentStatus(client1, client2)
         assertCurrentStatusIsTheExpected(client2Status, updateStatus)
 
         // Log out
@@ -153,7 +153,7 @@ describe('Integration - Session Management Client', () => {
         await sleep('1m')
 
         // Assert that the status is set as offline
-        const newClient2Status = await getCurrentStatus(client1, client2)
+        const newClient2Status = getCurrentStatus(client1, client2)
         expect(newClient2Status.presence).to.equal(PresenceType.OFFLINE)
         expect(newClient2Status.position).to.be.undefined
         expect(newClient2Status.realm).to.be.undefined
@@ -192,8 +192,8 @@ describe('Integration - Session Management Client', () => {
     }
 
     /** Get client2's current status, from client1 point of view */
-    async function getCurrentStatus(client1: SocialClient, client2: SocialClient): Promise<CurrentUserStatus> {
-        const statuses = await client1.getUserStatuses(client2.getUserId())
+    function getCurrentStatus(client1: SocialClient, client2: SocialClient): CurrentUserStatus {
+        const statuses = client1.getUserStatuses(client2.getUserId())
         expect(statuses.size).to.equal(1)
         return statuses.get(client2.getUserId())!!
     }

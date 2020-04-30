@@ -4,7 +4,7 @@ import { ConversationCursor } from './ConversationCursor';
 export interface MessagingAPI {
 
     /** Get all conversation the user has joined */
-    getAllCurrentConversations(): Promise<{ conversation: Conversation, unreadMessages: boolean }[]>
+    getAllCurrentConversations(): { conversation: Conversation, unreadMessages: boolean }[]
 
     /**
      * Send a text message  to a conversation.
@@ -22,7 +22,7 @@ export interface MessagingAPI {
      * Return basic information about the last read message. Since we don't mark messages sent by the logged in user as read,
      * we also check against the last sent message.
      */
-    getLastReadMessage(conversationId: ConversationId): Promise<BasicMessageInfo | undefined>;
+    getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined;
 
     /** Returns a cursor located on the given message */
     getCursorOnMessage(conversationId: ConversationId, messageId: MessageId, options?: CursorOptions): Promise<ConversationCursor>;
@@ -40,5 +40,5 @@ export interface MessagingAPI {
     createDirectConversation(userId: SocialId): Promise<Conversation>;
 
     /** Return whether a conversation has unread messages or not */
-    doesConversationHaveUnreadMessages(conversationId: ConversationId): Promise<boolean>;
+    doesConversationHaveUnreadMessages(conversationId: ConversationId): boolean;
 }

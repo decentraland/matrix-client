@@ -1,10 +1,11 @@
 import EthCrypto from 'eth-crypto'
 import { SocialClient } from 'SocialClient'
-import { getDataToLogin } from './Utils'
 import { DockerEnvironment, DockerEnvironmentBuilder } from './containers/commons/DockerEnvironment'
 import { ServiceContainer } from './containers/commons/ServiceContainer'
 import { CatalystContainerBuilder } from './containers/catalyst/CatalystContainerBuilder'
 import { SynapseContainerBuilder } from './containers/synapse/SynapseContainerBuilder'
+import { loginWithIdentity, createUser } from '../utils/Utils'
+import { SocialId } from 'types'
 
 
 /**
@@ -52,10 +53,13 @@ export class TestEnvironment {
     }
 
     async getClientWithIdentity(identity): Promise<SocialClient> {
-        const { ethAddress, timestamp, authChain } = getDataToLogin(Date.now(), identity)
-        const client = await SocialClient.loginToServer(this.synapseContainer.getAddress(), ethAddress, timestamp, authChain)
+        const client = await loginWithIdentity(this.synapseContainer.getAddress(), identity)
         this.clients.push(client)
         return client
+    }
+
+    createUserOnServer(identity): Promise<SocialId> {
+        return createUser(this.synapseContainer.getAddress(), identity)
     }
 
 }
