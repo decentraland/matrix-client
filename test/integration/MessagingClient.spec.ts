@@ -76,7 +76,7 @@ describe('Integration - Messaging Client', () => {
         client2.onMessage(spy2)
 
         // Create a conversation
-        const conversation= await client1.createDirectConversation(client2.getUserId())
+        const conversation = await client1.createDirectConversation(client2.getUserId())
 
         // Wait for sync
         await sleep('1s')
@@ -236,6 +236,36 @@ describe('Integration - Messaging Client', () => {
         // Assert that client2 doesn't have unread messages
         const unreadMessages2 = client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages2).to.be.false
+    })
+
+    // Bug fix
+    it(`When there is a live cursor, messages are only received one`, async () => {
+        const client1 = await testEnv.getRandomClient()
+        const client2 = await testEnv.getRandomClient()
+
+        // Prepare spies
+        const spy = sinon.spy()
+
+        // Set listeners
+        client2.onMessage(spy)
+
+        // Create a conversation
+        const conversation = await client1.createDirectConversation(client2.getUserId())
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Create the cursor
+        await client2.getCursorOnLastMessage(conversation.id)
+
+        // Send message
+        await client1.sendMessageTo(conversation.id, 'Hi there!')
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that the message sent by client 1 was received once
+        assertMessageWasReceivedByEvent(spy, client1, conversation, 'Hi there!')
     })
 
     /** Assert that the message was received, and return the message id */

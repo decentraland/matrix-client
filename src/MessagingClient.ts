@@ -89,8 +89,11 @@ export class MessagingClient implements MessagingAPI {
                 return;
             }
 
-            // ignore anything but real-time updates at the end of the room:
+            // Ignore anything but real-time updates at the end of the room
             if (toStartOfTimeline || !data || !data.liveEvent) return;
+
+            // Just listen to the unfiltered timeline, so we don't raise the same message more than once
+            if (data.timeline.getFilter()) return
 
             const conversation = {
                 type: getConversationTypeFromRoom(this.matrixClient, room),
