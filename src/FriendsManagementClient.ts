@@ -111,7 +111,13 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     }
 
     private listenToEvent(eventToListenTo: FriendshipEvent, listener: (from: SocialId) => void): void {
-        this.matrixClient.on('Room.timeline', (event) => {
+        this.matrixClient.on("Room.timeline", (event, _, toStartOfTimeline, __, data) => {
+            // Ignore anything but real-time updates at the end of the room
+            if (toStartOfTimeline || !data || !data.liveEvent) return;
+
+            // Just listen to the unfiltered timeline, so we don't raise the same event more than once
+            if (data.timeline.getFilter()) return
+
             if (event.getType() === FriendsManagementClient.FRIENDSHIP_EVENT_TYPE && event.getStateKey() === '') {
                 const { type } = event.getContent()
                 if (type === eventToListenTo && event.getSender() !== this.matrixClient.getUserId()) {
