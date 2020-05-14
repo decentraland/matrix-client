@@ -189,11 +189,24 @@ export class MessagingClient implements MessagingAPI {
         return this.doesRoomHaveUnreadMessages(room)
     }
 
+    private async assertThatUsersExist(userIds: SocialId[]): Promise<void> {
+        const unknownUsers = userIds.filter(userId => this.matrixClient.getUser(userId) === null)
+        const existsCheck = await Promise.all(unknownUsers
+            .map<Promise<[string, { results: any[] }]>>(async userId => [userId, await this.matrixClient.searchUserDirectory({ term: userId })]))
+        const doesNotExist: SocialId[] = existsCheck
+            .filter(([, { results }]) => results.length === 0)
+            .map(([userId]) => userId)
+        if (doesNotExist.length > 0) {
+            throw new UnknownUsersError(doesNotExist)
+        }
+    }
+
     /**
      * Find or create a conversation for the given other users. There is no need to include the
      * current user id.
      */
     private async getOrCreateConversation(client: Matrix.MatrixClient, type: ConversationType, userIds: SocialId[], conversationName?: string): Promise<{ conversation: Conversation, created: boolean }> {
+        await this.assertThatUsersExist(userIds)
         const allUsersInConversation = [client.getUserIdLocalpart(), ...userIds]
         const alias = this.buildAliasForConversationWithUsers(allUsersInConversation)
         let roomId: string
@@ -258,9 +271,9 @@ export class MessagingClient implements MessagingAPI {
 
     private toLocalpart(userId: SocialId): MatrixIdLocalpart {
         if (!userId.includes(':')) {
-            return userId
+            return userId.toLowerCase()
         }
-        return userId.split(":")[0].substring(1);
+        return userId.split(":")[0].substring(1).toLowerCase();
     }
 
     private async undefinedIfError<T>(call: () => Promise<T>): Promise<T | undefined>  {
@@ -299,6 +312,18 @@ export class MessagingClient implements MessagingAPI {
         } else {
             return lastMessageEvent.getTs() > lastReadMessage.timestamp
         }
+    }
+
+}
+
+export class UnknownUsersError extends Error {
+
+    constructor(private readonly unknownUsers: SocialId[]) {
+        super(`Some of the given users are not part of the system: '${unknownUsers.join(', ')}'`)
+    }
+
+    getUnknownUsers(): SocialId[] {
+        return this.unknownUsers
     }
 
 }

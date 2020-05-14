@@ -47,6 +47,17 @@ describe('Integration - Messaging Client', () => {
         expect(conversation2).to.deep.equal(commonConversation)
     })
 
+    it(`When a direct conversation is started with a client that doesn't exist, then an exception is thrown`, async () => {
+        const client = await testEnv.getRandomClient()
+        const nonExistentUserId = `@randomuser:${client.getDomain()}`
+
+        // Create a conversation
+        const conversationPromise = client.createDirectConversation(nonExistentUserId)
+
+        // Assert that it failed
+        await expect(conversationPromise).to.be.rejectedWith(`Some of the given users are not part of the system: '${nonExistentUserId}'`)
+    })
+
     it(`When a direct conversation is started again between the same users, then the same conversation is reused`, async () => {
         const client1 = await testEnv.getRandomClient()
         const client2 = await testEnv.getRandomClient()
