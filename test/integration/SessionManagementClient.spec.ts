@@ -59,6 +59,7 @@ describe('Integration - Session Management Client', () => {
     it(`When a user sets a status, then only friends can see it`, async () => {
         const client1 = await testEnv.getRandomClient()
         const client2 = await testEnv.getRandomClient()
+        const client3 = await testEnv.getRandomClient()
 
         // Set a status
         const updateStatus: UpdateUserStatus = { presence: PresenceType.ONLINE, realm: { serverName: 'zeus', layer: 'red' }, position: { x: 1, y: 2 } }
@@ -77,6 +78,11 @@ describe('Integration - Session Management Client', () => {
         // Assert that the status is now reported
         const client2Status = getCurrentStatus(client1, client2)
         assertCurrentStatusIsTheExpected(client2Status, updateStatus)
+
+        // Assert that client3 can't see the status
+        const statuses = client3.getUserStatuses(client2.getUserId())
+        expect(statuses).to.be.empty
+
     })
 
     it(`When no status is actively set, then status is considered offline`, async () => {

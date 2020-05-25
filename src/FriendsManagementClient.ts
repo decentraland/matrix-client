@@ -166,8 +166,8 @@ export class FriendsManagementClient implements FriendsManagementAPI {
                 case FriendshipEvent.ACCEPT:
                     // If the last friendship event is FriendshipEvent.ACCEPT, then we perform an extra check, to verify
                     // that both participants actually agreed to the friendship. The start of a friendship MUST be mutual.
-                    const othersLastFriendshipEvent: Matrix.MatrixEvent | undefined = this.getLastFriendshipEventInRoomByUser(room, room.guessDMUserId())
-                    const myLastFriendshipEvent: Matrix.MatrixEvent | undefined = this.getLastFriendshipEventInRoomByUser(room, this.matrixClient.getUserId())
+                    const othersLastFriendshipEvent: Matrix.MatrixEvent | undefined = sender === room.guessDMUserId() ? event : this.getLastFriendshipEventInRoomByUser(room, room.guessDMUserId())
+                    const myLastFriendshipEvent: Matrix.MatrixEvent | undefined = sender === this.matrixClient.getUserId() ? event : this.getLastFriendshipEventInRoomByUser(room, this.matrixClient.getUserId())
                     if (othersLastFriendshipEvent && myLastFriendshipEvent) {
                         const wasInvited = othersLastFriendshipEvent.getContent().type === FriendshipEvent.REQUEST && myLastFriendshipEvent.getContent().type === FriendshipEvent.ACCEPT
                         const didTheInvite = othersLastFriendshipEvent.getContent().type === FriendshipEvent.ACCEPT && myLastFriendshipEvent.getContent().type === FriendshipEvent.REQUEST
