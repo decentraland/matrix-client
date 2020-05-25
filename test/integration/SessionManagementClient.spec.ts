@@ -69,7 +69,7 @@ describe('Integration - Session Management Client', () => {
         // Wait for sync
         await sleep('1s')
 
-        // Logout both users, and wait for logut
+        // Logout both users, and wait for logout
         await client.logout()
         await oldFriend.logout()
         await sleep('1s')
