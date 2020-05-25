@@ -2,6 +2,7 @@
 import chai from 'chai'
 import sinonChai from 'sinon-chai'
 import sinon from 'sinon'
+import EthCrypto from 'eth-crypto'
 import { SocialClient } from 'SocialClient'
 import { PresenceType, UpdateUserStatus, CurrentUserStatus, SocialId } from 'types'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
@@ -54,6 +55,52 @@ describe('Integration - Session Management Client', () => {
         // Assert that only client 1 received the status event
         expect(spy2).to.not.have.been.called
         assertEventWasReceived(spy1, client3, updateStatus)
+    })
+
+    it(`When a user sets a status, recent and old friends get the event`, async () => {
+        const identity1 = EthCrypto.createIdentity()
+        const identity2 = EthCrypto.createIdentity()
+        let client = await testEnv.getClientWithIdentity(identity1)
+        let oldFriend = await testEnv.getClientWithIdentity(identity2)
+
+        // Make client and oldFriend become friends
+        await becomeFriends(client, oldFriend)
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Logout both users, and wait for logut
+        await client.logout()
+        await oldFriend.logout()
+        await sleep('1s')
+
+        // Log in again, and the new friend also
+        client = await testEnv.getClientWithIdentity(identity1)
+        oldFriend = await testEnv.getClientWithIdentity(identity2)
+        const newFriend = await testEnv.getRandomClient()
+
+        // Make client and newFriend become friends
+        await becomeFriends(client, newFriend)
+
+        // Set listeners
+        const spy1 = sinon.spy()
+        const spy2 = sinon.spy()
+        const spy3 = sinon.spy()
+        client.onStatusChange(spy1)
+        oldFriend.onStatusChange(spy2)
+        newFriend.onStatusChange(spy3)
+
+        // Set a status
+        const updateStatus: UpdateUserStatus = { presence: PresenceType.ONLINE, realm: { serverName: 'zeus', layer: 'red' }, position: { x: 1, y: 2 } }
+        await client.setStatus(updateStatus)
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that both friends got the update
+        expect(spy1).to.not.have.been.called
+        assertEventWasReceived(spy2, client, updateStatus)
+        assertEventWasReceived(spy3, client, updateStatus)
     })
 
     it(`When a user sets a status, then only friends can see it`, async () => {

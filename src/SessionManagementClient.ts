@@ -48,14 +48,28 @@ export class SessionManagementClient implements SessionManagementAPI {
 
     onStatusChange(listener: (userId: SocialId, status: CurrentUserStatus) => void): void {
         const socialClient = this.socialClient
-        this.matrixClient.on("User.lastPresenceTs", async function(_, user: Matrix.User) {
-            if (socialClient.isUserMyFriend(user.userId)) {
-                listener(user.userId, SessionManagementClient.userToStatus(user))
+
+        this.matrixClient.on('event', async (event) =>{
+            const sender = event.getSender()
+            if (event.getType() === 'm.presence' &&
+                sender !== this.getUserId() &&
+                socialClient.isUserMyFriend(sender)) {
+                    listener(sender, SessionManagementClient.eventToStatus(event.getContent()))
             }
         });
     }
 
-    private static userToStatus(user: Matrix.User): CurrentUserStatus {
+    private static eventToStatus(event: Matrix.MatrixEvent): CurrentUserStatus {
+        const content = event
+        const presenceData = {
+            presence: content.presence,
+            lastActiveAgo: content.last_active_ago,
+            presenceStatusMsg: content.status_msg,
+        }
+        return SessionManagementClient.userToStatus(presenceData)
+    }
+
+    private static userToStatus(user: { presence: string, lastActiveAgo: number, presenceStatusMsg: string }): CurrentUserStatus {
         const presence: PresenceType = PresenceType[user.presence.toUpperCase().trim()]
 
         const userStatus: CurrentUserStatus = {
