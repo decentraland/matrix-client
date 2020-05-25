@@ -132,7 +132,7 @@ describe('Integration - Session Management Client', () => {
 
     })
 
-    it(`When no status is actively set, then status is considered offline`, async () => {
+    it(`When no status is actively set, then status is considered online`, async () => {
         const client1 = await testEnv.getRandomClient()
         const client2 = await testEnv.getRandomClient()
 
@@ -142,12 +142,9 @@ describe('Integration - Session Management Client', () => {
         // Wait for sync
         await sleep('1s')
 
-        // Assert that the status is set as offline
+        // Assert that the status is set as online
         const client2Status = getCurrentStatus(client1, client2)
-        expect(client2Status.presence).to.equal(PresenceType.OFFLINE)
-        expect(client2Status.lastActiveAgo).to.be.undefined
-        expect(client2Status.realm).to.be.undefined
-        expect(client2Status.position).to.be.undefined
+        expect(client2Status.presence).to.equal(PresenceType.ONLINE)
     })
 
     it(`When status is changed, then change is also detected`, async () => {
@@ -169,7 +166,7 @@ describe('Integration - Session Management Client', () => {
         assertCurrentStatusIsTheExpected(client2Status, updateStatus1)
 
         // Set new status
-        const updateStatus2: UpdateUserStatus = { presence: PresenceType.UNAVAILABLE, realm: { serverName: 'hades', layer: 'blue' }, position: { x: 3, y: 4 } }
+        const updateStatus2: UpdateUserStatus = { presence: PresenceType.ONLINE, realm: { serverName: 'hades', layer: 'blue' }, position: { x: 3, y: 4 } }
         await client2.setStatus(updateStatus2)
 
         // Wait for sync
