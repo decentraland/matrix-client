@@ -31,7 +31,7 @@ export class MessagingClient implements MessagingAPI {
         // Listen to when the sync is finishes, and join all rooms I was invited to
         matrixClient.once('sync', async (state) => {
             if (state === 'PREPARED') {
-                const rooms = this.matrixClient.getVisibleRooms()
+                const rooms = this.getAllRooms()
                 const join: Promise<void>[] = rooms
                     .filter(room => room.getMyMembership() === 'invite') // Consider rooms that I have been invited to
                     .map(room => {
@@ -45,7 +45,7 @@ export class MessagingClient implements MessagingAPI {
 
     /** Get all conversation the user has joined */
     getAllCurrentConversations(): { conversation: Conversation, unreadMessages: boolean }[] {
-        const rooms = this.matrixClient.getVisibleRooms()
+        const rooms = this.getAllRooms()
         return rooms
             .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
             .map(room => ({
@@ -246,7 +246,7 @@ export class MessagingClient implements MessagingAPI {
     }
 
     private findRoomByAliasLocally(alias: string): Matrix.Room | undefined {
-        return this.matrixClient.getVisibleRooms()
+        return this.getAllRooms()
             .filter(room => room.getCanonicalAlias() === alias)[0]
     }
 
@@ -282,6 +282,11 @@ export class MessagingClient implements MessagingAPI {
         } catch (error) {
             return undefined
         }
+    }
+
+    private getAllRooms() {
+        return this.matrixClient.getVisibleRooms()
+            .filter(room => !room.tags.hasOwnProperty('m.server_notice'))
     }
 
     private async addDirectRoomToUser(userId: SocialId, roomId: string): Promise<void> {
