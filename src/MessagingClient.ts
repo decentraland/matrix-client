@@ -192,7 +192,7 @@ export class MessagingClient implements MessagingAPI {
     private async assertThatUsersExist(userIds: SocialId[]): Promise<void> {
         const unknownUsers = userIds.filter(userId => this.matrixClient.getUser(userId) === null)
         const existsCheck = await Promise.all(unknownUsers
-            .map<Promise<[string, { results: any[] }]>>(async userId => [userId, await this.matrixClient.searchUserDirectory({ term: userId })]))
+            .map<Promise<[string, { results: any[] }]>>(async userId => [userId, await this.matrixClient.searchUserDirectory({ term: this.toLocalpart(userId) })]))
         const doesNotExist: SocialId[] = existsCheck
             .filter(([, { results }]) => results.length === 0)
             .map(([userId]) => userId)
