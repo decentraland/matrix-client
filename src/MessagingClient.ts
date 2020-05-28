@@ -6,6 +6,7 @@ import { MessagingAPI } from './MessagingAPI';
 
 export class MessagingClient implements MessagingAPI {
 
+    private static readonly ROOM_CRYPTO_CONFIG = { algorithm: 'm.megolm.v1.aes-sha2' };
     private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()
 
     constructor(private readonly matrixClient: Matrix.MatrixClient) {
@@ -81,23 +82,42 @@ export class MessagingClient implements MessagingAPI {
      * Listen to new messages
      */
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void {
-        this.matrixClient.on("Room.timeline", (event, room, toStartOfTimeline, _, data) => {
+        // this.matrixClient.on("Room.timeline", (event, room, toStartOfTimeline, _, data) => {
 
+        //     if (event.getType() !== "m.room.message" || // Make sure that it is in fact a message
+        //         event.getContent().msgtype !== MessageType.TEXT || // Make sure that the message is of type text
+        //         event.getSender() === this.matrixClient.getUserId()) {  // Don't raise an event if I was the sender
+        //         return;
+        //     }
+
+        //     // Ignore anything but real-time updates at the end of the room
+        //     if (toStartOfTimeline || !data || !data.liveEvent) return;
+
+        //     // Just listen to the unfiltered timeline, so we don't raise the same message more than once
+        //     if (data.timeline.getFilter()) return
+
+        //     const conversation = {
+        //         type: getConversationTypeFromRoom(this.matrixClient, room),
+        //         id: room.roomId
+        //     }
+
+        //     const message: TextMessage = buildTextMessage(event, MessageStatus.UNREAD)
+
+        //     listener(conversation, message)
+        // });
+
+        this.matrixClient.on('Event.decrypted', (event) => {
+            console.log('DECRYPTED', JSON.stringify(event.getContent()))
+            console.log('DECRYPTED', event.getSender(), this.matrixClient.getUserId())
             if (event.getType() !== "m.room.message" || // Make sure that it is in fact a message
                 event.getContent().msgtype !== MessageType.TEXT || // Make sure that the message is of type text
                 event.getSender() === this.matrixClient.getUserId()) {  // Don't raise an event if I was the sender
                 return;
             }
-
-            // Ignore anything but real-time updates at the end of the room
-            if (toStartOfTimeline || !data || !data.liveEvent) return;
-
-            // Just listen to the unfiltered timeline, so we don't raise the same message more than once
-            if (data.timeline.getFilter()) return
-
+            const room = this.matrixClient.getRoom(event.getRoomId())
             const conversation = {
                 type: getConversationTypeFromRoom(this.matrixClient, room),
-                id: room.roomId
+                id: event.getRoomId()
             }
 
             const message: TextMessage = buildTextMessage(event, MessageStatus.UNREAD)
@@ -233,6 +253,9 @@ export class MessagingClient implements MessagingAPI {
                 })
                 roomId = creationResult.room_id
                 created = true
+
+                await this.matrixClient.sendStateEvent(roomId, 'm.room.encryption', MessagingClient.ROOM_CRYPTO_CONFIG)
+                await this.matrixClient.setRoomEncryption(roomId, MessagingClient.ROOM_CRYPTO_CONFIG)
             }
         }
 
@@ -257,6 +280,7 @@ export class MessagingClient implements MessagingAPI {
             await this.addDirectRoomToUser(event.getSender(), member.roomId)
         }
         await this.matrixClient.joinRoom(member.roomId)
+        await this.matrixClient.setRoomEncryption(member.roomId, MessagingClient.ROOM_CRYPTO_CONFIG)
     }
 
     private buildAliasForConversationWithUsers(userIds: (SocialId | MatrixIdLocalpart)[]): string {

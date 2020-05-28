@@ -65,6 +65,9 @@ describe('Integration - Messaging Client', () => {
         // Create a conversation
         const commonConversation = await client1.createDirectConversation(client2.getUserId())
 
+        // Wait for sync
+        await sleep('1s')
+
         // Try to create the conversation again
         const newConversation1 = await client1.createDirectConversation(client2.getUserId())
         const newConversation2 = await client2.createDirectConversation(client1.getUserId())

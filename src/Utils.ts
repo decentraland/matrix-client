@@ -1,16 +1,20 @@
 import Matrix from 'matrix-js-sdk';
+import { LocalStorageCryptoStore } from "matrix-js-sdk/lib/crypto/store/localStorage-crypto-store";
 import { EthAddress, AuthChain } from 'dcl-crypto';
 import { ConversationType, MessageStatus, TextMessage, SocialId, BasicMessageInfo, Timestamp } from './types';
 
-export async function login(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<Matrix.MatrixClient> {
+export async function login(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain, storage?: Storage): Promise<Matrix.MatrixClient> {
+    if (!storage) {
+        throw new Error('You must set a storage for e2e encryption to work.')
+    }
+
     // Create the client
-    const matrixClient: Matrix.MatrixClient = Matrix.createClient({
+    const loginClient: Matrix.MatrixClient = Matrix.createClient({
         baseUrl: synapseUrl,
-        timelineSupport: true,
     })
 
     // Actual login
-    await matrixClient.login('m.login.decentraland', {
+    const { user_id, access_token, device_id } = await loginClient.login('m.login.decentraland', {
         identifier: {
             type: 'm.id.user',
             user: ethAddress.toLowerCase(),
@@ -19,7 +23,19 @@ export async function login(synapseUrl: string, ethAddress: EthAddress, timestam
         auth_chain: authChain
     });
 
-    return matrixClient
+    // New full client
+    const fullClient = Matrix.createClient({
+        baseUrl: synapseUrl,
+        timelineSupport: true,
+        sessionStore: new Matrix.WebStorageSessionStore(storage),
+        cryptoStore: new LocalStorageCryptoStore(storage),
+        userId: user_id,
+        deviceId: device_id,
+        accessToken: access_token,
+        // store: new matrix.MatrixInMemoryStore({ localStorage }),
+    })
+
+    return fullClient
 }
 
 export function findEventInRoom(client: Matrix.MatrixClient, roomId: string, eventId: string): Event | undefined {

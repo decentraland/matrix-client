@@ -4,6 +4,7 @@ import { Authenticator, AuthChain } from 'dcl-crypto'
 import { SocialClient } from 'SocialClient';
 import { login } from 'Utils';
 import { SocialId } from 'types';
+import { localStorageMock } from './MockedLocalStorage';
 
 export function sleep(time: string): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms(time)));
@@ -18,13 +19,13 @@ export function getDataToLogin(timestamp: number = Date.now(), identity = EthCry
 
 export async function loginWithIdentity(serverUrl: string, identity) {
     const { ethAddress, timestamp, authChain } = getDataToLogin(Date.now(), identity)
-    const client = await SocialClient.loginToServer(serverUrl, ethAddress, timestamp, authChain)
+    const client = await SocialClient.loginToServer(serverUrl, ethAddress, timestamp, authChain, localStorageMock())
     return client
 }
 
 export async function createUser(serverUrl: string, identity): Promise<SocialId> {
     const { ethAddress, timestamp, authChain } = getDataToLogin(Date.now(), identity)
-    const matrixClient = await login(serverUrl, ethAddress, timestamp, authChain)
+    const matrixClient = await login(serverUrl, ethAddress, timestamp, authChain, localStorageMock())
     const userId = matrixClient.getUserId()
     await matrixClient.logout()
     return userId
