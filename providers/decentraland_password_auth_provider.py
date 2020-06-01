@@ -49,10 +49,10 @@ class DecentralandPasswordAuthProvider:
             logger.debug("Username '%s' could not log in, since the required fields were not provided", username)
             return None
 
-        # Validate that the timestamp is recent (max diff is 20 seconds)
+        # Validate that the timestamp is recent (max diff is 1 minute)
         utc_timestamp = datetime.utcfromtimestamp(float(login_dict['timestamp']) / 1000.)
         diff = datetime.utcnow() - utc_timestamp
-        delta = timedelta(seconds = 20)
+        delta = timedelta(minutes = 1)
         if diff > delta:
             logger.debug("Username '%s' could not log in, since timestamp was too old", username)
             return None
