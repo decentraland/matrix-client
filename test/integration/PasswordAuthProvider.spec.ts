@@ -65,7 +65,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         // Attempt to login
         const now = Date.now()
         const { ethAddress, authChain } = getLoginData(now)
-        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, now - ms('1m'), authChain)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, now - ms('2m'), authChain)
 
         await expect(loginResult).to.be.rejected
     })
@@ -77,7 +77,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         // Attempt to login
         const now = Date.now()
         const { ethAddress, authChain } = getLoginData(now)
-        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, now + ms('2m'), authChain)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, now + ms('3m'), authChain)
 
         await expect(loginResult).to.be.rejected
     })
