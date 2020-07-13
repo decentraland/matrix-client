@@ -1,11 +1,16 @@
 import Matrix from 'matrix-js-sdk';
+import { MatrixClient } from 'matrix-js-sdk/lib/client'
+import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
+import { Room } from 'matrix-js-sdk/lib/models/room'
+import { Filter } from 'matrix-js-sdk/lib/filter'
 import { EthAddress, AuthChain } from 'dcl-crypto';
 import { ConversationType, MessageStatus, TextMessage, SocialId, BasicMessageInfo, Timestamp } from './types';
 
-export async function login(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<Matrix.MatrixClient> {
+export async function login(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<MatrixClient> {
     // Create the client
-    const matrixClient: Matrix.MatrixClient = Matrix.createClient({
+    const matrixClient: MatrixClient = Matrix.createClient({
         baseUrl: synapseUrl,
+        //@ts-ignore
         timelineSupport: true,
     })
 
@@ -22,13 +27,13 @@ export async function login(synapseUrl: string, ethAddress: EthAddress, timestam
     return matrixClient
 }
 
-export function findEventInRoom(client: Matrix.MatrixClient, roomId: string, eventId: string): Event | undefined {
+export function findEventInRoom(client: MatrixClient, roomId: string, eventId: string): Event | undefined {
     const room = client.getRoom(roomId)
     const timelineSet = room.getUnfilteredTimelineSet()
     return timelineSet.findEventById(eventId)
 }
 
-export function buildTextMessage(event: Matrix.Event, status: MessageStatus): TextMessage {
+export function buildTextMessage(event: MatrixEvent, status: MessageStatus): TextMessage {
     return {
         text: event.getContent().body,
         timestamp: event.getTs(),
@@ -38,7 +43,7 @@ export function buildTextMessage(event: Matrix.Event, status: MessageStatus): Te
     }
 }
 
-export function getConversationTypeFromRoom(client: Matrix.MatrixClient, room: Matrix.Room): ConversationType {
+export function getConversationTypeFromRoom(client: MatrixClient, room: Room): ConversationType {
     if (room.getInvitedAndJoinedMemberCount() === 2 ) {
         const membersWhoAreNotMe = room.currentState.getMembers().filter(member => member.userId !== client.getUserId());
         const otherMember = membersWhoAreNotMe[0].userId
@@ -52,7 +57,7 @@ export function getConversationTypeFromRoom(client: Matrix.MatrixClient, room: M
     return ConversationType.GROUP
 }
 
-export function getOnlyMessagesTimelineSetFromRoom(client: Matrix.MatrixClient, room, limit?: number) {
+export function getOnlyMessagesTimelineSetFromRoom(client: MatrixClient, room, limit?: number) {
     const filter = GET_ONLY_MESSAGES_FILTER(client.getUserId(), limit)
     return room.getOrCreateFilteredTimelineSet(filter)
 }
@@ -62,12 +67,12 @@ export function getOnlyMessagesSentByMeTimelineSetFromRoom(client, room) {
     return room.getOrCreateFilteredTimelineSet(filter)
 }
 
-export function matrixEventToBasicEventInfo(event: Matrix.MatrixEvent): BasicMessageInfo {
+export function matrixEventToBasicEventInfo(event: MatrixEvent): BasicMessageInfo {
     return { id: event.getId(), timestamp: event.getTs() }
 }
 
 /** Build a filter that only keeps messages in a room */
-const GET_ONLY_MESSAGES_FILTER = (userId: SocialId, limit?: number) => Matrix.Filter.fromJson(userId, 'ONLY_MESSAGES_FILTER',
+const GET_ONLY_MESSAGES_FILTER = (userId: SocialId, limit?: number) => Filter.fromJson(userId, 'ONLY_MESSAGES_FILTER',
 {
     room: {
         timeline: {
@@ -79,7 +84,7 @@ const GET_ONLY_MESSAGES_FILTER = (userId: SocialId, limit?: number) => Matrix.Fi
     },
 })
 
-const GET_ONLY_MESSAGES_SENT_BY_ME_FILTER = (userId: SocialId, limit?: number) => Matrix.Filter.fromJson(userId, 'ONLY_MESSAGES_SENT_BY_ME_FILTER',
+const GET_ONLY_MESSAGES_SENT_BY_ME_FILTER = (userId: SocialId, limit?: number) => Filter.fromJson(userId, 'ONLY_MESSAGES_SENT_BY_ME_FILTER',
 {
     room: {
         timeline: {
