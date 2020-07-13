@@ -1,4 +1,6 @@
-import Matrix from 'matrix-js-sdk';
+import { MatrixClient } from 'matrix-js-sdk/lib/client'
+import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
+import { Room } from 'matrix-js-sdk/lib/models/room'
 import { Conversation, ConversationType, SocialId, TextMessage, MessageType, MessageStatus, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
 import { findEventInRoom, buildTextMessage, getOnlyMessagesTimelineSetFromRoom, getOnlyMessagesSentByMeTimelineSetFromRoom, matrixEventToBasicEventInfo, getConversationTypeFromRoom } from './Utils';
 import { ConversationCursor } from './ConversationCursor';
@@ -8,7 +10,7 @@ export class MessagingClient implements MessagingAPI {
 
     private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()
 
-    constructor(private readonly matrixClient: Matrix.MatrixClient) {
+    constructor(private readonly matrixClient: MatrixClient) {
         // Listen to events, and store the last message I send
         matrixClient.on("Room.timeline", (event, room) => {
             if (event.getType() === "m.room.message" &&
@@ -72,7 +74,7 @@ export class MessagingClient implements MessagingAPI {
         if (!event) {
             // If I couldn't find it locally, then fetch it from the server
             const eventRaw = await this.matrixClient.fetchRoomEvent(conversationId, messageId)
-            event = new Matrix.MatrixEvent(eventRaw)
+            event = new MatrixEvent(eventRaw)
         }
         return this.matrixClient.sendReadReceipt(event)
     }
@@ -114,7 +116,7 @@ export class MessagingClient implements MessagingAPI {
         // Fetch last message marked as read
         const room = this.matrixClient.getRoom(conversationId)
         const lastReadEventId: string | null = room.getEventReadUpTo(this.matrixClient.getUserId(), false)
-        const lastReadMatrixEvent: Matrix.Event | undefined = lastReadEventId ? findEventInRoom(this.matrixClient, conversationId, lastReadEventId) : undefined
+        const lastReadMatrixEvent: Event | undefined = lastReadEventId ? findEventInRoom(this.matrixClient, conversationId, lastReadEventId) : undefined
         const lastReadEvent: BasicMessageInfo | undefined = lastReadMatrixEvent ? matrixEventToBasicEventInfo(lastReadMatrixEvent) : undefined
 
         // Fetch last message sent by me
@@ -205,14 +207,14 @@ export class MessagingClient implements MessagingAPI {
      * Find or create a conversation for the given other users. There is no need to include the
      * current user id.
      */
-    private async getOrCreateConversation(client: Matrix.MatrixClient, type: ConversationType, userIds: SocialId[], conversationName?: string): Promise<{ conversation: Conversation, created: boolean }> {
+    private async getOrCreateConversation(client: MatrixClient, type: ConversationType, userIds: SocialId[], conversationName?: string): Promise<{ conversation: Conversation, created: boolean }> {
         await this.assertThatUsersExist(userIds)
         const allUsersInConversation = [client.getUserIdLocalpart(), ...userIds]
         const alias = this.buildAliasForConversationWithUsers(allUsersInConversation)
         let roomId: string
         let created: boolean
         // First, try to find the alias locally
-        const room: Matrix.Room | undefined = this.findRoomByAliasLocally(`#${alias}:${client.getDomain()}`)
+        const room: Room | undefined = this.findRoomByAliasLocally(`#${alias}:${client.getDomain()}`)
         if (room) {
             roomId = room.roomId
             created = false
@@ -245,7 +247,7 @@ export class MessagingClient implements MessagingAPI {
         }
     }
 
-    private findRoomByAliasLocally(alias: string): Matrix.Room | undefined {
+    private findRoomByAliasLocally(alias: string): Room | undefined {
         return this.getAllRooms()
             .filter(room => room.getCanonicalAlias() === alias)[0]
     }

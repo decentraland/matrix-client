@@ -1,4 +1,4 @@
-import Matrix from 'matrix-js-sdk';
+import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { AuthChain, EthAddress } from 'dcl-crypto'
 import { Timestamp, Conversation, SocialId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo, FriendshipRequest, CurrentUserStatus, UpdateUserStatus } from './types';
 import { ConversationCursor } from './ConversationCursor';
@@ -17,7 +17,7 @@ export class SocialClient implements SocialAPI {
     private readonly messaging: MessagingAPI;
     private readonly friendsManagement: FriendsManagementAPI;
 
-    private constructor(matrixClient: Matrix.MatrixClient) {
+    private constructor(matrixClient: MatrixClient) {
         this.sessionManagement = new SessionManagementClient(matrixClient, this)
         this.messaging = new MessagingClient(matrixClient)
         this.friendsManagement = new FriendsManagementClient(matrixClient, this)

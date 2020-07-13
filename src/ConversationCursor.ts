@@ -1,4 +1,6 @@
-import Matrix from "matrix-js-sdk";
+import { MatrixClient } from 'matrix-js-sdk/lib/client'
+import { TimelineWindow}  from 'matrix-js-sdk/lib/timeline-window'
+import { EventTimeline } from 'matrix-js-sdk/lib/models/event-timeline'
 import { buildTextMessage, getOnlyMessagesTimelineSetFromRoom } from "./Utils";
 import { TextMessage, Timestamp, MessageStatus, CursorOptions, CursorDirection, BasicMessageInfo } from "./types";
 
@@ -13,7 +15,7 @@ export class ConversationCursor {
 
     private constructor(
         private readonly roomId: string,
-        private readonly window: Matrix.TimelineWindow,
+        private readonly window: TimelineWindow,
         private readonly lastReadMessageTimestampFetch: (roomId: string) => BasicMessageInfo | undefined) { }
 
     getMessages(): TextMessage[] {
@@ -25,7 +27,7 @@ export class ConversationCursor {
     }
 
     canExtendInDirection(direction: CursorDirection): boolean {
-        const newDirection = direction === CursorDirection.BACKWARDS ? Matrix.EventTimeline.BACKWARDS : Matrix.EventTimeline.FORWARDS;
+        const newDirection = direction === CursorDirection.BACKWARDS ? EventTimeline.BACKWARDS : EventTimeline.FORWARDS;
         return this.window.canPaginate(newDirection)
     }
 
@@ -35,7 +37,7 @@ export class ConversationCursor {
      * Returns true if more messages were actually added to the cursor.
      */
     moveInDirection(direction: CursorDirection, size: number): Promise<boolean> {
-        const newDirection = direction === CursorDirection.BACKWARDS ? Matrix.EventTimeline.BACKWARDS : Matrix.EventTimeline.FORWARDS;
+        const newDirection = direction === CursorDirection.BACKWARDS ? EventTimeline.BACKWARDS : EventTimeline.FORWARDS;
         return this.window.paginate(newDirection, size)
     }
 
@@ -47,7 +49,7 @@ export class ConversationCursor {
         this.window.unpaginate(numberOfEvents, oldestMessages)
     }
 
-    static async build(client: Matrix.MatrixClient,
+    static async build(client: MatrixClient,
         roomId: string,
         initialEventId: string | undefined | null, // If no eventId is set, then we will start at the last message
         lastReadMessageTimestampFetch: (roomId: string) => BasicMessageInfo | undefined,
@@ -56,20 +58,20 @@ export class ConversationCursor {
             const initialSize = options?.initialSize ?? this.DEFAULT_INITIAL_SIZE
             const room = client.getRoom(roomId)
             const timelineSet = getOnlyMessagesTimelineSetFromRoom(client, room, limit)
-            const window = new Matrix.TimelineWindow(client, timelineSet, { windowLimit: limit })
+            const window = new TimelineWindow(client, timelineSet, { windowLimit: limit })
             await window.load(initialEventId, initialSize)
 
             // It could happen that the initial size of the window isn't respected. That's why we will try to fix it
             let windowSize = window.getEvents().length
             let gotResults = true
             while (windowSize < initialSize && gotResults) {
-                gotResults = await window.paginate(Matrix.EventTimeline.BACKWARDS, initialSize - windowSize)
+                gotResults = await window.paginate(EventTimeline.BACKWARDS, initialSize - windowSize)
                 windowSize = window.getEvents().length
             }
 
             gotResults = true
             while (windowSize < initialSize && gotResults) {
-                gotResults = await window.paginate(Matrix.EventTimeline.FORWARDS, initialSize - windowSize)
+                gotResults = await window.paginate(EventTimeline.FORWARDS, initialSize - windowSize)
                 windowSize = window.getEvents().length
             }
 

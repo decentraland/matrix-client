@@ -1,4 +1,5 @@
-import Matrix from 'matrix-js-sdk';
+import { MatrixClient } from 'matrix-js-sdk/lib/client'
+import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { SocialId, ConversationType, FriendshipRequest } from './types';
 import { FriendsManagementAPI } from './FriendsManagementAPI';
 import { getConversationTypeFromRoom } from './Utils';
@@ -16,7 +17,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     private static readonly PENDING_STATUSES = [FriendshipStatus.REQUEST_SENT_TO_ME_PENDING, FriendshipStatus.REQUEST_SENT_BY_ME_PENDING]
     private static readonly FRIENDSHIP_EVENT_TYPE = 'org.decentraland.friendship'
 
-    constructor(private readonly matrixClient: Matrix.MatrixClient,
+    constructor(private readonly matrixClient: MatrixClient,
         private readonly socialClient: SocialClient) { }
 
     getAllFriends(): SocialId[] {
@@ -152,7 +153,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     }
 
     private getFriendshipStatusInRoom(room): FriendshipStatus {
-        const event: Matrix.MatrixEvent | null = this.getLastFriendshipEventInRoom(room)
+        const event: MatrixEvent | null = this.getLastFriendshipEventInRoom(room)
         if (event) {
             const sender = event.getSender()
             const { type }: { type: FriendshipEvent } = event.getContent()
@@ -166,8 +167,8 @@ export class FriendsManagementClient implements FriendsManagementAPI {
                 case FriendshipEvent.ACCEPT:
                     // If the last friendship event is FriendshipEvent.ACCEPT, then we perform an extra check, to verify
                     // that both participants actually agreed to the friendship. The start of a friendship MUST be mutual.
-                    const othersLastFriendshipEvent: Matrix.MatrixEvent | undefined = sender === room.guessDMUserId() ? event : this.getLastFriendshipEventInRoomByUser(room, room.guessDMUserId())
-                    const myLastFriendshipEvent: Matrix.MatrixEvent | undefined = sender === this.matrixClient.getUserId() ? event : this.getLastFriendshipEventInRoomByUser(room, this.matrixClient.getUserId())
+                    const othersLastFriendshipEvent: MatrixEvent | undefined = sender === room.guessDMUserId() ? event : this.getLastFriendshipEventInRoomByUser(room, room.guessDMUserId())
+                    const myLastFriendshipEvent: MatrixEvent | undefined = sender === this.matrixClient.getUserId() ? event : this.getLastFriendshipEventInRoomByUser(room, this.matrixClient.getUserId())
                     if (othersLastFriendshipEvent && myLastFriendshipEvent) {
                         const wasInvited = othersLastFriendshipEvent.getContent().type === FriendshipEvent.REQUEST && myLastFriendshipEvent.getContent().type === FriendshipEvent.ACCEPT
                         const didTheInvite = othersLastFriendshipEvent.getContent().type === FriendshipEvent.ACCEPT && myLastFriendshipEvent.getContent().type === FriendshipEvent.REQUEST
@@ -186,8 +187,8 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return FriendshipStatus.NOT_FRIENDS
     }
 
-    private getLastFriendshipEventInRoomByUser(room, userId: SocialId): Matrix.MatrixEvent | undefined {
-        const lastFriendshipEvent: Matrix.MatrixEvent | null = this.getLastFriendshipEventInRoom(room, userId)
+    private getLastFriendshipEventInRoomByUser(room, userId: SocialId): MatrixEvent | undefined {
+        const lastFriendshipEvent: MatrixEvent | null = this.getLastFriendshipEventInRoom(room, userId)
         // Make sure that the sender was the actual user
         if (lastFriendshipEvent && lastFriendshipEvent.getSender() === userId) {
             return lastFriendshipEvent
@@ -195,7 +196,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return undefined
     }
 
-    private getLastFriendshipEventInRoom(room, key = ''): Matrix.MatrixEvent | null {
+    private getLastFriendshipEventInRoom(room, key = ''): MatrixEvent | null {
         return room.currentState.getStateEvents(FriendsManagementClient.FRIENDSHIP_EVENT_TYPE, key)
     }
 
