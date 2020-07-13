@@ -1,14 +1,18 @@
-import Matrix from 'matrix-js-sdk';
+import { MatrixClient } from 'matrix-js-sdk/lib/client'
+import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
+import { Room } from 'matrix-js-sdk/lib/models/room'
 import { Conversation, ConversationType, SocialId, TextMessage, MessageType, MessageStatus, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
 import { findEventInRoom, buildTextMessage, getOnlyMessagesTimelineSetFromRoom, getOnlyMessagesSentByMeTimelineSetFromRoom, matrixEventToBasicEventInfo, getConversationTypeFromRoom } from './Utils';
 import { ConversationCursor } from './ConversationCursor';
 import { MessagingAPI } from './MessagingAPI';
+import { cryptoOn } from 'SocialClient';
 
 export class MessagingClient implements MessagingAPI {
 
+    private static readonly ROOM_CRYPTO_CONFIG = { algorithm: 'm.megolm.v1.aes-sha2' };
     private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()
 
-    constructor(private readonly matrixClient: Matrix.MatrixClient) {
+    constructor(private readonly matrixClient: MatrixClient) {
         // Listen to events, and store the last message I send
         matrixClient.on("Room.timeline", (event, room) => {
             if (event.getType() === "m.room.message" &&
@@ -72,7 +76,7 @@ export class MessagingClient implements MessagingAPI {
         if (!event) {
             // If I couldn't find it locally, then fetch it from the server
             const eventRaw = await this.matrixClient.fetchRoomEvent(conversationId, messageId)
-            event = new Matrix.MatrixEvent(eventRaw)
+            event = new MatrixEvent(eventRaw)
         }
         return this.matrixClient.sendReadReceipt(event)
     }
@@ -81,23 +85,16 @@ export class MessagingClient implements MessagingAPI {
      * Listen to new messages
      */
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void {
-        this.matrixClient.on("Room.timeline", (event, room, toStartOfTimeline, _, data) => {
-
+        this.matrixClient.on('Event.decrypted', (event) => {
             if (event.getType() !== "m.room.message" || // Make sure that it is in fact a message
                 event.getContent().msgtype !== MessageType.TEXT || // Make sure that the message is of type text
                 event.getSender() === this.matrixClient.getUserId()) {  // Don't raise an event if I was the sender
                 return;
             }
-
-            // Ignore anything but real-time updates at the end of the room
-            if (toStartOfTimeline || !data || !data.liveEvent) return;
-
-            // Just listen to the unfiltered timeline, so we don't raise the same message more than once
-            if (data.timeline.getFilter()) return
-
+            const room = this.matrixClient.getRoom(event.getRoomId())
             const conversation = {
                 type: getConversationTypeFromRoom(this.matrixClient, room),
-                id: room.roomId
+                id: event.getRoomId()
             }
 
             const message: TextMessage = buildTextMessage(event, MessageStatus.UNREAD)
@@ -114,7 +111,7 @@ export class MessagingClient implements MessagingAPI {
         // Fetch last message marked as read
         const room = this.matrixClient.getRoom(conversationId)
         const lastReadEventId: string | null = room.getEventReadUpTo(this.matrixClient.getUserId(), false)
-        const lastReadMatrixEvent: Matrix.Event | undefined = lastReadEventId ? findEventInRoom(this.matrixClient, conversationId, lastReadEventId) : undefined
+        const lastReadMatrixEvent: MatrixEvent | undefined = lastReadEventId ? findEventInRoom(this.matrixClient, conversationId, lastReadEventId) : undefined
         const lastReadEvent: BasicMessageInfo | undefined = lastReadMatrixEvent ? matrixEventToBasicEventInfo(lastReadMatrixEvent) : undefined
 
         // Fetch last message sent by me
@@ -205,14 +202,14 @@ export class MessagingClient implements MessagingAPI {
      * Find or create a conversation for the given other users. There is no need to include the
      * current user id.
      */
-    private async getOrCreateConversation(client: Matrix.MatrixClient, type: ConversationType, userIds: SocialId[], conversationName?: string): Promise<{ conversation: Conversation, created: boolean }> {
+    private async getOrCreateConversation(client: MatrixClient, type: ConversationType, userIds: SocialId[], conversationName?: string): Promise<{ conversation: Conversation, created: boolean }> {
         await this.assertThatUsersExist(userIds)
         const allUsersInConversation = [client.getUserIdLocalpart(), ...userIds]
         const alias = this.buildAliasForConversationWithUsers(allUsersInConversation)
         let roomId: string
         let created: boolean
         // First, try to find the alias locally
-        const room: Matrix.Room | undefined = this.findRoomByAliasLocally(`#${alias}:${client.getDomain()}`)
+        const room = this.findRoomByAliasLocally(`#${alias}:${client.getDomain()}`)
         if (room) {
             roomId = room.roomId
             created = false
@@ -233,6 +230,11 @@ export class MessagingClient implements MessagingAPI {
                 })
                 roomId = creationResult.room_id
                 created = true
+
+                if (cryptoOn) {
+                    await this.matrixClient.sendStateEvent(roomId, 'm.room.encryption', MessagingClient.ROOM_CRYPTO_CONFIG)
+                    await this.matrixClient.setRoomEncryption(roomId, MessagingClient.ROOM_CRYPTO_CONFIG)
+                }
             }
         }
 
@@ -245,7 +247,7 @@ export class MessagingClient implements MessagingAPI {
         }
     }
 
-    private findRoomByAliasLocally(alias: string): Matrix.Room | undefined {
+    private findRoomByAliasLocally(alias: string): Room | undefined {
         return this.getAllRooms()
             .filter(room => room.getCanonicalAlias() === alias)[0]
     }
@@ -257,6 +259,9 @@ export class MessagingClient implements MessagingAPI {
             await this.addDirectRoomToUser(event.getSender(), member.roomId)
         }
         await this.matrixClient.joinRoom(member.roomId)
+        if (cryptoOn) {
+            await this.matrixClient.setRoomEncryption(member.roomId, MessagingClient.ROOM_CRYPTO_CONFIG)
+        }
     }
 
     private buildAliasForConversationWithUsers(userIds: (SocialId | MatrixIdLocalpart)[]): string {

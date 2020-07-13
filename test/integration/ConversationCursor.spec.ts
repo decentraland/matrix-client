@@ -72,7 +72,7 @@ describe('Integration - Conversation cursor', () => {
         expect(cursor.canExtendInDirection(CursorDirection.BACKWARDS)).to.be.true
     })
 
-    it(`When using a cursor on the last message, the reported messages are the expected`, async () => {
+    it.only(`When using a cursor on the last message, the reported messages are the expected`, async () => {
         const sender = await testEnv.getRandomClient()
         const receiver = await testEnv.getRandomClient()
 

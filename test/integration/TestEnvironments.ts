@@ -26,7 +26,6 @@ export class TestEnvironment {
             .build()
         this.catalystContainer = await new CatalystContainerBuilder()
             .withDockerEnvironment(this.dockerEnv)
-            .withVersion('a7bc7a8eef9e42c0f3a2cc1dcf0101d71d780f55') // We can remove this line when this commit is included in 'latest'
             .start()
         this.synapseContainer = await new SynapseContainerBuilder()
             .withDockerEnvironment(this.dockerEnv)
