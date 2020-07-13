@@ -1,6 +1,6 @@
 //@ts-ignore
 global.Olm = require('olm');
-import Matrix from 'matrix-js-sdk';
+import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { AuthChain, EthAddress } from 'dcl-crypto'
 import { Timestamp, Conversation, SocialId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo, FriendshipRequest, CurrentUserStatus, UpdateUserStatus } from './types';
 import { ConversationCursor } from './ConversationCursor';
@@ -13,13 +13,15 @@ import { FriendsManagementClient } from './FriendsManagementClient';
 import { SocialAPI } from './SocialAPI';
 import { login } from './Utils';
 
+export const cryptoOn = true
+
 export class SocialClient implements SocialAPI {
 
     private readonly sessionManagement: SessionManagementAPI;
     private readonly messaging: MessagingAPI;
     private readonly friendsManagement: FriendsManagementAPI;
 
-    private constructor(matrixClient: Matrix.MatrixClient) {
+    private constructor(matrixClient: MatrixClient) {
         this.sessionManagement = new SessionManagementClient(matrixClient, this)
         this.messaging = new MessagingClient(matrixClient)
         this.friendsManagement = new FriendsManagementClient(matrixClient, this)
@@ -43,12 +45,13 @@ export class SocialClient implements SocialAPI {
         // Create the client before starting the matrix client, so our event hooks can detect all events during the initial sync
         const socialClient = new SocialClient(matrixClient)
 
-        // Start e2e encryption
-        await matrixClient.initCrypto()
+        if (cryptoOn) {
+            // Start e2e encryption
+            await matrixClient.initCrypto()
 
-        // Don't fail with unknown devices
-        matrixClient.setGlobalErrorOnUnknownDevices(false)
-
+            // Don't fail with unknown devices
+            matrixClient.setGlobalErrorOnUnknownDevices(false)
+        }
         // Start the client
         await matrixClient.startClient({
             pendingEventOrdering: 'detached', // Necessary for the SDK to work

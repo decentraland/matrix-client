@@ -1,4 +1,5 @@
-import Matrix from 'matrix-js-sdk';
+import { MatrixClient } from 'matrix-js-sdk/lib/client'
+import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { SocialId, PresenceType, CurrentUserStatus, UpdateUserStatus } from './types';
 import { SessionManagementAPI } from './SessionManagementAPI';
 import { SocialClient } from './SocialClient';
@@ -7,7 +8,7 @@ export class SessionManagementClient implements SessionManagementAPI {
 
     private loggedIn: boolean = true
 
-    constructor(private readonly matrixClient: Matrix.MatrixClient,
+    constructor(private readonly matrixClient: MatrixClient,
         private readonly socialClient: SocialClient) { }
 
     isLoggedIn(): boolean {
@@ -59,7 +60,7 @@ export class SessionManagementClient implements SessionManagementAPI {
         });
     }
 
-    private static eventToStatus(event: Matrix.MatrixEvent): CurrentUserStatus {
+    private static eventToStatus(event: MatrixEvent): CurrentUserStatus {
         const content = event
         const presenceData = {
             presence: content.presence,

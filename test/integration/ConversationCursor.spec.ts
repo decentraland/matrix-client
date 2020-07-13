@@ -7,7 +7,7 @@ import { sleep } from '../utils/Utils'
 
 const expect = chai.expect
 
-describe.only('Integration - Conversation cursor', () => {
+describe('Integration - Conversation cursor', () => {
 
     const testEnv: TestEnvironment = loadTestEnvironment()
 
