@@ -73,7 +73,7 @@
     "nested-property": "^2.0.0",
     "nyc": "^14.1.1",
     "prettier": "^1.10.2",
-    "semantic-release": "^15.9.16",
+    "semantic-release": "^17.2.3",
     "sinon": "^9.0.2",
     "sinon-chai": "^3.5.0",
     "testcontainers": "^2.7.0",
