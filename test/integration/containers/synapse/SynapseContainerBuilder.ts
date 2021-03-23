@@ -24,9 +24,7 @@ export class SynapseContainerBuilder extends ServiceContainerBuilder<SynapseCont
 
     async specificConfiguration(container: GenericContainer) {
         // Create mount dir, or empty it if it already exists
-        if (fs.existsSync(SynapseContainerBuilder.MOUNT_DIR)) {
-            fs.emptyDirSync(SynapseContainerBuilder.MOUNT_DIR)
-        } else {
+        if (!fs.existsSync(SynapseContainerBuilder.MOUNT_DIR)) {
             fs.mkdirSync(SynapseContainerBuilder.MOUNT_DIR)
         }
 
