@@ -12,6 +12,7 @@ export async function login(synapseUrl: string, ethAddress: EthAddress, timestam
         baseUrl: synapseUrl,
         //@ts-ignore
         timelineSupport: true,
+        useAuthorizationHeader: true,
     })
 
     // Actual login
