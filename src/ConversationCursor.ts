@@ -51,7 +51,7 @@ export class ConversationCursor {
 
     static async build(client: MatrixClient,
         roomId: string,
-        initialEventId: string | undefined | null, // If no eventId is set, then we will start at the last message
+        initialEventId: string | undefined, // If no eventId is set, then we will start at the last message
         lastReadMessageTimestampFetch: (roomId: string) => BasicMessageInfo | undefined,
         options?: CursorOptions) {
             const limit = ConversationCursor.calculateLimit(options)

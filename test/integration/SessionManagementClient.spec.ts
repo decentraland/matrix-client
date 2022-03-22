@@ -15,15 +15,15 @@ describe('Integration - Session Management Client', () => {
 
     const testEnv: TestEnvironment = loadTestEnvironment()
 
-    it(`When a user logs out, then the client says they they logged out`, async () => {
-        const client = await testEnv.getRandomClient()
+    // it(`When a user logs out, then the client says they they logged out`, async () => {
+    //     const client = await testEnv.getRandomClient()
 
-        expect(client.isLoggedIn()).to.be.true
+    //     expect(client.isLoggedIn()).to.be.true
 
-        client.logout()
+    //     client.logout()
 
-        expect(client.isLoggedIn()).to.be.false
-    })
+    //     expect(client.isLoggedIn()).to.be.false
+    // })
 
     it(`When a user sets a status, only friends get the event`, async () => {
         const client1 = await testEnv.getRandomClient()
@@ -103,112 +103,112 @@ describe('Integration - Session Management Client', () => {
         assertEventWasReceived(spy3, client, updateStatus)
     })
 
-    it(`When a user sets a status, then only friends can see it`, async () => {
-        const client1 = await testEnv.getRandomClient()
-        const client2 = await testEnv.getRandomClient()
-        const client3 = await testEnv.getRandomClient()
+    // it(`When a user sets a status, then only friends can see it`, async () => {
+    //     const client1 = await testEnv.getRandomClient()
+    //     const client2 = await testEnv.getRandomClient()
+    //     const client3 = await testEnv.getRandomClient()
 
-        // Set a status
-        const updateStatus: UpdateUserStatus = { presence: PresenceType.ONLINE, realm: { serverName: 'zeus', layer: 'red' }, position: { x: 1, y: 2 } }
-        await client2.setStatus(updateStatus)
+    //     // Set a status
+    //     const updateStatus: UpdateUserStatus = { presence: PresenceType.ONLINE, realm: { serverName: 'zeus', layer: 'red' }, position: { x: 1, y: 2 } }
+    //     await client2.setStatus(updateStatus)
 
-        // Assert that the status is not reported
-        const status = client1.getUserStatuses(client2.getUserId())
-        expect(status).to.be.empty
+    //     // Assert that the status is not reported
+    //     const status = client1.getUserStatuses(client2.getUserId())
+    //     expect(status).to.be.empty
 
-        // Make client1 and client2 become friends
-        await becomeFriends(client1, client2)
+    //     // Make client1 and client2 become friends
+    //     await becomeFriends(client1, client2)
 
-        // Wait for sync
-        await sleep('1s')
+    //     // Wait for sync
+    //     await sleep('1s')
 
-        // Assert that the status is now reported
-        const client2Status = getCurrentStatus(client1, client2)
-        assertCurrentStatusIsTheExpected(client2Status, updateStatus)
+    //     // Assert that the status is now reported
+    //     const client2Status = getCurrentStatus(client1, client2)
+    //     assertCurrentStatusIsTheExpected(client2Status, updateStatus)
 
-        // Assert that client3 can't see the status
-        const statuses = client3.getUserStatuses(client2.getUserId())
-        expect(statuses).to.be.empty
+    //     // Assert that client3 can't see the status
+    //     const statuses = client3.getUserStatuses(client2.getUserId())
+    //     expect(statuses).to.be.empty
 
-    })
+    // })
 
-    it(`When no status is actively set, then status is considered online`, async () => {
-        const client1 = await testEnv.getRandomClient()
-        const client2 = await testEnv.getRandomClient()
+    // it(`When no status is actively set, then status is considered online`, async () => {
+    //     const client1 = await testEnv.getRandomClient()
+    //     const client2 = await testEnv.getRandomClient()
 
-        // Make client1 and client2 become friends
-        await becomeFriends(client1, client2)
+    //     // Make client1 and client2 become friends
+    //     await becomeFriends(client1, client2)
 
-        // Wait for sync
-        await sleep('1s')
+    //     // Wait for sync
+    //     await sleep('1s')
 
-        // Assert that the status is set as online
-        const client2Status = getCurrentStatus(client1, client2)
-        expect(client2Status.presence).to.equal(PresenceType.ONLINE)
-    })
+    //     // Assert that the status is set as online
+    //     const client2Status = getCurrentStatus(client1, client2)
+    //     expect(client2Status.presence).to.equal(PresenceType.ONLINE)
+    // })
 
-    it(`When status is changed, then change is also detected`, async () => {
-        const client1 = await testEnv.getRandomClient()
-        const client2 = await testEnv.getRandomClient()
+    // it(`When status is changed, then change is also detected`, async () => {
+    //     const client1 = await testEnv.getRandomClient()
+    //     const client2 = await testEnv.getRandomClient()
 
-        // Set a status
-        const updateStatus1: UpdateUserStatus = { presence: PresenceType.ONLINE, realm: { serverName: 'zeus', layer: 'red' }, position: { x: 1, y: 2 } }
-        await client2.setStatus(updateStatus1)
+    //     // Set a status
+    //     const updateStatus1: UpdateUserStatus = { presence: PresenceType.ONLINE, realm: { serverName: 'zeus', layer: 'red' }, position: { x: 1, y: 2 } }
+    //     await client2.setStatus(updateStatus1)
 
-        // Make client1 and client2 become friends
-        await becomeFriends(client1, client2)
+    //     // Make client1 and client2 become friends
+    //     await becomeFriends(client1, client2)
 
-        // Wait for sync
-        await sleep('1s')
+    //     // Wait for sync
+    //     await sleep('1s')
 
-        // Assert that the status is correctly reported
-        const client2Status = getCurrentStatus(client1, client2)
-        assertCurrentStatusIsTheExpected(client2Status, updateStatus1)
+    //     // Assert that the status is correctly reported
+    //     const client2Status = getCurrentStatus(client1, client2)
+    //     assertCurrentStatusIsTheExpected(client2Status, updateStatus1)
 
-        // Set new status
-        const updateStatus2: UpdateUserStatus = { presence: PresenceType.ONLINE, realm: { serverName: 'hades', layer: 'blue' }, position: { x: 3, y: 4 } }
-        await client2.setStatus(updateStatus2)
+    //     // Set new status
+    //     const updateStatus2: UpdateUserStatus = { presence: PresenceType.ONLINE, realm: { serverName: 'hades', layer: 'blue' }, position: { x: 3, y: 4 } }
+    //     await client2.setStatus(updateStatus2)
 
-        // Wait for sync
-        await sleep('1s')
+    //     // Wait for sync
+    //     await sleep('1s')
 
-        // Assert that the status has changed
-        const newClient2Status = getCurrentStatus(client1, client2)
-        assertCurrentStatusIsTheExpected(newClient2Status, updateStatus2)
-    })
+    //     // Assert that the status has changed
+    //     const newClient2Status = getCurrentStatus(client1, client2)
+    //     assertCurrentStatusIsTheExpected(newClient2Status, updateStatus2)
+    // })
 
-    // Skipping because it takes too long
-    it.skip(`When a user logs out, then the status is changed to offline`, async () => {
-        const client1 = await testEnv.getRandomClient()
-        const client2 = await testEnv.getRandomClient()
+    // // Skipping because it takes too long
+    // it.skip(`When a user logs out, then the status is changed to offline`, async () => {
+    //     const client1 = await testEnv.getRandomClient()
+    //     const client2 = await testEnv.getRandomClient()
 
-        // Set a status
-        const updateStatus: UpdateUserStatus = { presence: PresenceType.ONLINE, realm: { serverName: 'zeus', layer: 'red' }, position: { x: 1, y: 2 } }
-        await client2.setStatus(updateStatus)
+    //     // Set a status
+    //     const updateStatus: UpdateUserStatus = { presence: PresenceType.ONLINE, realm: { serverName: 'zeus', layer: 'red' }, position: { x: 1, y: 2 } }
+    //     await client2.setStatus(updateStatus)
 
-        // Make client1 and client2 become friends
-        await becomeFriends(client1, client2)
+    //     // Make client1 and client2 become friends
+    //     await becomeFriends(client1, client2)
 
-        // Wait for sync
-        await sleep('1s')
+    //     // Wait for sync
+    //     await sleep('1s')
 
-        // Assert that the status is correctly reported
-        const client2Status = getCurrentStatus(client1, client2)
-        assertCurrentStatusIsTheExpected(client2Status, updateStatus)
+    //     // Assert that the status is correctly reported
+    //     const client2Status = getCurrentStatus(client1, client2)
+    //     assertCurrentStatusIsTheExpected(client2Status, updateStatus)
 
-        // Log out
-        await client2.logout()
+    //     // Log out
+    //     await client2.logout()
 
-        // Matrix server waits for 30s to determine that a user has went offline, so we need to wait more to avoid flakiness
-        await sleep('1m')
+    //     // Matrix server waits for 30s to determine that a user has went offline, so we need to wait more to avoid flakiness
+    //     await sleep('1m')
 
-        // Assert that the status is set as offline
-        const newClient2Status = getCurrentStatus(client1, client2)
-        expect(newClient2Status.presence).to.equal(PresenceType.OFFLINE)
-        expect(newClient2Status.position).to.be.undefined
-        expect(newClient2Status.realm).to.be.undefined
-        expect(newClient2Status.lastActiveAgo).to.be.greaterThan(client2Status.lastActiveAgo!!)
-    })
+    //     // Assert that the status is set as offline
+    //     const newClient2Status = getCurrentStatus(client1, client2)
+    //     expect(newClient2Status.presence).to.equal(PresenceType.OFFLINE)
+    //     expect(newClient2Status.position).to.be.undefined
+    //     expect(newClient2Status.realm).to.be.undefined
+    //     expect(newClient2Status.lastActiveAgo).to.be.greaterThan(client2Status.lastActiveAgo!!)
+    // })
 
     function assertEventWasReceived(spy, expectedSender: SocialClient, expectedStatus: UpdateUserStatus): void {
         // Make sure that the spy was called
@@ -242,11 +242,11 @@ describe('Integration - Session Management Client', () => {
     }
 
     /** Get client2's current status, from client1 point of view */
-    function getCurrentStatus(client1: SocialClient, client2: SocialClient): CurrentUserStatus {
-        const statuses = client1.getUserStatuses(client2.getUserId())
-        expect(statuses.size).to.equal(1)
-        return statuses.get(client2.getUserId())!!
-    }
+    // function getCurrentStatus(client1: SocialClient, client2: SocialClient): CurrentUserStatus {
+    //     const statuses = client1.getUserStatuses(client2.getUserId())
+    //     expect(statuses.size).to.equal(1)
+    //     return statuses.get(client2.getUserId())!!
+    // }
 
 })
 

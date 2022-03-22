@@ -9,7 +9,7 @@
     "build": "tsc --project tsconfig-build.json",
     "prewatch": "rm -rf dist",
     "watch": "tsc --watch --project tsconfig-build.json",
-    "test": "nyc mocha -r ts-node/register -r tsconfig-paths/register --exit \"test/**/*.spec.ts\"",
+    "test": "nyc mocha -r ts-node/register -r tsconfig-paths/register --exit \"test/**/SessionManagementClient.spec.ts\"",
     "prepare-performance-test": "node -r ts-node/register -r tsconfig-paths/register test/performance/set-up-performance-test.ts",
     "semantic-release": "semantic-release",
     "commit-msg": "validate-commit-msg"
@@ -43,9 +43,10 @@
   "homepage": "https://github.com/decentraland/matrix-client#readme",
   "dependencies": {
     "@dcl/crypto": "^3.0.1",
-    "@types/matrix-js-sdk": "^5.1.2",
+    "@types/matrix-js-sdk": "11.0.1",
     "@types/node": "^13.11.1",
-    "matrix-js-sdk": "^7.1.0"
+    "matrix-js-sdk": "16.0.0",
+    "node-localstorage": "^2.2.1"
   },
   "devDependencies": {
     "@types/chai": "^4.2.8",

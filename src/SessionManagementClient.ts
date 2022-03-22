@@ -1,8 +1,8 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
-import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { SocialId, PresenceType, CurrentUserStatus, UpdateUserStatus } from './types';
 import { SessionManagementAPI } from './SessionManagementAPI';
 import { SocialClient } from './SocialClient';
+import { User, UserEvent } from 'matrix-js-sdk';
 
 export class SessionManagementClient implements SessionManagementAPI {
 
@@ -50,22 +50,28 @@ export class SessionManagementClient implements SessionManagementAPI {
     onStatusChange(listener: (userId: SocialId, status: CurrentUserStatus) => void): void {
         const socialClient = this.socialClient
 
-        this.matrixClient.on('event', async (event) =>{
+        this.matrixClient.on(UserEvent.Presence, async (event, user) =>{
+            if (!event) return
+            console.log("------------------- USER EVENT: PRESENCE BEGIN ------------------------")
+
+
             const sender = event.getSender()
-            if (event.getType() === 'm.presence' &&
-                sender !== this.getUserId() &&
+            console.log(`Sender: ${sender} - My user ID: ${this.getUserId()} - are we friends?: ${socialClient.isUserMyFriend(sender)}`)
+            if (sender !== this.getUserId() &&
                 socialClient.isUserMyFriend(sender)) {
-                    listener(sender, SessionManagementClient.eventToStatus(event.getContent()))
+                    console.log('entro')
+                    listener(sender, SessionManagementClient.eventToStatus(user))
             }
+            console.log("------------------- USER EVENT: PRESENCE FIN ------------------------")
         });
     }
 
-    private static eventToStatus(event: MatrixEvent): CurrentUserStatus {
-        const content = event
+    private static eventToStatus(user: User): CurrentUserStatus {
+
         const presenceData = {
-            presence: content.presence,
-            lastActiveAgo: content.last_active_ago,
-            presenceStatusMsg: content.status_msg,
+            presence: user.presence,
+            lastActiveAgo: user.lastActiveAgo,
+            presenceStatusMsg: user.presenceStatusMsg,
         }
         return SessionManagementClient.userToStatus(presenceData)
     }
