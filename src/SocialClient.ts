@@ -27,7 +27,7 @@ export class SocialClient implements SocialAPI {
         this.friendsManagement = new FriendsManagementClient(matrixClient, this)
     }
 
-    static async loginToServer(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain, options: Partial<ClientLoginOptions> | undefined): Promise<SocialClient> {
+    static async loginToServer(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain, options?: Partial<ClientLoginOptions> | undefined): Promise<SocialClient> {
         // Destructure options
         const { disablePresence }: ClientLoginOptions  = { disablePresence: false, ...options };
 
