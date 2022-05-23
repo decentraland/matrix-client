@@ -13,6 +13,7 @@ import { login } from './Utils';
 
 type ClientLoginOptions  = {
     disablePresence: boolean;
+    initialSyncLimit: number;
 }
 
 export class SocialClient implements SocialAPI {
@@ -29,7 +30,7 @@ export class SocialClient implements SocialAPI {
 
     static async loginToServer(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain, options?: Partial<ClientLoginOptions> | undefined): Promise<SocialClient> {
         // Destructure options
-        const { disablePresence }: ClientLoginOptions  = { disablePresence: false, ...options };
+        const _options: ClientLoginOptions  = { disablePresence: false, ...options };
 
         // Login
         const matrixClient = await login(synapseUrl, ethAddress, timestamp, authChain)
@@ -51,8 +52,8 @@ export class SocialClient implements SocialAPI {
         // Start the client
         await matrixClient.startClient({
             pendingEventOrdering: 'detached', // Necessary for the SDK to work
-            disablePresence,
             initialSyncLimit: 20, // This is the value that the Matrix React SDK uses
+            ..._options,
         });
 
         // Wait for initial sync
