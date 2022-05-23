@@ -12,7 +12,7 @@ import { SocialAPI } from './SocialAPI';
 import { login } from './Utils';
 
 type ClientLoginOptions  = {
-    disablePresence: boolean | undefined;
+    disablePresence: boolean;
 }
 
 export class SocialClient implements SocialAPI {
@@ -29,7 +29,7 @@ export class SocialClient implements SocialAPI {
 
     static async loginToServer(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain, options: Partial<ClientLoginOptions> | undefined): Promise<SocialClient> {
         // Destructure options
-        const { disablePresence }  = options || { disablePresence: false };
+        const { disablePresence }: ClientLoginOptions  = { disablePresence: false, ...options };
 
         // Login
         const matrixClient = await login(synapseUrl, ethAddress, timestamp, authChain)
