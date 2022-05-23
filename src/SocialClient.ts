@@ -11,6 +11,10 @@ import { FriendsManagementClient } from './FriendsManagementClient';
 import { SocialAPI } from './SocialAPI';
 import { login } from './Utils';
 
+type ClientLoginOptions  = {
+    disablePresence: boolean | undefined;
+}
+
 export class SocialClient implements SocialAPI {
 
     private readonly sessionManagement: SessionManagementAPI;
@@ -23,7 +27,10 @@ export class SocialClient implements SocialAPI {
         this.friendsManagement = new FriendsManagementClient(matrixClient, this)
     }
 
-    static async loginToServer(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<SocialClient> {
+    static async loginToServer(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain, options: Partial<ClientLoginOptions> | undefined): Promise<SocialClient> {
+        // Destructure options
+        const { disablePresence }  = options || { disablePresence: false };
+
         // Login
         const matrixClient = await login(synapseUrl, ethAddress, timestamp, authChain)
 
@@ -44,6 +51,7 @@ export class SocialClient implements SocialAPI {
         // Start the client
         await matrixClient.startClient({
             pendingEventOrdering: 'detached', // Necessary for the SDK to work
+            disablePresence,
             initialSyncLimit: 20, // This is the value that the Matrix React SDK uses
         });
 
