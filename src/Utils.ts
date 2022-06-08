@@ -3,7 +3,7 @@ import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { Room } from 'matrix-js-sdk/lib/models/room'
 import { Filter } from 'matrix-js-sdk/lib/filter'
-import { EthAddress, AuthChain } from 'dcl-crypto';
+import { EthAddress, AuthChain } from '@dcl/crypto';
 import { ConversationType, MessageStatus, TextMessage, SocialId, BasicMessageInfo, Timestamp } from './types';
 
 export async function login(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<MatrixClient> {

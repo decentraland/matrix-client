@@ -1,5 +1,5 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
-import { AuthChain, EthAddress } from 'dcl-crypto'
+import { AuthChain, EthAddress } from '@dcl/crypto'
 import { Timestamp, Conversation, SocialId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo, FriendshipRequest, CurrentUserStatus, UpdateUserStatus } from './types';
 import { ConversationCursor } from './ConversationCursor';
 import { MessagingAPI } from './MessagingAPI';
