@@ -45,7 +45,7 @@ export class SynapseContainerBuilder extends ServiceContainerBuilder<SynapseCont
             .withExposedPorts(DEFAULT_PORT)
             .withBindMount(SynapseContainerBuilder.MOUNT_DIR, "/data", "rw")
             .withWaitStrategy(Wait.forLogMessage('SynapseSite starting'))
-            .withName('synapse-test');
+            .withName('synapse');
     }
 
     protected getExposedPort(): number | undefined {
