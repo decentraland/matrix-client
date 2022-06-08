@@ -1,6 +1,6 @@
 import ms from 'ms'
 import EthCrypto from 'eth-crypto'
-import { Authenticator, AuthChain } from 'dcl-crypto'
+import { Authenticator, AuthChain } from '@dcl/crypto'
 import { SocialClient } from 'SocialClient';
 import { login } from 'Utils';
 import { SocialId } from 'types';
