@@ -11,25 +11,6 @@ export class MessagingClient implements MessagingAPI {
     private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()
 
     constructor(private readonly matrixClient: MatrixClient) {
-        // Listen to events, and store the last message I send
-        matrixClient.on("Room.timeline", (event, room) => {
-            if (event.getType() === "m.room.message" &&
-                event.getContent().msgtype === MessageType.TEXT &&
-                event.getSender() === this.matrixClient.getUserId()) {
-                    const currentLastSentMessage = this.lastSentMessage.get(room.roomId)
-                    if (!currentLastSentMessage || currentLastSentMessage.timestamp < event.getTs()) {
-                        this.lastSentMessage.set(room.roomId, matrixEventToBasicEventInfo(event))
-                    }
-            }
-        });
-
-        // Listen to invitations and accept them automatically
-        matrixClient.on("RoomMember.membership", async (_, member) => {
-            if (member.membership === "invite" && member.userId === this.matrixClient.getUserId()) {
-                await this.joinRoom(member)
-            }
-        });
-
         // Listen to when the sync is finishes, and join all rooms I was invited to
         matrixClient.once('sync', async (state) => {
             if (state === 'PREPARED') {
@@ -41,6 +22,27 @@ export class MessagingClient implements MessagingAPI {
                         return this.joinRoom(member)
                     })
                 await Promise.all(join)
+            }
+        });
+    }
+
+    listenToEvents(): void {
+        // Listen to events, and store the last message I send
+        this.matrixClient.on("Room.timeline", (event, room) => {
+            if (event.getType() === "m.room.message" &&
+                event.getContent().msgtype === MessageType.TEXT &&
+                event.getSender() === this.matrixClient.getUserId()) {
+                const currentLastSentMessage = this.lastSentMessage.get(room.roomId)
+                if (!currentLastSentMessage || currentLastSentMessage.timestamp < event.getTs()) {
+                    this.lastSentMessage.set(room.roomId, matrixEventToBasicEventInfo(event))
+                }
+            }
+        });
+
+        // Listen to invitations and accept them automatically
+        this.matrixClient.on("RoomMember.membership", async (_, member) => {
+            if (member.membership === "invite" && member.userId === this.matrixClient.getUserId()) {
+                await this.joinRoom(member)
             }
         });
     }
@@ -278,7 +280,7 @@ export class MessagingClient implements MessagingAPI {
         return userId.split(":")[0].substring(1).toLowerCase();
     }
 
-    private async undefinedIfError<T>(call: () => Promise<T>): Promise<T | undefined>  {
+    private async undefinedIfError<T>(call: () => Promise<T>): Promise<T | undefined> {
         try {
             return await call()
         } catch (error) {
@@ -295,7 +297,7 @@ export class MessagingClient implements MessagingAPI {
         // The documentation specifies that we should store a map from user to direct rooms in the 'm.direct' event
         // However, we only support having one direct room to each user, so the list will only have one element
         const mDirectEvent = this.matrixClient.getAccountData('m.direct')
-        const directRoomMap = mDirectEvent ? mDirectEvent.getContent() : { }
+        const directRoomMap = mDirectEvent ? mDirectEvent.getContent() : {}
         directRoomMap[userId] = [roomId]
         await this.matrixClient.setAccountData('m.direct', directRoomMap)
     }

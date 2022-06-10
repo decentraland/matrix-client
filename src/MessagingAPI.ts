@@ -3,6 +3,9 @@ import { ConversationCursor } from './ConversationCursor';
 
 export interface MessagingAPI {
 
+    /** Start listening to events */
+    listenToEvents(): void;
+
     /** Get all conversation the user has joined */
     getAllCurrentConversations(): { conversation: Conversation, unreadMessages: boolean }[]
 
