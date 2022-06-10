@@ -11,7 +11,7 @@ import { FriendsManagementClient } from './FriendsManagementClient';
 import { SocialAPI } from './SocialAPI';
 import { login } from './Utils';
 
-type ClientLoginOptions  = {
+type ClientLoginOptions = {
     pendingEventOrdering: string;
     disablePresence: boolean;
     initialSyncLimit: number;
@@ -29,9 +29,13 @@ export class SocialClient implements SocialAPI {
         this.friendsManagement = new FriendsManagementClient(matrixClient, this)
     }
 
+    listenToEvents(): void {
+        this.messaging.listenToEvents()
+    }
+
     static async loginToServer(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain, options?: Partial<ClientLoginOptions> | undefined): Promise<SocialClient> {
         // Destructure options
-        const _options: ClientLoginOptions  = {
+        const _options: ClientLoginOptions = {
             pendingEventOrdering: 'detached', // Necessary for the SDK to work
             initialSyncLimit: 20, // This is the value that the Matrix React SDK uses
             disablePresence: false,
@@ -60,6 +64,9 @@ export class SocialClient implements SocialAPI {
 
         // Wait for initial sync
         await waitForInitialSync
+
+        // Starting listening to new events after initial sync
+        socialClient.listenToEvents()
 
         return socialClient
     }
@@ -96,7 +103,7 @@ export class SocialClient implements SocialAPI {
 
     //////             MESSAGING             //////
     getAllCurrentConversations(): { conversation: Conversation, unreadMessages: boolean }[] {
-       return this.messaging.getAllCurrentConversations()
+        return this.messaging.getAllCurrentConversations()
     }
 
     sendMessageTo(conversationId: ConversationId, message: string): Promise<MessageId> {
