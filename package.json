@@ -45,7 +45,7 @@
     "@dcl/crypto": "^3.0.1",
     "@types/matrix-js-sdk": "^5.1.2",
     "@types/node": "^13.11.1",
-    "matrix-js-sdk": "^7.1.0"
+    "matrix-js-sdk": "^12.4.1"
   },
   "devDependencies": {
     "@types/chai": "^4.2.8",
