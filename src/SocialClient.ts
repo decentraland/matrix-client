@@ -10,10 +10,10 @@ import { FriendsManagementAPI } from './FriendsManagementAPI';
 import { FriendsManagementClient } from './FriendsManagementClient';
 import { SocialAPI } from './SocialAPI';
 import { login } from './Utils';
-import { ClientEvent } from 'matrix-js-sdk';
+import { ClientEvent, PendingEventOrdering } from 'matrix-js-sdk';
 
 type ClientLoginOptions = {
-    pendingEventOrdering: string;
+    pendingEventOrdering: PendingEventOrdering;
     disablePresence: boolean;
     initialSyncLimit: number;
 }
@@ -37,7 +37,7 @@ export class SocialClient implements SocialAPI {
     static async loginToServer(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain, options?: Partial<ClientLoginOptions> | undefined): Promise<SocialClient> {
         // Destructure options
         const _options: ClientLoginOptions = {
-            pendingEventOrdering: 'detached', // Necessary for the SDK to work
+            pendingEventOrdering: PendingEventOrdering.Detached,
             initialSyncLimit: 20, // This is the value that the Matrix React SDK uses
             disablePresence: false,
             ...options
@@ -50,7 +50,7 @@ export class SocialClient implements SocialAPI {
         const waitForInitialSync = new Promise<void>((resolve, reject) => {
             matrixClient.once(ClientEvent.Sync, async (state) => {
                 if (state === 'PREPARED') {
-                    resolve(null)
+                    resolve(void 0)
                 } else {
                     reject()
                 }

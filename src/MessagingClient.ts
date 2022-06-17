@@ -28,8 +28,9 @@ export class MessagingClient implements MessagingAPI {
     }
 
     listenToEvents(): void {
+
         // Listen to events, and store the last message I send
-        this.matrixClient.on("Room.timeline", (event, room) => {
+        this.matrixClient.on(RoomEvent.Timeline, (event, room) => {
             if (event.getType() === "m.room.message" &&
                 event.getContent().msgtype === MessageType.TEXT &&
                 event.getSender() === this.matrixClient.getUserId()) {
@@ -41,7 +42,7 @@ export class MessagingClient implements MessagingAPI {
         });
 
         // Listen to invitations and accept them automatically
-        this.matrixClient.on("RoomMember.membership", async (_, member) => {
+        this.matrixClient.on(RoomMemberEvent.Membership, async (_, member) => {
             if (member.membership === "invite" && member.userId === this.matrixClient.getUserId()) {
                 await this.joinRoom(member)
             }
