@@ -66,11 +66,15 @@ export class MessagingClient implements MessagingAPI {
         const rooms: Array<any>= this.getAllRooms()
         return rooms
             .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
-            .map(room => ({
-                id: room.roomId,
-                type: getConversationTypeFromRoom(this.matrixClient, room),
-                unreadMessages: this.getRoomUnreadMessages(room)
-            }))
+            .map(room => {
+                const otherId = room.guessDMUserId()
+                return {
+                    id: room.roomId,
+                    type: getConversationTypeFromRoom(this.matrixClient, room),
+                    unreadMessages: this.getRoomUnreadMessages(room),
+                    userIds: [this.matrixClient.getUserId(), otherId]
+                }
+            })
             .filter(conv => conv.unreadMessages.length > 0)
     }
 
