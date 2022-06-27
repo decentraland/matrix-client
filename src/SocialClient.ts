@@ -106,6 +106,10 @@ export class SocialClient implements SocialAPI {
         return this.messaging.getAllCurrentConversations()
     }
 
+    getAllConversationsWithUnreadMessages(): Conversation[] {
+        return this.messaging.getAllConversationsWithUnreadMessages()
+    }
+
     sendMessageTo(conversationId: ConversationId, message: string): Promise<MessageId> {
         return this.messaging.sendMessageTo(conversationId, message)
     }

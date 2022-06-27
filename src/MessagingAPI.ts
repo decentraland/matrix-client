@@ -9,6 +9,9 @@ export interface MessagingAPI {
     /** Get all conversation the user has joined */
     getAllCurrentConversations(): { conversation: Conversation, unreadMessages: boolean }[]
 
+    /** Get all conversation the user has with unread messages */
+    getAllConversationsWithUnreadMessages(): Conversation[]
+
     /**
      * Send a text message  to a conversation.
      * Returns the message id

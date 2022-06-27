@@ -71,6 +71,7 @@ export class MessagingClient implements MessagingAPI {
                 type: getConversationTypeFromRoom(this.matrixClient, room),
                 unreadMessages: this.getRoomUnreadMessages(room)
             }))
+            .filter(conv => conv.unreadMessages.length > 0)
     }
 
     /**
