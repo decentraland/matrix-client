@@ -160,6 +160,8 @@ describe('Integration - Messaging Client', () => {
         // Assert that client2 has unread messages
         const unreadMessages1 = client2.doesConversationHaveUnreadMessages(conversationId)
         expect(unreadMessages1).to.be.true
+        const unreadMessages = client2.getConversationUnreadMessages(conversationId)
+        expect(unreadMessages).length.to.be.greaterThan(0)
 
         // Mark message as read
         await client2.markAsRead(conversationId, messageId)

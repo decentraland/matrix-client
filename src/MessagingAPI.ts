@@ -44,4 +44,7 @@ export interface MessagingAPI {
 
     /** Return whether a conversation has unread messages or not */
     doesConversationHaveUnreadMessages(conversationId: ConversationId): boolean;
+    
+    /** Return a conversation unread messages */
+    getConversationUnreadMessages(conversationId: ConversationId): BasicMessageInfo[];
 }

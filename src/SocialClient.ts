@@ -142,6 +142,10 @@ export class SocialClient implements SocialAPI {
         return this.messaging.doesConversationHaveUnreadMessages(conversationId)
     }
 
+    getConversationUnreadMessages(conversationId: ConversationId): Array<BasicMessageInfo> {
+        return this.messaging.getConversationUnreadMessages(conversationId)
+    }
+
     //////        FRIENDS MANAGEMENT         //////
     getAllFriends(): SocialId[] {
         return this.friendsManagement.getAllFriends()
