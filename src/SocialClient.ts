@@ -106,6 +106,10 @@ export class SocialClient implements SocialAPI {
         return this.messaging.getAllCurrentConversations()
     }
 
+    getAllConversationsWithUnreadMessages(): Conversation[] {
+        return this.messaging.getAllConversationsWithUnreadMessages()
+    }
+
     sendMessageTo(conversationId: ConversationId, message: string): Promise<MessageId> {
         return this.messaging.sendMessageTo(conversationId, message)
     }
@@ -140,6 +144,10 @@ export class SocialClient implements SocialAPI {
 
     doesConversationHaveUnreadMessages(conversationId: ConversationId): boolean {
         return this.messaging.doesConversationHaveUnreadMessages(conversationId)
+    }
+
+    getConversationUnreadMessages(conversationId: ConversationId): Array<BasicMessageInfo> {
+        return this.messaging.getConversationUnreadMessages(conversationId)
     }
 
     //////        FRIENDS MANAGEMENT         //////

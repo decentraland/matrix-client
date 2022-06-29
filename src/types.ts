@@ -12,6 +12,8 @@ export enum ConversationType {
 export type Conversation = {
     type: ConversationType,
     id: ConversationId,
+    unreadMessages?: Array<BasicMessageInfo>
+    userIds?: Array<string>
 }
 
 export type BasicMessageInfo = {

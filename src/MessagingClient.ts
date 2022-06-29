@@ -61,6 +61,23 @@ export class MessagingClient implements MessagingAPI {
             }))
     }
 
+    /** Get all conversation the user has joined */
+    getAllConversationsWithUnreadMessages(): Conversation[] {
+        const rooms: Array<any>= this.getAllRooms()
+        return rooms
+            .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
+            .map(room => {
+                const otherId = room.guessDMUserId()
+                return {
+                    id: room.roomId,
+                    type: getConversationTypeFromRoom(this.matrixClient, room),
+                    unreadMessages: this.getRoomUnreadMessages(room),
+                    userIds: [this.matrixClient.getUserId(), otherId]
+                }
+            })
+            .filter(conv => conv.unreadMessages.length > 0)
+    }
+
     /**
      * Send a message text to a conversation.
      * Returns the message id
@@ -192,6 +209,12 @@ export class MessagingClient implements MessagingAPI {
         const room = this.matrixClient.getRoom(conversationId)
         return this.doesRoomHaveUnreadMessages(room)
     }
+    
+    /** Return a conversation unread messages */
+    getConversationUnreadMessages(conversationId: ConversationId): BasicMessageInfo[] {
+        const room = this.matrixClient.getRoom(conversationId)
+        return this.getRoomUnreadMessages(room)
+    }
 
     private async assertThatUsersExist(userIds: SocialId[]): Promise<void> {
         const unknownUsers = userIds.filter(userId => this.matrixClient.getUser(userId) === null)
@@ -302,25 +325,24 @@ export class MessagingClient implements MessagingAPI {
         await this.matrixClient.setAccountData('m.direct', directRoomMap)
     }
 
-    private doesRoomHaveUnreadMessages(room): boolean {
+    private getRoomUnreadMessages(room): Array<BasicMessageInfo> {
         // Fetch message events
         const timelineSet = getOnlyMessagesTimelineSetFromRoom(this.matrixClient, room)
-        const timeline = timelineSet.getLiveTimeline().getEvents()
+        const timeline: Array<any> = timelineSet.getLiveTimeline().getEvents()
 
         // If there are no messages, then there are no unread messages
         if (timeline.length === 0) {
-            return false
+            return []
         }
-
-        const lastMessageEvent = timeline[timeline.length - 1]
 
         const lastReadMessage = this.getLastReadMessage(room.roomId)
 
-        if (!lastReadMessage) {
-            return true
-        } else {
-            return lastMessageEvent.getTs() > lastReadMessage.timestamp
-        }
+        return timeline.filter(event => !lastReadMessage || (event.getTs() > lastReadMessage.timestamp)).map(event => matrixEventToBasicEventInfo(event))
+        
+    }
+
+    private doesRoomHaveUnreadMessages(room): boolean {
+        return this.getRoomUnreadMessages(room).length > 0
     }
 
 }
