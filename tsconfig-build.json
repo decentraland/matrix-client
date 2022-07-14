@@ -1,7 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "include": ["./src"],
   "exclude": [
@@ -11,6 +12,6 @@
     "acceptance-tests",
     "webpack",
     "jest",
-    "dist",
+    "dist"
   ]
 }
