@@ -9,7 +9,7 @@
     "build": "tsc --project tsconfig-build.json",
     "prewatch": "rm -rf dist",
     "watch": "tsc --watch --project tsconfig-build.json",
-    "test": "nyc mocha -r ts-node/register -r tsconfig-paths/register --exit \"test/**/SessionManagementClient.spec.ts\"",
+    "test": "nyc mocha -r ts-node/register -r tsconfig-paths/register --exit \"test/**/*.spec.ts\"",
     "prepare-performance-test": "node -r ts-node/register -r tsconfig-paths/register test/performance/set-up-performance-test.ts",
     "semantic-release": "semantic-release",
     "commit-msg": "validate-commit-msg"
