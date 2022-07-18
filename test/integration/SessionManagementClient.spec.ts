@@ -25,7 +25,7 @@ describe('Integration - Session Management Client', () => {
         expect(client.isLoggedIn()).to.be.false
     })
 
-    it.skip(`When a user sets a status, only friends get the event`, async () => {
+    it(`When a user sets a status, only friends get the event`, async () => {
         const client1 = await testEnv.getRandomClient()
         const client2 = await testEnv.getRandomClient()
         const client3 = await testEnv.getRandomClient()
@@ -57,7 +57,7 @@ describe('Integration - Session Management Client', () => {
         assertEventWasReceived(spy1, client3, updateStatus)
     })
 
-    it.skip(`When a user sets a status, recent and old friends get the event`, async () => {
+    it(`When a user sets a status, recent and old friends get the event`, async () => {
         const identity1 = EthCrypto.createIdentity()
         const identity2 = EthCrypto.createIdentity()
         let client = await testEnv.getClientWithIdentity(identity1)

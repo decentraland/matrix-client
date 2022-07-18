@@ -4,7 +4,6 @@ import { SocialId, ConversationType, FriendshipRequest } from './types';
 import { FriendsManagementAPI } from './FriendsManagementAPI';
 import { getConversationTypeFromRoom } from './Utils';
 import { SocialClient } from './SocialClient';
-import { Room, RoomEvent } from 'matrix-js-sdk';
 
 enum FriendshipStatus {
     NOT_FRIENDS = 'not friends',
@@ -31,7 +30,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     getPendingRequests(): FriendshipRequest[] {
         const rooms = this.matrixClient.getVisibleRooms()
         return rooms.filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
-            .map(room => [room, this.getFriendshipStatusInRoom(room)] as [Room, FriendshipStatus])
+            .map(room => [room, this.getFriendshipStatusInRoom(room)])
             .filter(([, status]) => FriendsManagementClient.PENDING_STATUSES.includes(status))
             .map(([room, status]) => {
                 const other = room.guessDMUserId()
@@ -113,7 +112,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     }
 
     private listenToEvent(eventToListenTo: FriendshipEvent, listener: (from: SocialId) => void): void {
-        this.matrixClient.on(RoomEvent.Timeline, (event, _, toStartOfTimeline, __, data) => {
+        this.matrixClient.on("Room.timeline", (event, _, toStartOfTimeline, __, data) => {
             // Ignore anything but real-time updates at the end of the room
             if (toStartOfTimeline || !data || !data.liveEvent) return;
 

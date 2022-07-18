@@ -1,26 +1,18 @@
 import Matrix from 'matrix-js-sdk';
-import { LocalStorage } from 'node-localstorage';
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { Room } from 'matrix-js-sdk/lib/models/room'
 import { Filter } from 'matrix-js-sdk/lib/filter'
 import { EthAddress, AuthChain } from '@dcl/crypto';
 import { ConversationType, MessageStatus, TextMessage, SocialId, BasicMessageInfo, Timestamp } from './types';
-import { WebStorageSessionStore } from 'matrix-js-sdk/lib/store/session/webstorage';
-
 
 export async function login(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<MatrixClient> {
-
-    const localStorage = new LocalStorage('.storage');
-    const sessionStore = new WebStorageSessionStore(localStorage);
-
     // Create the client
     const matrixClient: MatrixClient = Matrix.createClient({
         baseUrl: synapseUrl,
         //@ts-ignore
         timelineSupport: true,
         useAuthorizationHeader: true,
-        sessionStore
     })
 
     // Actual login
@@ -36,10 +28,10 @@ export async function login(synapseUrl: string, ethAddress: EthAddress, timestam
     return matrixClient
 }
 
-export function findEventInRoom(client: MatrixClient, roomId: string, eventId: string): MatrixEvent | undefined {
+export function findEventInRoom(client: MatrixClient, roomId: string, eventId: string): Event | undefined {
     const room = client.getRoom(roomId)
-    const timelineSet = room?.getUnfilteredTimelineSet()
-    return timelineSet?.findEventById(eventId)
+    const timelineSet = room.getUnfilteredTimelineSet()
+    return timelineSet.findEventById(eventId)
 }
 
 export function buildTextMessage(event: MatrixEvent, status: MessageStatus): TextMessage {

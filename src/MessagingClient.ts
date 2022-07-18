@@ -1,11 +1,10 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
-import { Room, RoomEvent } from 'matrix-js-sdk/lib/models/room'
+import { Room } from 'matrix-js-sdk/lib/models/room'
 import { Conversation, ConversationType, SocialId, TextMessage, MessageType, MessageStatus, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
 import { findEventInRoom, buildTextMessage, getOnlyMessagesTimelineSetFromRoom, getOnlyMessagesSentByMeTimelineSetFromRoom, matrixEventToBasicEventInfo, getConversationTypeFromRoom } from './Utils';
 import { ConversationCursor } from './ConversationCursor';
 import { MessagingAPI } from './MessagingAPI';
-import { ClientEvent, Preset, RoomMemberEvent } from 'matrix-js-sdk';
 
 export class MessagingClient implements MessagingAPI {
 
@@ -13,7 +12,7 @@ export class MessagingClient implements MessagingAPI {
 
     constructor(private readonly matrixClient: MatrixClient) {
         // Listen to when the sync is finishes, and join all rooms I was invited to
-        matrixClient.once(ClientEvent.Sync, async (state) => {
+        matrixClient.once('sync', async (state) => {
             if (state === 'PREPARED') {
                 const rooms = this.getAllRooms()
                 const join: Promise<void>[] = rooms
@@ -28,9 +27,8 @@ export class MessagingClient implements MessagingAPI {
     }
 
     listenToEvents(): void {
-
         // Listen to events, and store the last message I send
-        this.matrixClient.on(RoomEvent.Timeline, (event, room) => {
+        this.matrixClient.on("Room.timeline", (event, room) => {
             if (event.getType() === "m.room.message" &&
                 event.getContent().msgtype === MessageType.TEXT &&
                 event.getSender() === this.matrixClient.getUserId()) {
@@ -42,7 +40,7 @@ export class MessagingClient implements MessagingAPI {
         });
 
         // Listen to invitations and accept them automatically
-        this.matrixClient.on(RoomMemberEvent.Membership, async (_, member) => {
+        this.matrixClient.on("RoomMember.membership", async (_, member) => {
             if (member.membership === "invite" && member.userId === this.matrixClient.getUserId()) {
                 await this.joinRoom(member)
             }
@@ -97,14 +95,14 @@ export class MessagingClient implements MessagingAPI {
             const eventRaw = await this.matrixClient.fetchRoomEvent(conversationId, messageId)
             event = new MatrixEvent(eventRaw)
         }
-        await this.matrixClient.sendReadReceipt(event)
+        return this.matrixClient.sendReadReceipt(event)
     }
 
     /**
      * Listen to new messages
      */
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void {
-        this.matrixClient.on(RoomEvent.Timeline, (event, room, toStartOfTimeline, _, data) => {
+        this.matrixClient.on("Room.timeline", (event, room, toStartOfTimeline, _, data) => {
 
             if (event.getType() !== "m.room.message" || // Make sure that it is in fact a message
                 event.getContent().msgtype !== MessageType.TEXT || // Make sure that the message is of type text
@@ -136,9 +134,9 @@ export class MessagingClient implements MessagingAPI {
     getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined {
         // Fetch last message marked as read
         const room = this.matrixClient.getRoom(conversationId)
-        const lastReadEventId = room?.getEventReadUpTo(this.matrixClient.getUserId(), false)
-        const lastReadMatrixEvent = lastReadEventId ? findEventInRoom(this.matrixClient, conversationId, lastReadEventId) : undefined
-        const lastReadEvent = lastReadMatrixEvent ? matrixEventToBasicEventInfo(lastReadMatrixEvent) : undefined
+        const lastReadEventId: string | null = room.getEventReadUpTo(this.matrixClient.getUserId(), false)
+        const lastReadMatrixEvent: Event | undefined = lastReadEventId ? findEventInRoom(this.matrixClient, conversationId, lastReadEventId) : undefined
+        const lastReadEvent: BasicMessageInfo | undefined = lastReadMatrixEvent ? matrixEventToBasicEventInfo(lastReadMatrixEvent) : undefined
 
         // Fetch last message sent by me
         let lastEventSentByMe: BasicMessageInfo | undefined
@@ -255,7 +253,7 @@ export class MessagingClient implements MessagingAPI {
                 // If alias wasn't found, then create the room
                 const creationResult = await client.createRoom({
                     room_alias_name: alias,
-                    preset: Preset.TrustedPrivateChat,
+                    preset: 'trusted_private_chat',
                     is_direct: type === ConversationType.DIRECT,
                     invite: userIds,
                     name: conversationName,
