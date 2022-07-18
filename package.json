@@ -43,9 +43,10 @@
   "homepage": "https://github.com/decentraland/matrix-client#readme",
   "dependencies": {
     "@dcl/crypto": "^3.0.1",
-    "@types/matrix-js-sdk": "^5.1.2",
+    "@types/matrix-js-sdk": "11.0.1",
     "@types/node": "^13.11.1",
-    "matrix-js-sdk": "^7.1.0"
+    "matrix-js-sdk": "16.0.0",
+    "node-localstorage": "^2.2.1"
   },
   "devDependencies": {
     "@types/chai": "^4.2.8",
