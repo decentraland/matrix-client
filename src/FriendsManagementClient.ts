@@ -37,9 +37,9 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             .map(([room, status]) => {
                 const other = room.guessDMUserId()
                 if (status === FriendshipStatus.REQUEST_SENT_BY_ME_PENDING) {
-                    return { from: this.matrixClient.getUserId(), to: other }
+                    return { from: this.matrixClient.getUserId(), to: other, createdAt: room.timeline[0].getTs() }
                 } else {
-                    return { to: this.matrixClient.getUserId(), from: other }
+                    return { to: this.matrixClient.getUserId(), from: other, createdAt: room.timeline[0].getTs() }
                 }
             })
     }

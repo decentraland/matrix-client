@@ -228,6 +228,8 @@ describe('Integration - Friends Management Client', () => {
         expect(fromPendingRequest).to.deep.equal(toPendingRequest)
         expect(fromPendingRequest.from).to.equal(from.getUserId())
         expect(fromPendingRequest.to).to.equal(to.getUserId())
+        expect(fromPendingRequest.createdAt).not.to.equal(null)
+        expect(typeof fromPendingRequest.createdAt).to.equal(typeof 1)
     }
 
     function assertNoPendingRequests(...clients: SocialClient[]): void {
