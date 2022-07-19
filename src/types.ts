@@ -49,6 +49,7 @@ export type CursorOptions = {
 export type FriendshipRequest = {
     from: SocialId,
     to: SocialId,
+    createdAt: number,
 }
 
 export type UpdateUserStatus = {
