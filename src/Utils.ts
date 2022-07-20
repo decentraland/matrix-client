@@ -1,5 +1,4 @@
 import Matrix from 'matrix-js-sdk';
-import { LocalStorage } from 'node-localstorage';
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { Room } from 'matrix-js-sdk/lib/models/room'
@@ -8,11 +7,8 @@ import { EthAddress, AuthChain } from '@dcl/crypto';
 import { ConversationType, MessageStatus, TextMessage, SocialId, BasicMessageInfo, Timestamp } from './types';
 import { WebStorageSessionStore } from 'matrix-js-sdk/lib/store/session/webstorage';
 
-
 export async function login(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<MatrixClient> {
-
-    const localStorage = new LocalStorage('.storage');
-    const sessionStore = new WebStorageSessionStore(localStorage);
+    let sessionStore = new WebStorageSessionStore(localStorage);    
 
     // Create the client
     const matrixClient: MatrixClient = Matrix.createClient({
