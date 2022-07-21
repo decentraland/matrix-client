@@ -6,7 +6,7 @@ import { CatalystContainerBuilder } from './containers/catalyst/CatalystContaine
 import { SynapseContainerBuilder } from './containers/synapse/SynapseContainerBuilder'
 import { loginWithIdentity, createUser } from '../utils/Utils'
 import { SocialId } from 'types'
-
+import { LocalStorage } from 'node-localstorage'
 
 /**
  * Almost every test on this project will need to set up a synapse server, a catalyst server,
@@ -14,19 +14,14 @@ import { SocialId } from 'types'
  * In order to avoid repeating the code over and over again, we will group everything here.
  */
 export class TestEnvironment {
-
     private dockerEnv: DockerEnvironment
     private synapseContainer: ServiceContainer
     private catalystContainer: ServiceContainer
     private clients: SocialClient[]
 
     async start(): Promise<void> {
-        this.dockerEnv = await new DockerEnvironmentBuilder()
-            .withNetwork('some-network')
-            .build()
-        this.catalystContainer = await new CatalystContainerBuilder()
-            .withDockerEnvironment(this.dockerEnv)
-            .start()
+        this.dockerEnv = await new DockerEnvironmentBuilder().withNetwork('some-network').build()
+        this.catalystContainer = await new CatalystContainerBuilder().withDockerEnvironment(this.dockerEnv).start()
         this.synapseContainer = await new SynapseContainerBuilder()
             .withDockerEnvironment(this.dockerEnv)
             .withConfig('password_providers.0.config.trusted_servers', [this.catalystContainer.getInternalAddress()])
@@ -52,7 +47,9 @@ export class TestEnvironment {
     }
 
     async getClientWithIdentity(identity): Promise<SocialClient> {
-        const client = await loginWithIdentity(this.synapseContainer.getAddress(), identity)
+        const client = await loginWithIdentity(this.synapseContainer.getAddress(), identity, {
+            getLocalStorage: () => new LocalStorage('.storage')
+        })
         this.clients.push(client)
         return client
     }
@@ -60,28 +57,25 @@ export class TestEnvironment {
     createUserOnServer(identity): Promise<SocialId> {
         return createUser(this.synapseContainer.getAddress(), identity)
     }
-
 }
 
 /**
  * This is an easy way to load a test environment into a test suite
  */
 export function loadTestEnvironment(): TestEnvironment {
-
     const testEnv = new TestEnvironment()
 
     before(async () => {
         await testEnv.start()
-    });
+    })
 
     after(async () => {
         await testEnv.stop()
-    });
+    })
 
     afterEach(async () => {
         await testEnv.clearClientList()
     })
 
     return testEnv
-
 }

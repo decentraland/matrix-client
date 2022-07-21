@@ -9,6 +9,7 @@ import { SynapseContainerBuilder } from './containers/synapse/SynapseContainerBu
 import { DockerEnvironment, DockerEnvironmentBuilder } from './containers/commons/DockerEnvironment'
 import { ServiceContainer } from './containers/commons/ServiceContainer'
 import { CatalystContainerBuilder } from './containers/catalyst/CatalystContainerBuilder'
+import { LocalStorage } from 'node-localstorage'
 
 chai.use(chaiAsPromised)
 const expect = chai.expect
@@ -110,7 +111,9 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const client = await SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain)
+        const client = await SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain, {
+            getLocalStorage: () => new LocalStorage('.storage')
+        })
 
         assertLoginWasSuccessful(ethAddress, client)
 
@@ -127,7 +130,9 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Login
         const { timestamp, authChain } = getLoginData(Date.now(), identity)
-        const client = await SocialClient.loginToServer(synapseContainer.getAddress(), identity.address, timestamp, authChain)
+        const client = await SocialClient.loginToServer(synapseContainer.getAddress(), identity.address, timestamp, authChain, {
+            getLocalStorage: () => new LocalStorage('.storage')
+        })
 
         // Assert login was successful
         assertLoginWasSuccessful(identity.address, client)
@@ -137,7 +142,9 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Login again
         const { timestamp: timestamp2, authChain: authChain2 } = getLoginData(Date.now(), identity)
-        const client2 = await SocialClient.loginToServer(synapseContainer.getAddress(), identity.address, timestamp2, authChain2)
+        const client2 = await SocialClient.loginToServer(synapseContainer.getAddress(), identity.address, timestamp2, authChain2, {
+            getLocalStorage: () => new LocalStorage('.storage')
+        })
 
         // Assert login was successful
         assertLoginWasSuccessful(identity.address, client2)
