@@ -7,8 +7,13 @@ import { EthAddress, AuthChain } from '@dcl/crypto';
 import { ConversationType, MessageStatus, TextMessage, SocialId, BasicMessageInfo, Timestamp } from './types';
 import { WebStorageSessionStore } from 'matrix-js-sdk/lib/store/session/webstorage';
 
-export async function login(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain): Promise<MatrixClient> {
-    let sessionStore = new WebStorageSessionStore(localStorage);    
+export async function login(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain, getLocalStorage?: () => Storage): Promise<MatrixClient> {
+    let sessionStore;
+    if(getLocalStorage) {
+        sessionStore = new WebStorageSessionStore(getLocalStorage());    
+    } else {
+        sessionStore = new WebStorageSessionStore(localStorage);    
+    }
 
     // Create the client
     const matrixClient: MatrixClient = Matrix.createClient({
