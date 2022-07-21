@@ -9,7 +9,7 @@ import { WebStorageSessionStore } from 'matrix-js-sdk/lib/store/session/webstora
 
 export async function login(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain, getLocalStorage?: () => Storage): Promise<MatrixClient> {
     let sessionStore;
-    if(getLocalStorage) {
+    if (getLocalStorage) {
         sessionStore = new WebStorageSessionStore(getLocalStorage());    
     } else {
         sessionStore = new WebStorageSessionStore(localStorage);    
