@@ -5,7 +5,7 @@ import { Conversation, ConversationType, SocialId, TextMessage, MessageType, Mes
 import { findEventInRoom, buildTextMessage, getOnlyMessagesTimelineSetFromRoom, getOnlyMessagesSentByMeTimelineSetFromRoom, matrixEventToBasicEventInfo, getConversationTypeFromRoom } from './Utils';
 import { ConversationCursor } from './ConversationCursor';
 import { MessagingAPI } from './MessagingAPI';
-import { ClientEvent, Preset, RoomMemberEvent } from 'matrix-js-sdk';
+import { ClientEvent, EventType, Preset, RoomMemberEvent } from 'matrix-js-sdk';
 
 export class MessagingClient implements MessagingAPI {
 
@@ -59,13 +59,15 @@ export class MessagingClient implements MessagingAPI {
                 conversation: {
                     id: room.roomId,
                     type: getConversationTypeFromRoom(this.matrixClient, room),
+                    lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
+                    hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage)
                 }
             }))
     }
 
     /** Get all conversation the user has joined */
     getAllConversationsWithUnreadMessages(): Conversation[] {
-        const rooms: Array<any>= this.getAllRooms()
+        const rooms = this.getAllRooms()
         return rooms
             .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
             .map(room => {
@@ -74,7 +76,8 @@ export class MessagingClient implements MessagingAPI {
                     id: room.roomId,
                     type: getConversationTypeFromRoom(this.matrixClient, room),
                     unreadMessages: this.getRoomUnreadMessages(room),
-                    userIds: [this.matrixClient.getUserId(), otherId]
+                    userIds: [this.matrixClient.getUserId(), otherId],
+                    lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs()
                 }
             })
             .filter(conv => conv.unreadMessages.length > 0)
@@ -268,9 +271,9 @@ export class MessagingClient implements MessagingAPI {
         return {
             conversation: {
                 type,
-                id: roomId
+                id: roomId,
             },
-            created
+            created,
         }
     }
 

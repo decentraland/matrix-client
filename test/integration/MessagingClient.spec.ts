@@ -39,12 +39,23 @@ describe('Integration - Messaging Client', () => {
         const conversations1Again = client1.getAllCurrentConversations()
         expect(conversations1Again.length).to.equal(1)
         const [ {conversation: conversation1} ] = conversations1Again
-        expect(conversation1).to.deep.equal(commonConversation)
+        expect(conversation1.id).to.equal(commonConversation.id)
+        expect(conversation1.type).to.equal(commonConversation.type)
+        expect(conversation1.unreadMessages).to.deep.equal(commonConversation.unreadMessages)
+        expect(conversation1.userIds).to.deep.equal(commonConversation.userIds)
+        expect(conversation1.hasMessages).to.equal(false)
+        expect(conversation1.lastEventTimestamp).not.to.be.undefined
 
         const conversations2Again = client2.getAllCurrentConversations()
         expect(conversations2Again.length).to.equal(1)
         const [ {conversation: conversation2} ] = conversations2Again
-        expect(conversation2).to.deep.equal(commonConversation)
+        expect(conversation2.id).to.equal(commonConversation.id)
+        expect(conversation2.type).to.equal(commonConversation.type)
+        expect(conversation2.unreadMessages).to.deep.equal(commonConversation.unreadMessages)
+        expect(conversation2.userIds).to.deep.equal(commonConversation.userIds)
+        expect(conversation2.hasMessages).to.equal(false)
+        expect(conversation2.lastEventTimestamp).not.to.be.undefined
+
     })
 
     it(`When a direct conversation is started with a client that doesn't exist, then an exception is thrown`, async () => {
@@ -135,7 +146,10 @@ describe('Integration - Messaging Client', () => {
         const receiverConversations = receiver.getAllCurrentConversations()
         expect(receiverConversations.length).to.equal(1)
         const [{ conversation: receiverConversation, unreadMessages }] = receiverConversations
-        expect(receiverConversation).to.deep.equal(conversation)
+        expect(receiverConversation.id).to.equal(conversation.id)
+        expect(receiverConversation.type).to.equal(conversation.type)
+        expect(receiverConversation.lastEventTimestamp).not.to.be.undefined
+        expect(receiverConversation.hasMessages).to.be.true
 
         // Since the message was sent before the user could see the conversation for the first time, there are no unread messages
         expect(unreadMessages).to.be.false
