@@ -203,7 +203,7 @@ export class MessagingClient implements MessagingAPI {
     /** Get or create a group conversation with the given users */
     async createGroupConversation(conversationName: string, userIds: SocialId[]): Promise<Conversation> {
         if (userIds.length < 2) {
-            throw new Error('Group conversations must include two or more people.')
+            throw new Error('Group conversations must include two or more people. ')
         }
         const { conversation } = await this.getOrCreateConversation(this.matrixClient, ConversationType.GROUP, userIds, conversationName)
         return conversation
