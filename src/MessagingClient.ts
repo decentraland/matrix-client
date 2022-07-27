@@ -54,38 +54,31 @@ export class MessagingClient implements MessagingAPI {
         const rooms = this.getAllRooms()
         return rooms
             .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
-            .map(room => ({
-                unreadMessages: this.doesRoomHaveUnreadMessages(room),
-                conversation: {
-                    id: room.roomId,
-                    type: getConversationTypeFromRoom(this.matrixClient, room),
-                    lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
-                    hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage)
-                }
-            }))
+            .map(room => {
+                const otherId = room.guessDMUserId()
+                return {
+                    unreadMessages: this.doesRoomHaveUnreadMessages(room),
+                    conversation: {
+                        id: room.roomId,
+                        type: getConversationTypeFromRoom(this.matrixClient, room),
+                        lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
+                        userIds: [this.matrixClient.getUserId(), otherId],
+                        hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage)
+                    }
+            }
+        })
     }
 
     /** Get all conversation the user has joined */
     getAllConversationsWithUnreadMessages(): Conversation[] {
-        const rooms = this.getAllRooms()
-        return rooms
-            .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
-            .map(room => {
-                const otherId = room.guessDMUserId()
-                return {
-                    id: room.roomId,
-                    type: getConversationTypeFromRoom(this.matrixClient, room),
-                    unreadMessages: this.getRoomUnreadMessages(room),
-                    userIds: [this.matrixClient.getUserId(), otherId],
-                    lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs()
-                }
-            })
-            .filter(conv => conv.unreadMessages.length > 0)
+        return this.getAllCurrentConversations()
+        .filter(conv => conv.unreadMessages)
+        .map((conv): Conversation => conv.conversation)
     }
 
     /** Get total number of unseen messages from all conversations the user has joined */
     getTotalUnseenMessages(): number {
-        const rooms: Array<any> = this.getAllRooms()
+        const rooms = this.getAllRooms()
         return rooms
             .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
             .map(room => {
@@ -93,9 +86,8 @@ export class MessagingClient implements MessagingAPI {
                     unreadMessages: this.getRoomUnreadMessages(room).length,
                 }
             })
-            .map(unread => unread.unreadMessages)
             .reduce((accumulator, current) => {
-                return accumulator + current
+                return accumulator + current.unreadMessages
             }, 0)
     }
 
@@ -122,11 +114,14 @@ export class MessagingClient implements MessagingAPI {
     /** Mark all messages in the conversation as seen */
     async markMessagesAsSeen(conversationId: ConversationId): Promise<void> {
         const room = this.matrixClient.getRoom(conversationId)
-        const lastMessage = room?.timeline[room.timeline.filter(event => event.getType() === EventType.RoomMessage).length - 1]
-
-        if (lastMessage) {
-            await this.markAsRead(conversationId, lastMessage.getId())
+        if (!room) {
+            return
         }
+
+        const roomMessages = room.timeline.filter(event => event.getType() === EventType.RoomMessage)
+        const lastMessage = roomMessages[roomMessages.length - 1].getId()
+
+        await this.markAsRead(conversationId, lastMessage)
     }
 
     /**
