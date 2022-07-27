@@ -1,4 +1,3 @@
-
 import chai from 'chai'
 import sinonChai from 'sinon-chai'
 import sinon from 'sinon'
@@ -13,7 +12,6 @@ chai.use(sinonChai)
 const expect = chai.expect
 
 describe('Integration - Messaging Client', () => {
-
     const testEnv: TestEnvironment = loadTestEnvironment()
 
     it(`When a direct conversation is started, then both participants can see it`, async () => {
@@ -38,24 +36,23 @@ describe('Integration - Messaging Client', () => {
         // Assert that both clients see the conversation
         const conversations1Again = client1.getAllCurrentConversations()
         expect(conversations1Again.length).to.equal(1)
-        const [ {conversation: conversation1} ] = conversations1Again
+        const [{ conversation: conversation1 }] = conversations1Again
         expect(conversation1.id).to.equal(commonConversation.id)
         expect(conversation1.type).to.equal(commonConversation.type)
         expect(conversation1.unreadMessages).to.deep.equal(commonConversation.unreadMessages)
-        expect(conversation1.userIds).to.deep.equal(commonConversation.userIds)
+        expect(conversation1.userIds).to.deep.equal([client1.getUserId(), client2.getUserId()])
         expect(conversation1.hasMessages).to.equal(false)
         expect(conversation1.lastEventTimestamp).not.to.be.undefined
 
         const conversations2Again = client2.getAllCurrentConversations()
         expect(conversations2Again.length).to.equal(1)
-        const [ {conversation: conversation2} ] = conversations2Again
+        const [{ conversation: conversation2 }] = conversations2Again
         expect(conversation2.id).to.equal(commonConversation.id)
         expect(conversation2.type).to.equal(commonConversation.type)
         expect(conversation2.unreadMessages).to.deep.equal(commonConversation.unreadMessages)
-        expect(conversation2.userIds).to.deep.equal(commonConversation.userIds)
+        expect(conversation2.userIds).to.deep.equal([client2.getUserId(), client1.getUserId()])
         expect(conversation2.hasMessages).to.equal(false)
         expect(conversation2.lastEventTimestamp).not.to.be.undefined
-
     })
 
     it(`When a direct conversation is started with a client that doesn't exist, then an exception is thrown`, async () => {
@@ -66,7 +63,9 @@ describe('Integration - Messaging Client', () => {
         const conversationPromise = client.createDirectConversation(nonExistentUserId)
 
         // Assert that it failed
-        await expect(conversationPromise).to.be.rejectedWith(`Some of the given users are not part of the system: '${nonExistentUserId}'`)
+        await expect(conversationPromise).to.be.rejectedWith(
+            `Some of the given users are not part of the system: '${nonExistentUserId}'`
+        )
     })
 
     it(`When a direct conversation is started again between the same users, then the same conversation is reused`, async () => {
@@ -255,7 +254,7 @@ describe('Integration - Messaging Client', () => {
         const client2 = await testEnv.getRandomClient()
 
         // Create a conversation
-        const { id: conversationId }  = await client1.createDirectConversation(client2.getUserId())
+        const { id: conversationId } = await client1.createDirectConversation(client2.getUserId())
 
         // Wait for sync
         await sleep('1s')
@@ -296,7 +295,12 @@ describe('Integration - Messaging Client', () => {
     })
 
     /** Assert that the message was received, and return the message id */
-    function assertMessageWasReceivedByEvent(spy, sender: SocialClient, conversation: Conversation, message: string): MessageId {
+    function assertMessageWasReceivedByEvent(
+        spy,
+        sender: SocialClient,
+        conversation: Conversation,
+        message: string
+    ): MessageId {
         // Make sure that the spy was called
         expect(spy).to.have.been.calledOnce
 
@@ -313,5 +317,4 @@ describe('Integration - Messaging Client', () => {
 
         return id
     }
-
 })

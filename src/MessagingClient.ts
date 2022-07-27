@@ -54,34 +54,28 @@ export class MessagingClient implements MessagingAPI {
         const rooms = this.getAllRooms()
         return rooms
             .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
-            .map(room => ({
-                unreadMessages: this.doesRoomHaveUnreadMessages(room),
-                conversation: {
-                    id: room.roomId,
-                    type: getConversationTypeFromRoom(this.matrixClient, room),
-                    lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
-                    hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage)
-                }
-            }))
+            .map(room => {
+                const otherId = room.guessDMUserId()
+                return {
+                    unreadMessages: this.doesRoomHaveUnreadMessages(room),
+                    conversation: {
+                        id: room.roomId,
+                        type: getConversationTypeFromRoom(this.matrixClient, room),
+                        lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
+                        userIds: [this.matrixClient.getUserId(), otherId],
+                        hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage)
+                    }
+            }
+        })
     }
 
     /** Get all conversation the user has joined */
     getAllConversationsWithUnreadMessages(): Conversation[] {
-        const rooms = this.getAllRooms()
-        return rooms
-            .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
-            .map(room => {
-                const otherId = room.guessDMUserId()
-                return {
-                    id: room.roomId,
-                    type: getConversationTypeFromRoom(this.matrixClient, room),
-                    unreadMessages: this.getRoomUnreadMessages(room),
-                    userIds: [this.matrixClient.getUserId(), otherId],
-                    lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs()
-                }
-            })
-            .filter(conv => conv.unreadMessages.length > 0)
+        return this.getAllCurrentConversations()
+        .filter(conv => conv.unreadMessages)
+        .map((conv): Conversation => conv.conversation)
     }
+
 
     /**
      * Send a message text to a conversation.
