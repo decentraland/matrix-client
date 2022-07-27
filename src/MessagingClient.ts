@@ -81,13 +81,8 @@ export class MessagingClient implements MessagingAPI {
         const rooms = this.getAllRooms()
         return rooms
             .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
-            .map(room => {
-                return {
-                    unreadMessages: this.getRoomUnreadMessages(room).length,
-                }
-            })
             .reduce((accumulator, current) => {
-                return accumulator + current.unreadMessages
+                return accumulator + this.getRoomUnreadMessages(current).length
             }, 0)
     }
 
@@ -114,6 +109,8 @@ export class MessagingClient implements MessagingAPI {
     /** Mark all messages in the conversation as seen */
     async markMessagesAsSeen(conversationId: ConversationId): Promise<void> {
         const room = this.matrixClient.getRoom(conversationId)
+        // If there is no room, then there are no messages to mark as read. Anyway, we expect to always be able to get the room,
+        // since the method is called when the user opens a conversation.
         if (!room) {
             return
         }
