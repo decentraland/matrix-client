@@ -76,6 +76,15 @@ export class MessagingClient implements MessagingAPI {
         .map((conv): Conversation => conv.conversation)
     }
 
+    /** Get total number of unseen messages from all conversations the user has joined */
+    getTotalUnseenMessages(): number {
+        const rooms = this.getAllRooms()
+        return rooms
+            .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
+            .reduce((accumulator, current) => {
+                return accumulator + this.getRoomUnreadMessages(current).length
+            }, 0)
+    }
 
     /**
      * Send a message text to a conversation.
@@ -95,6 +104,21 @@ export class MessagingClient implements MessagingAPI {
             event = new MatrixEvent(eventRaw)
         }
         await this.matrixClient.sendReadReceipt(event)
+    }
+
+    /** Mark all messages in the conversation as seen */
+    async markMessagesAsSeen(conversationId: ConversationId): Promise<void> {
+        const room = this.matrixClient.getRoom(conversationId)
+        // If there is no room, then there are no messages to mark as read. Anyway, we expect to always be able to get the room,
+        // since the method is called when the user opens a conversation.
+        if (!room) {
+            return
+        }
+
+        const roomMessages = room.timeline.filter(event => event.getType() === EventType.RoomMessage)
+        const lastMessage = roomMessages[roomMessages.length - 1].getId()
+
+        await this.markAsRead(conversationId, lastMessage)
     }
 
     /**
@@ -208,7 +232,7 @@ export class MessagingClient implements MessagingAPI {
         const room = this.matrixClient.getRoom(conversationId)
         return this.doesRoomHaveUnreadMessages(room)
     }
-    
+
     /** Return a conversation unread messages */
     getConversationUnreadMessages(conversationId: ConversationId): BasicMessageInfo[] {
         const room = this.matrixClient.getRoom(conversationId)
@@ -337,7 +361,7 @@ export class MessagingClient implements MessagingAPI {
         const lastReadMessage = this.getLastReadMessage(room.roomId)
 
         return timeline.filter(event => !lastReadMessage || (event.getTs() > lastReadMessage.timestamp)).map(event => matrixEventToBasicEventInfo(event))
-        
+
     }
 
     private doesRoomHaveUnreadMessages(room): boolean {

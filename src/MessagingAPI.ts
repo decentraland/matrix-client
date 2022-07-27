@@ -12,6 +12,9 @@ export interface MessagingAPI {
     /** Get all conversation the user has with unread messages */
     getAllConversationsWithUnreadMessages(): Conversation[]
 
+    /** Get total number of unseen messages from all conversations the user has joined */
+    getTotalUnseenMessages(): number;
+
     /**
      * Send a text message  to a conversation.
      * Returns the message id
@@ -20,6 +23,9 @@ export interface MessagingAPI {
 
     /** Mark a message (and all those that came before it on the conversation) as read */
     markAsRead(conversationId: ConversationId, messageId: MessageId): Promise<void>;
+
+    /** Mark all messages in the conversation as seen */
+    markMessagesAsSeen(conversationId: ConversationId): Promise<void>;
 
     /** Listen to new messages */
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void;
@@ -47,7 +53,7 @@ export interface MessagingAPI {
 
     /** Return whether a conversation has unread messages or not */
     doesConversationHaveUnreadMessages(conversationId: ConversationId): boolean;
-    
+
     /** Return a conversation unread messages */
     getConversationUnreadMessages(conversationId: ConversationId): BasicMessageInfo[];
 }

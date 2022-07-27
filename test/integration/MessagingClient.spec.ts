@@ -235,8 +235,8 @@ describe('Integration - Messaging Client', () => {
         await sleep('1s')
 
         // Assert that client2 has unread messages
-        const unreadMessages1 = client2.doesConversationHaveUnreadMessages(conversationId)
-        expect(unreadMessages1).to.be.true
+        const unreadMessages = client2.doesConversationHaveUnreadMessages(conversationId)
+        expect(unreadMessages).to.be.true
 
         // Respond to the message
         await client2.sendMessageTo(conversationId, 'Hello back!')
@@ -255,6 +255,40 @@ describe('Integration - Messaging Client', () => {
 
         // Create a conversation
         const { id: conversationId } = await client1.createDirectConversation(client2.getUserId())
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that client2 doesn't have unread messages
+        const unreadMessages2 = client2.doesConversationHaveUnreadMessages(conversationId)
+        expect(unreadMessages2).to.be.false
+    })
+
+    it(`When a user opens a private chat, it marks as seen all the messages`, async () => {
+        const client1 = await testEnv.getRandomClient()
+        const client2 = await testEnv.getRandomClient()
+
+        // Create a conversation
+        const { id: conversationId } = await client1.createDirectConversation(client2.getUserId())
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Send message
+        await client1.sendMessageTo(conversationId, 'Hi there!')
+        await client1.sendMessageTo(conversationId, 'How are you?')
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that client2 has unread messages
+        const unreadMessages1 = client2.doesConversationHaveUnreadMessages(conversationId)
+        expect(unreadMessages1).to.be.true
+        const totalUnreadMessages = client2.getTotalUnseenMessages()
+        expect(totalUnreadMessages).to.be.greaterThan(0)
+
+        // Mark message as read
+        await client2.markMessagesAsSeen(conversationId)
 
         // Wait for sync
         await sleep('1s')
@@ -295,12 +329,7 @@ describe('Integration - Messaging Client', () => {
     })
 
     /** Assert that the message was received, and return the message id */
-    function assertMessageWasReceivedByEvent(
-        spy,
-        sender: SocialClient,
-        conversation: Conversation,
-        message: string
-    ): MessageId {
+    function assertMessageWasReceivedByEvent(spy, sender: SocialClient, conversation: Conversation, message: string): MessageId {
         // Make sure that the spy was called
         expect(spy).to.have.been.calledOnce
 
@@ -317,4 +346,5 @@ describe('Integration - Messaging Client', () => {
 
         return id
     }
+
 })

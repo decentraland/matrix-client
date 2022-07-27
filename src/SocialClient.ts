@@ -112,12 +112,20 @@ export class SocialClient implements SocialAPI {
         return this.messaging.getAllConversationsWithUnreadMessages()
     }
 
+    getTotalUnseenMessages(): number {
+        return this.messaging.getTotalUnseenMessages()
+    }
+
     sendMessageTo(conversationId: ConversationId, message: string): Promise<MessageId> {
         return this.messaging.sendMessageTo(conversationId, message)
     }
 
     markAsRead(conversationId: ConversationId, messageId: MessageId): Promise<void> {
         return this.messaging.markAsRead(conversationId, messageId)
+    }
+
+    markMessagesAsSeen(conversationId: ConversationId): Promise<void> {
+        return this.messaging.markMessagesAsSeen(conversationId)
     }
 
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void {
