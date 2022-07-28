@@ -136,7 +136,7 @@ export class SocialClient implements SocialAPI {
         return this.messaging.getLastReadMessage(conversationId)
     }
 
-    getCursorOnMessage(conversationId: ConversationId, messageId: MessageId, options?: CursorOptions): Promise<ConversationCursor> {
+    getCursorOnMessage(conversationId: ConversationId, messageId?: MessageId, options?: CursorOptions): Promise<ConversationCursor> {
         return this.messaging.getCursorOnMessage(conversationId, messageId, options)
     }
 

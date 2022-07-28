@@ -37,7 +37,7 @@ export interface MessagingAPI {
     getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined;
 
     /** Returns a cursor located on the given message */
-    getCursorOnMessage(conversationId: ConversationId, messageId: MessageId, options?: CursorOptions): Promise<ConversationCursor>;
+    getCursorOnMessage(conversationId: ConversationId, messageId?: MessageId, options?: CursorOptions): Promise<ConversationCursor>;
 
     /**
      * Returns a cursor located on the last read message. If no messages were read, then
