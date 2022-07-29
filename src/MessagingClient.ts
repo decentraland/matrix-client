@@ -65,15 +65,15 @@ export class MessagingClient implements MessagingAPI {
                         userIds: [this.matrixClient.getUserId(), otherId],
                         hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage)
                     }
-            }
-        })
+                }
+            })
     }
 
     /** Get all conversation the user has joined */
     getAllConversationsWithUnreadMessages(): Conversation[] {
         return this.getAllCurrentConversations()
-        .filter(conv => conv.unreadMessages)
-        .map((conv): Conversation => conv.conversation)
+            .filter(conv => conv.unreadMessages)
+            .map((conv): Conversation => conv.conversation)
     }
 
     /** Get total number of unseen messages from all conversations the user has joined */
@@ -188,8 +188,10 @@ export class MessagingClient implements MessagingAPI {
         return undefined
     }
 
-    /** Returns a cursor located on the given message */
-    getCursorOnMessage(conversationId: ConversationId, messageId: MessageId, options?: CursorOptions): Promise<ConversationCursor> {
+    /** Returns a cursor located on the given message. If there is no given message, then it is 
+     * located at the end of the conversation.
+    */
+    getCursorOnMessage(conversationId: ConversationId, messageId?: MessageId, options?: CursorOptions): Promise<ConversationCursor> {
         return ConversationCursor.build(this.matrixClient, conversationId, messageId, roomId => this.getLastReadMessage(roomId), options)
     }
 

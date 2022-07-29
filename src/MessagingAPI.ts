@@ -36,8 +36,9 @@ export interface MessagingAPI {
      */
     getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined;
 
-    /** Returns a cursor located on the given message */
-    getCursorOnMessage(conversationId: ConversationId, messageId: MessageId, options?: CursorOptions): Promise<ConversationCursor>;
+    /** Returns a cursor located on the given message. If there is no given message, then it is 
+     * located at the end of the conversation. */
+    getCursorOnMessage(conversationId: ConversationId, messageId?: MessageId, options?: CursorOptions): Promise<ConversationCursor>;
 
     /**
      * Returns a cursor located on the last read message. If no messages were read, then
