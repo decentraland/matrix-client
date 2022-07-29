@@ -65,15 +65,15 @@ export class MessagingClient implements MessagingAPI {
                         userIds: [this.matrixClient.getUserId(), otherId],
                         hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage)
                     }
-            }
-        })
+                }
+            })
     }
 
     /** Get all conversation the user has joined */
     getAllConversationsWithUnreadMessages(): Conversation[] {
         return this.getAllCurrentConversations()
-        .filter(conv => conv.unreadMessages)
-        .map((conv): Conversation => conv.conversation)
+            .filter(conv => conv.unreadMessages)
+            .map((conv): Conversation => conv.conversation)
     }
 
     /** Get total number of unseen messages from all conversations the user has joined */
