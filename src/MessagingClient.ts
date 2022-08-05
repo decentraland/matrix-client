@@ -61,6 +61,7 @@ export class MessagingClient implements MessagingAPI {
                     conversation: {
                         id: room.roomId,
                         type: getConversationTypeFromRoom(this.matrixClient, room),
+                        unreadMessages: this.getRoomUnreadMessages(room),
                         lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
                         userIds: [this.matrixClient.getUserId(), otherId],
                         hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage)
