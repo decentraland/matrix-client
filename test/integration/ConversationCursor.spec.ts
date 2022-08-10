@@ -40,6 +40,34 @@ describe('Integration - Conversation cursor', () => {
         expect(cursor.canExtendInDirection(CursorDirection.BACKWARDS)).to.be.true
     })
 
+    it(`When using a cursor on an undefined message, the reported messages are the expected`, async () => {
+        const sender = await testEnv.getRandomClient()
+        const receiver = await testEnv.getRandomClient()
+
+        // Create a conversation
+        const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
+
+        // Send messages
+        await sendMessages(sender, conversationId, 0, 10)
+        await sendMessages(sender, conversationId, 11, 9)
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Get cursor on specific message
+        const cursor = await receiver.getCursorOnMessage(conversationId, undefined, { initialSize: 3 })
+
+        // Read the messages
+        const messages = cursor.getMessages()
+
+        // Assert that the messages are the expected ones (the last ones)
+        assertMessagesAre(messages, 17, 19)
+
+        // Make sure that extension possibilities are correct
+        expect(cursor.canExtendInDirection(CursorDirection.FORWARDS)).to.be.false
+        expect(cursor.canExtendInDirection(CursorDirection.BACKWARDS)).to.be.true
+    })
+
     it(`When using a cursor on the last read message, the reported messages are the expected`, async () => {
         const sender = await testEnv.getRandomClient()
         const receiver = await testEnv.getRandomClient()
