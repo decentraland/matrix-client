@@ -63,6 +63,7 @@ jobs:
     <<: *base_env
 
     steps:
+      - <<: *attach_root
       - run:
           name: Install node dependencies
           command: npm install
