@@ -1,37 +1,39 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
-import { SocialId, ConversationType, FriendshipRequest } from './types';
-import { FriendsManagementAPI } from './FriendsManagementAPI';
-import { getConversationTypeFromRoom } from './Utils';
-import { SocialClient } from './SocialClient';
-import { Room, RoomEvent } from 'matrix-js-sdk';
+import { SocialId, ConversationType, FriendshipRequest } from './types'
+import { FriendsManagementAPI } from './FriendsManagementAPI'
+import { getConversationTypeFromRoom } from './Utils'
+import { SocialClient } from './SocialClient'
+import { Room, RoomEvent } from 'matrix-js-sdk'
 
 enum FriendshipStatus {
     NOT_FRIENDS = 'not friends',
     REQUEST_SENT_BY_ME_PENDING = 'request sent my me pending',
     REQUEST_SENT_TO_ME_PENDING = 'request sent to me pending',
-    FRIENDS = 'friends',
+    FRIENDS = 'friends'
 }
 
 export class FriendsManagementClient implements FriendsManagementAPI {
-
-    private static readonly PENDING_STATUSES = [FriendshipStatus.REQUEST_SENT_TO_ME_PENDING, FriendshipStatus.REQUEST_SENT_BY_ME_PENDING]
+    private static readonly PENDING_STATUSES = [
+        FriendshipStatus.REQUEST_SENT_TO_ME_PENDING,
+        FriendshipStatus.REQUEST_SENT_BY_ME_PENDING
+    ]
     private static readonly FRIENDSHIP_EVENT_TYPE = 'org.decentraland.friendship'
 
-    constructor(private readonly matrixClient: MatrixClient,
-        private readonly socialClient: SocialClient) { }
+    constructor(private readonly matrixClient: MatrixClient, private readonly socialClient: SocialClient) {}
 
     getAllFriends(): SocialId[] {
         const rooms = this.matrixClient.getVisibleRooms()
-        return rooms.filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
+        return rooms
+            .filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
             .filter(room => this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS)
             .map(room => room.guessDMUserId())
     }
-    
 
     getPendingRequests(): FriendshipRequest[] {
         const rooms = this.matrixClient.getVisibleRooms()
-        return rooms.filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
+        return rooms
+            .filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
             .map(room => [room, this.getFriendshipStatusInRoom(room)] as [Room, FriendshipStatus])
             .filter(([, status]) => FriendsManagementClient.PENDING_STATUSES.includes(status))
             .map(([room, status]) => {
@@ -50,46 +52,55 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     }
 
     async addAsFriend(userId: SocialId): Promise<void> {
-        return this.actByStatus(userId,
+        return this.actByStatus(
+            userId,
             // Send request
-            this.action(FriendshipStatus.NOT_FRIENDS,
-                userId => this.sendFriendshipEvent(FriendshipEvent.REQUEST, userId)),
+            this.action(FriendshipStatus.NOT_FRIENDS, userId =>
+                this.sendFriendshipEvent(FriendshipEvent.REQUEST, userId)
+            ),
 
             // Approve friendship
-            this.action(FriendshipStatus.REQUEST_SENT_TO_ME_PENDING,
-                userId => this.approveFriendshipRequestFrom(userId)),
+            this.action(FriendshipStatus.REQUEST_SENT_TO_ME_PENDING, userId =>
+                this.approveFriendshipRequestFrom(userId)
+            )
         )
     }
 
     deleteFriendshipWith(userId: SocialId): Promise<void> {
-        return this.actByStatus(userId,
+        return this.actByStatus(
+            userId,
             // Delete friendship
-            this.action(FriendshipStatus.FRIENDS,
-                userId => this.sendFriendshipEvent(FriendshipEvent.DELETE, userId)),
+            this.action(FriendshipStatus.FRIENDS, userId => this.sendFriendshipEvent(FriendshipEvent.DELETE, userId))
         )
     }
 
     approveFriendshipRequestFrom(userId: SocialId): Promise<void> {
-        return this.actByStatus(userId,
+        return this.actByStatus(
+            userId,
             // Accept friendship
-            this.action(FriendshipStatus.REQUEST_SENT_TO_ME_PENDING,
-                userId => this.sendFriendshipEvent(FriendshipEvent.ACCEPT, userId)),
+            this.action(FriendshipStatus.REQUEST_SENT_TO_ME_PENDING, userId =>
+                this.sendFriendshipEvent(FriendshipEvent.ACCEPT, userId)
+            )
         )
     }
 
     rejectFriendshipRequestFrom(userId: SocialId): Promise<void> {
-        return this.actByStatus(userId,
+        return this.actByStatus(
+            userId,
             // Reject friendship
-            this.action(FriendshipStatus.REQUEST_SENT_TO_ME_PENDING,
-                userId => this.sendFriendshipEvent(FriendshipEvent.REJECT, userId)),
+            this.action(FriendshipStatus.REQUEST_SENT_TO_ME_PENDING, userId =>
+                this.sendFriendshipEvent(FriendshipEvent.REJECT, userId)
+            )
         )
     }
 
     cancelFriendshipRequestTo(userId: SocialId): Promise<void> {
-        return this.actByStatus(userId,
+        return this.actByStatus(
+            userId,
             // Cancel friendship request
-            this.action(FriendshipStatus.REQUEST_SENT_BY_ME_PENDING,
-                userId => this.sendFriendshipEvent(FriendshipEvent.CANCEL, userId)),
+            this.action(FriendshipStatus.REQUEST_SENT_BY_ME_PENDING, userId =>
+                this.sendFriendshipEvent(FriendshipEvent.CANCEL, userId)
+            )
         )
     }
 
@@ -116,7 +127,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     private listenToEvent(eventToListenTo: FriendshipEvent, listener: (from: SocialId) => void): void {
         this.matrixClient.on(RoomEvent.Timeline, (event, _, toStartOfTimeline, __, data) => {
             // Ignore anything but real-time updates at the end of the room
-            if (toStartOfTimeline || !data || !data.liveEvent) return;
+            if (toStartOfTimeline || !data || !data.liveEvent) return
 
             // Just listen to the unfiltered timeline, so we don't raise the same event more than once
             if (data.timeline.getFilter()) return
@@ -134,7 +145,12 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         const { id: roomId } = await this.socialClient.createDirectConversation(otherUser)
         const content = { type: event }
         await this.matrixClient.sendStateEvent(roomId, FriendsManagementClient.FRIENDSHIP_EVENT_TYPE, content, '')
-        await this.matrixClient.sendStateEvent(roomId, FriendsManagementClient.FRIENDSHIP_EVENT_TYPE, content, this.matrixClient.getUserId())
+        await this.matrixClient.sendStateEvent(
+            roomId,
+            FriendsManagementClient.FRIENDSHIP_EVENT_TYPE,
+            content,
+            this.matrixClient.getUserId()
+        )
     }
 
     /**
@@ -142,7 +158,10 @@ export class FriendsManagementClient implements FriendsManagementAPI {
      * If an action for the current status isn't provided, then nothing will be done
      */
     private async actByStatus(userId: SocialId, ...actions: ActionByStatus[]): Promise<void> {
-        const actionsAsEntries: [FriendshipStatus, (userId: SocialId) => Promise<void>][] = actions.map(({ status, action }) => [ status, action ])
+        const actionsAsEntries: [
+            FriendshipStatus,
+            (userId: SocialId) => Promise<void>
+        ][] = actions.map(({ status, action }) => [status, action])
         const actionMap: Map<FriendshipStatus, (userId: SocialId) => Promise<void>> = new Map(actionsAsEntries)
         const { id: roomId } = await this.socialClient.createDirectConversation(userId)
         const room = this.matrixClient.getRoom(roomId)
@@ -169,16 +188,26 @@ export class FriendsManagementClient implements FriendsManagementAPI {
                 case FriendshipEvent.ACCEPT:
                     // If the last friendship event is FriendshipEvent.ACCEPT, then we perform an extra check, to verify
                     // that both participants actually agreed to the friendship. The start of a friendship MUST be mutual.
-                    const othersLastFriendshipEvent: MatrixEvent | undefined = sender === room.guessDMUserId() ? event : this.getLastFriendshipEventInRoomByUser(room, room.guessDMUserId())
-                    const myLastFriendshipEvent: MatrixEvent | undefined = sender === this.matrixClient.getUserId() ? event : this.getLastFriendshipEventInRoomByUser(room, this.matrixClient.getUserId())
+                    const othersLastFriendshipEvent: MatrixEvent | undefined =
+                        sender === room.guessDMUserId()
+                            ? event
+                            : this.getLastFriendshipEventInRoomByUser(room, room.guessDMUserId())
+                    const myLastFriendshipEvent: MatrixEvent | undefined =
+                        sender === this.matrixClient.getUserId()
+                            ? event
+                            : this.getLastFriendshipEventInRoomByUser(room, this.matrixClient.getUserId())
                     if (othersLastFriendshipEvent && myLastFriendshipEvent) {
-                        const wasInvited = othersLastFriendshipEvent.getContent().type === FriendshipEvent.REQUEST && myLastFriendshipEvent.getContent().type === FriendshipEvent.ACCEPT
-                        const didTheInvite = othersLastFriendshipEvent.getContent().type === FriendshipEvent.ACCEPT && myLastFriendshipEvent.getContent().type === FriendshipEvent.REQUEST
+                        const wasInvited =
+                            othersLastFriendshipEvent.getContent().type === FriendshipEvent.REQUEST &&
+                            myLastFriendshipEvent.getContent().type === FriendshipEvent.ACCEPT
+                        const didTheInvite =
+                            othersLastFriendshipEvent.getContent().type === FriendshipEvent.ACCEPT &&
+                            myLastFriendshipEvent.getContent().type === FriendshipEvent.REQUEST
                         if (wasInvited || didTheInvite) {
                             return FriendshipStatus.FRIENDS
                         }
                     }
-                    break;
+                    break
                 case FriendshipEvent.CANCEL:
                 case FriendshipEvent.REJECT:
                 case FriendshipEvent.DELETE:
@@ -205,7 +234,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     private action(status: FriendshipStatus, action: (userId: SocialId) => Promise<void>): ActionByStatus {
         return {
             status,
-            action,
+            action
         }
     }
 }
@@ -220,5 +249,5 @@ enum FriendshipEvent {
     CANCEL = 'cancel', // Cancel a friendship request
     ACCEPT = 'accept', // Accept a friendship request
     REJECT = 'reject', // Reject a friendship request
-    DELETE = 'delete', // Delete an existing friendship
+    DELETE = 'delete' // Delete an existing friendship
 }

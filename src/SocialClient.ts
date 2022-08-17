@@ -1,29 +1,40 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { AuthChain, EthAddress } from '@dcl/crypto'
-import { Timestamp, Conversation, SocialId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo, FriendshipRequest, CurrentUserStatus, UpdateUserStatus } from './types';
-import { ConversationCursor } from './ConversationCursor';
-import { MessagingAPI } from './MessagingAPI';
-import { SessionManagementAPI } from './SessionManagementAPI';
-import { MessagingClient } from './MessagingClient';
-import { SessionManagementClient } from './SessionManagementClient';
-import { FriendsManagementAPI } from './FriendsManagementAPI';
-import { FriendsManagementClient } from './FriendsManagementClient';
-import { SocialAPI } from './SocialAPI';
-import { login } from './Utils';
-import { ClientEvent, PendingEventOrdering } from 'matrix-js-sdk';
+import {
+    Timestamp,
+    Conversation,
+    SocialId,
+    TextMessage,
+    MessageId,
+    CursorOptions,
+    ConversationId,
+    BasicMessageInfo,
+    FriendshipRequest,
+    CurrentUserStatus,
+    UpdateUserStatus
+} from './types'
+import { ConversationCursor } from './ConversationCursor'
+import { MessagingAPI } from './MessagingAPI'
+import { SessionManagementAPI } from './SessionManagementAPI'
+import { MessagingClient } from './MessagingClient'
+import { SessionManagementClient } from './SessionManagementClient'
+import { FriendsManagementAPI } from './FriendsManagementAPI'
+import { FriendsManagementClient } from './FriendsManagementClient'
+import { SocialAPI } from './SocialAPI'
+import { login } from './Utils'
+import { ClientEvent, PendingEventOrdering } from 'matrix-js-sdk'
 
 export type ClientLoginOptions = {
-    pendingEventOrdering: PendingEventOrdering;
-    disablePresence: boolean;
-    initialSyncLimit: number;
+    pendingEventOrdering: PendingEventOrdering
+    disablePresence: boolean
+    initialSyncLimit: number
     getLocalStorage?: () => Storage
 }
 
 export class SocialClient implements SocialAPI {
-
-    private readonly sessionManagement: SessionManagementAPI;
-    private readonly messaging: MessagingAPI;
-    private readonly friendsManagement: FriendsManagementAPI;
+    private readonly sessionManagement: SessionManagementAPI
+    private readonly messaging: MessagingAPI
+    private readonly friendsManagement: FriendsManagementAPI
 
     private constructor(matrixClient: MatrixClient) {
         this.sessionManagement = new SessionManagementClient(matrixClient, this)
@@ -35,34 +46,40 @@ export class SocialClient implements SocialAPI {
         this.messaging.listenToEvents()
     }
 
-    static async loginToServer(synapseUrl: string, ethAddress: EthAddress, timestamp: Timestamp, authChain: AuthChain, options?: Partial<ClientLoginOptions> | undefined): Promise<SocialClient> {
+    static async loginToServer(
+        synapseUrl: string,
+        ethAddress: EthAddress,
+        timestamp: Timestamp,
+        authChain: AuthChain,
+        options?: Partial<ClientLoginOptions> | undefined
+    ): Promise<SocialClient> {
         // Destructure options
         const _options: ClientLoginOptions = {
             pendingEventOrdering: PendingEventOrdering.Detached,
             initialSyncLimit: 20, // This is the value that the Matrix React SDK uses
             disablePresence: false,
             ...options
-        };
+        }
 
         // Login
         const matrixClient = await login(synapseUrl, ethAddress, timestamp, authChain, _options.getLocalStorage)
 
         // Listen to initial sync
         const waitForInitialSync = new Promise<void>((resolve, reject) => {
-            matrixClient.once(ClientEvent.Sync, async (state) => {
+            matrixClient.once(ClientEvent.Sync, async state => {
                 if (state === 'PREPARED') {
                     resolve(void 0)
                 } else {
                     reject()
                 }
-            });
+            })
         })
 
         // Create the client before starting the matrix client, so our event hooks can detect all events during the initial sync
         const socialClient = new SocialClient(matrixClient)
 
         // Start the client
-        await matrixClient.startClient(_options);
+        await matrixClient.startClient(_options)
 
         // Wait for initial sync
         await waitForInitialSync
@@ -104,7 +121,7 @@ export class SocialClient implements SocialAPI {
     }
 
     //////             MESSAGING             //////
-    getAllCurrentConversations(): { conversation: Conversation, unreadMessages: boolean }[] {
+    getAllCurrentConversations(): { conversation: Conversation; unreadMessages: boolean }[] {
         return this.messaging.getAllCurrentConversations()
     }
 
@@ -136,7 +153,11 @@ export class SocialClient implements SocialAPI {
         return this.messaging.getLastReadMessage(conversationId)
     }
 
-    getCursorOnMessage(conversationId: ConversationId, messageId?: MessageId, options?: CursorOptions): Promise<ConversationCursor> {
+    getCursorOnMessage(
+        conversationId: ConversationId,
+        messageId?: MessageId,
+        options?: CursorOptions
+    ): Promise<ConversationCursor> {
         return this.messaging.getCursorOnMessage(conversationId, messageId, options)
     }
 
@@ -212,5 +233,4 @@ export class SocialClient implements SocialAPI {
     onFriendshipDeletion(listener: (deletedBy: SocialId) => void): void {
         return this.friendsManagement.onFriendshipDeletion(listener)
     }
-
 }

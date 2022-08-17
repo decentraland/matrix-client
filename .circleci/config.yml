@@ -12,8 +12,8 @@ commands:
       - run:
           name: Update node version
           command: |
-            nvm install v12.18.1
-            nvm alias default v12.18.1
+            nvm install v16
+            nvm alias default v16
 
 references:
   .workspace_root: &workspace_root /tmp/repo
@@ -45,10 +45,28 @@ references:
         only: /^\d+\.\d+\.\d(.*)/ # semver
 
 jobs:
+  lint:
+    <<: *base_env
+
+    steps:
+      - <<: *attach_root
+      - checkout
+      - update_node_version
+      - restore_cache:
+          keys:
+            - dependencies-{{ checksum "package-lock.json" }}
+      - run:
+          name: Install node dependencies
+          command: npm install
+      - run:
+          name: Lint
+          command: npm run lint
+
   build:
     <<: *base_env
 
     steps:
+      - <<: *attach_root
       - checkout
       - update_node_version
       - restore_cache:
@@ -104,6 +122,9 @@ workflows:
 
   build-release:
     jobs:
+      - lint:
+          <<: *all_branches_and_tags
+
       - build:
           <<: *all_branches_and_tags
 
@@ -116,3 +137,4 @@ workflows:
           <<: *master_and_tags
           requires:
             - test
+            - lint
