@@ -1,10 +1,9 @@
-import { SocialId, FriendshipRequest } from './types';
+import { SocialId, FriendshipRequest } from './types'
 
 export interface FriendsManagementAPI {
-
-    getAllFriends(): SocialId[];
-    getPendingRequests(): FriendshipRequest[];
-    isUserMyFriend(userId: SocialId): boolean;
+    getAllFriends(): SocialId[]
+    getPendingRequests(): FriendshipRequest[]
+    isUserMyFriend(userId: SocialId): boolean
 
     addAsFriend(userId: SocialId): Promise<void>
     deleteFriendshipWith(userId: SocialId): Promise<void>

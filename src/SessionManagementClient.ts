@@ -1,15 +1,13 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
-import { SocialId, PresenceType, CurrentUserStatus, UpdateUserStatus } from './types';
-import { SessionManagementAPI } from './SessionManagementAPI';
-import { SocialClient } from './SocialClient';
-import { User, UserEvent } from 'matrix-js-sdk';
+import { SocialId, PresenceType, CurrentUserStatus, UpdateUserStatus } from './types'
+import { SessionManagementAPI } from './SessionManagementAPI'
+import { SocialClient } from './SocialClient'
+import { User, UserEvent } from 'matrix-js-sdk'
 
 export class SessionManagementClient implements SessionManagementAPI {
-
     private loggedIn: boolean = true
 
-    constructor(private readonly matrixClient: MatrixClient,
-        private readonly socialClient: SocialClient) { }
+    constructor(private readonly matrixClient: MatrixClient, private readonly socialClient: SocialClient) {}
 
     isLoggedIn(): boolean {
         return this.loggedIn
@@ -18,7 +16,7 @@ export class SessionManagementClient implements SessionManagementAPI {
     async logout(): Promise<void> {
         this.loggedIn = false
         await this.matrixClient.stopClient()
-        await this.matrixClient.logout();
+        await this.matrixClient.logout()
     }
 
     getUserId(): SocialId {
@@ -32,7 +30,7 @@ export class SessionManagementClient implements SessionManagementAPI {
     setStatus(status: UpdateUserStatus): Promise<void> {
         const input = {
             presence: status.presence,
-            status_msg: JSON.stringify({ realm: status.realm, position: status.position }),
+            status_msg: JSON.stringify({ realm: status.realm, position: status.position })
         }
 
         return this.matrixClient.setPresence(input)
@@ -40,7 +38,8 @@ export class SessionManagementClient implements SessionManagementAPI {
 
     getUserStatuses(...users: SocialId[]): Map<SocialId, CurrentUserStatus> {
         const friends = this.socialClient.getAllFriends()
-        const entries: [SocialId, CurrentUserStatus][] = users.filter(userId => friends.includes(userId))
+        const entries: [SocialId, CurrentUserStatus][] = users
+            .filter(userId => friends.includes(userId))
             .map(userId => this.matrixClient.getUser(userId))
             .filter(user => !!user)
             .map(user => [user.userId, SessionManagementClient.userToStatus(user)])
@@ -50,38 +49,43 @@ export class SessionManagementClient implements SessionManagementAPI {
     onStatusChange(listener: (userId: SocialId, status: CurrentUserStatus) => void): void {
         const socialClient = this.socialClient
 
-        this.matrixClient.on(UserEvent.Presence, async (event, user) =>{
+        this.matrixClient.on(UserEvent.Presence, async (event, user) => {
             if (!event) return
-            console.log("------------------- USER EVENT: PRESENCE BEGIN ------------------------")
-
+            console.log('------------------- USER EVENT: PRESENCE BEGIN ------------------------')
 
             const sender = event.getSender()
-            console.log(`Sender: ${sender} - My user ID: ${this.getUserId()} - are we friends?: ${socialClient.isUserMyFriend(sender)}`)
-            if (sender !== this.getUserId() &&
-                socialClient.isUserMyFriend(sender)) {
-                    console.log('entro')
-                    listener(sender, SessionManagementClient.eventToStatus(user))
+            console.log(
+                `Sender: ${sender} - My user ID: ${this.getUserId()} - are we friends?: ${socialClient.isUserMyFriend(
+                    sender
+                )}`
+            )
+            if (sender !== this.getUserId() && socialClient.isUserMyFriend(sender)) {
+                console.log('entro')
+                listener(sender, SessionManagementClient.eventToStatus(user))
             }
-            console.log("------------------- USER EVENT: PRESENCE FIN ------------------------")
-        });
+            console.log('------------------- USER EVENT: PRESENCE FIN ------------------------')
+        })
     }
 
     private static eventToStatus(user: User): CurrentUserStatus {
-
         const presenceData = {
             presence: user.presence,
             lastActiveAgo: user.lastActiveAgo,
-            presenceStatusMsg: user.presenceStatusMsg,
+            presenceStatusMsg: user.presenceStatusMsg
         }
         return SessionManagementClient.userToStatus(presenceData)
     }
 
-    private static userToStatus(user: { presence: string, lastActiveAgo: number, presenceStatusMsg: string }): CurrentUserStatus {
+    private static userToStatus(user: {
+        presence: string
+        lastActiveAgo: number
+        presenceStatusMsg: string
+    }): CurrentUserStatus {
         const presence: PresenceType = PresenceType[user.presence.toUpperCase().trim()]
 
         const userStatus: CurrentUserStatus = {
             presence,
-            lastActiveAgo: user.lastActiveAgo,
+            lastActiveAgo: user.lastActiveAgo
         }
 
         if (presence !== PresenceType.OFFLINE && user.presenceStatusMsg) {
@@ -94,10 +98,9 @@ export class SessionManagementClient implements SessionManagementAPI {
                 if (parseResult?.position) {
                     userStatus.position = parseResult?.position
                 }
-            } catch(error) { }
+            } catch (error) {}
         }
 
         return userStatus
     }
-
 }

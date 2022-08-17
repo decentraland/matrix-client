@@ -1,60 +1,71 @@
-import { Conversation, SocialId, TextMessage, MessageId, CursorOptions, ConversationId, BasicMessageInfo } from './types';
-import { ConversationCursor } from './ConversationCursor';
+import {
+    Conversation,
+    SocialId,
+    TextMessage,
+    MessageId,
+    CursorOptions,
+    ConversationId,
+    BasicMessageInfo
+} from './types'
+import { ConversationCursor } from './ConversationCursor'
 
 export interface MessagingAPI {
-
     /** Start listening to events */
-    listenToEvents(): void;
+    listenToEvents(): void
 
     /** Get all conversation the user has joined */
-    getAllCurrentConversations(): { conversation: Conversation, unreadMessages: boolean }[]
+    getAllCurrentConversations(): { conversation: Conversation; unreadMessages: boolean }[]
 
     /** Get all conversation the user has with unread messages */
     getAllConversationsWithUnreadMessages(): Conversation[]
 
     /** Get total number of unseen messages from all conversations the user has joined */
-    getTotalUnseenMessages(): number;
+    getTotalUnseenMessages(): number
 
     /**
      * Send a text message  to a conversation.
      * Returns the message id
      */
-    sendMessageTo(conversationId: ConversationId, message: string): Promise<MessageId>;
+    sendMessageTo(conversationId: ConversationId, message: string): Promise<MessageId>
 
     /** Mark a message (and all those that came before it on the conversation) as read */
-    markAsRead(conversationId: ConversationId, messageId: MessageId): Promise<void>;
+    markAsRead(conversationId: ConversationId, messageId: MessageId): Promise<void>
 
     /** Mark all messages in the conversation as seen */
-    markMessagesAsSeen(conversationId: ConversationId): Promise<void>;
+    markMessagesAsSeen(conversationId: ConversationId): Promise<void>
 
     /** Listen to new messages */
-    onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void;
+    onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void
 
     /**
      * Return basic information about the last read message. Since we don't mark messages sent by the logged in user as read,
      * we also check against the last sent message.
      */
-    getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined;
+    getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined
 
-    /** Returns a cursor located on the given message. If there is no given message, then it is 
+    /** Returns a cursor located on the given message. If there is no given message, then it is
      * located at the end of the conversation. */
-    getCursorOnMessage(conversationId: ConversationId, messageId?: MessageId, options?: CursorOptions): Promise<ConversationCursor>;
+    getCursorOnMessage(
+        conversationId: ConversationId,
+        messageId?: MessageId,
+        options?: CursorOptions
+    ): Promise<ConversationCursor>
 
     /**
      * Returns a cursor located on the last read message. If no messages were read, then
      * it is located at the end of the conversation.
      */
-    getCursorOnLastRead(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor>;
+    getCursorOnLastRead(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor>
 
     /** Returns a cursor located at the end of the conversation */
-    getCursorOnLastMessage(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor>;
+    getCursorOnLastMessage(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor>
 
     /** Get or create a direct conversation with the given user */
-    createDirectConversation(userId: SocialId): Promise<Conversation>;
+    createDirectConversation(userId: SocialId): Promise<Conversation>
 
     /** Return whether a conversation has unread messages or not */
-    doesConversationHaveUnreadMessages(conversationId: ConversationId): boolean;
+    doesConversationHaveUnreadMessages(conversationId: ConversationId): boolean
 
     /** Return a conversation unread messages */
-    getConversationUnreadMessages(conversationId: ConversationId): BasicMessageInfo[];
+    getConversationUnreadMessages(conversationId: ConversationId): BasicMessageInfo[]
 }
