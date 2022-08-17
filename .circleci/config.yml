@@ -56,14 +56,22 @@ jobs:
           keys:
             - dependencies-{{ checksum "package-lock.json" }}
       - run:
+          name: Install node dependencies
+          command: npm install
+      - run:
           name: Lint
-          command: npm run lint            
+          command: npm run lint
 
   build:
     <<: *base_env
 
     steps:
       - <<: *attach_root
+      - checkout
+      - update_node_version
+      - restore_cache:
+          keys:
+            - dependencies-{{ checksum "package-lock.json" }}
       - run:
           name: Install node dependencies
           command: npm install
