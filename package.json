@@ -12,7 +12,8 @@
     "test": "nyc mocha -r ts-node/register -r tsconfig-paths/register --exit \"test/**/*.spec.ts\"",
     "prepare-performance-test": "node -r ts-node/register -r tsconfig-paths/register test/performance/set-up-performance-test.ts",
     "semantic-release": "semantic-release",
-    "commit-msg": "validate-commit-msg"
+    "commit-msg": "validate-commit-msg",
+    "lint": "prettier --write 'src/**/*.ts'"
   },
   "nyc": {
     "all": true,
