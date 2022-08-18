@@ -75,14 +75,18 @@ export class MessagingClient implements MessagingAPI {
             .map(room => {
                 const otherId = room.guessDMUserId()
                 const unreadMessages = this.getRoomUnreadMessages(room)
+                const type = getConversationTypeFromRoom(this.matrixClient, room)
                 return {
                     unreadMessages: this.doesRoomHaveUnreadMessages(room),
                     conversation: {
                         id: room.roomId,
-                        type: getConversationTypeFromRoom(this.matrixClient, room),
+                        type,
                         unreadMessages: unreadMessages.length > 0 ? unreadMessages : undefined,
                         lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
-                        userIds: [this.matrixClient.getUserId(), otherId],
+                        userIds:
+                            type === ConversationType.DIRECT
+                                ? [this.matrixClient.getUserId(), otherId]
+                                : room.getMembers().map(x => x.userId),
                         hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage)
                     }
                 }
@@ -271,6 +275,7 @@ export class MessagingClient implements MessagingAPI {
     }
 
     /** Get or create a group conversation with the given users */
+    // This is a direct conversation between multiple users
     async createGroupConversation(conversationName: string, userIds: SocialId[]): Promise<Conversation> {
         if (userIds.length < 2) {
             throw new Error('Group conversations must include two or more people. ')
@@ -282,6 +287,29 @@ export class MessagingClient implements MessagingAPI {
             conversationName
         )
         return conversation
+    }
+
+    /** Create a channel with the given users */
+    async createChannel(channelName: string, userIds: SocialId[]): Promise<Conversation> {
+        await this.assertThatUsersExist(userIds)
+        try {
+            const res = await this.matrixClient.getRoomIdForAlias(`#${channelName}`)
+            return {
+                id: res.room_id,
+                type: ConversationType.GROUP
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+
+    /** Join a channel */
+    async joinChannel(roomIdOrChannelAlias: string): Promise<void> {
+        try {
+            await this.matrixClient.joinRoom(roomIdOrChannelAlias)
+        } catch (error) {
+            throw error
+        }
     }
 
     /** Return whether a conversation has unread messages or not */

@@ -68,4 +68,10 @@ export interface MessagingAPI {
 
     /** Return a conversation unread messages */
     getConversationUnreadMessages(conversationId: ConversationId): BasicMessageInfo[]
+
+    /** Create a channel with the given users */
+    createChannel(channelName: string, userIds: SocialId[]): Promise<Conversation>
+
+    /** Join a channel */
+    joinChannel(roomIdOrChannelAlias: string): Promise<void>
 }
