@@ -60,6 +60,9 @@ export function buildTextMessage(event: MatrixEvent, status: MessageStatus): Tex
 }
 
 export function getConversationTypeFromRoom(client: MatrixClient, room: Room): ConversationType {
+    if (room.getType() === 'channel') {
+        return ConversationType.CHANNEL
+    }
     if (room.getInvitedAndJoinedMemberCount() === 2) {
         const membersWhoAreNotMe = room.currentState.getMembers().filter(member => member.userId !== client.getUserId())
         const otherMember = membersWhoAreNotMe[0].userId

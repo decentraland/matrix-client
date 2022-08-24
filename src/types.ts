@@ -5,7 +5,8 @@ export type MessageId = string
 
 export enum ConversationType {
     GROUP,
-    DIRECT
+    DIRECT,
+    CHANNEL
 }
 
 export type Conversation = {

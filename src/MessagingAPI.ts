@@ -74,4 +74,7 @@ export interface MessagingAPI {
 
     /** Join a channel */
     joinChannel(roomIdOrChannelAlias: string): Promise<void>
+
+    /** Leave a channel */
+    leaveChannel(roomId: string): Promise<void>
 }

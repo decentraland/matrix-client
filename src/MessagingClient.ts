@@ -23,7 +23,7 @@ import {
 } from './Utils'
 import { ConversationCursor } from './ConversationCursor'
 import { MessagingAPI } from './MessagingAPI'
-import { ClientEvent, EventType, Preset, RoomMemberEvent } from 'matrix-js-sdk'
+import { ClientEvent, EventType, ICreateRoomOpts, Preset, RoomMemberEvent, Visibility } from 'matrix-js-sdk'
 
 export class MessagingClient implements MessagingAPI {
     private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()
@@ -291,13 +291,24 @@ export class MessagingClient implements MessagingAPI {
 
     /** Create a channel with the given users */
     async createChannel(channelName: string, userIds: SocialId[]): Promise<Conversation> {
-        await this.assertThatUsersExist(userIds)
         try {
-            const res = await this.matrixClient.getRoomIdForAlias(`#${channelName}`)
-            return {
-                id: res.room_id,
-                type: ConversationType.GROUP
-            }
+            this.matrixClient.getRoomIdForAlias(`#${channelName}:${this.matrixClient.getDomain()}`)
+            const { conversation } = await this.getOrCreateConversation(
+                this.matrixClient,
+                ConversationType.CHANNEL,
+                userIds,
+                channelName,
+                channelName,
+                {
+                    preset: Preset.PublicChat,
+                    is_direct: false,
+                    visibility: Visibility.Public,
+                    creation_content: {
+                        type: 'channel'
+                    }
+                }
+            )
+            return conversation
         } catch (error) {
             throw error
         }
@@ -307,6 +318,14 @@ export class MessagingClient implements MessagingAPI {
     async joinChannel(roomIdOrChannelAlias: string): Promise<void> {
         try {
             await this.matrixClient.joinRoom(roomIdOrChannelAlias)
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async leaveChannel(roomId: string): Promise<void> {
+        try {
+            await this.matrixClient.leave(roomId)
         } catch (error) {
             throw error
         }
@@ -348,11 +367,13 @@ export class MessagingClient implements MessagingAPI {
         client: MatrixClient,
         type: ConversationType,
         userIds: SocialId[],
-        conversationName?: string
+        conversationName?: string,
+        defaultAlias?: string,
+        createRoomOptions?: ICreateRoomOpts
     ): Promise<{ conversation: Conversation; created: boolean }> {
         await this.assertThatUsersExist(userIds)
         const allUsersInConversation = [client.getUserIdLocalpart(), ...userIds]
-        const alias = this.buildAliasForConversationWithUsers(allUsersInConversation)
+        const alias = defaultAlias ?? this.buildAliasForConversationWithUsers(allUsersInConversation)
         let roomId: string
         let created: boolean
         // First, try to find the alias locally
@@ -375,7 +396,8 @@ export class MessagingClient implements MessagingAPI {
                     preset: Preset.TrustedPrivateChat,
                     is_direct: type === ConversationType.DIRECT,
                     invite: userIds,
-                    name: conversationName
+                    name: conversationName,
+                    ...createRoomOptions
                 })
                 roomId = creationResult.room_id
                 created = true

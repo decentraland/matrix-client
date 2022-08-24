@@ -241,4 +241,8 @@ export class SocialClient implements SocialAPI {
     joinChannel(roomIdOrChannelAlias: string): Promise<void> {
         return this.messaging.joinChannel(roomIdOrChannelAlias)
     }
+
+    leaveChannel(roomId: string): Promise<void> {
+        return this.messaging.leaveChannel(roomId)
+    }
 }
