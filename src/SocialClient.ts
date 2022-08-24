@@ -11,7 +11,8 @@ import {
     BasicMessageInfo,
     FriendshipRequest,
     CurrentUserStatus,
-    UpdateUserStatus
+    UpdateUserStatus,
+    GetOrCreateConversationResponse
 } from './types'
 import { ConversationCursor } from './ConversationCursor'
 import { MessagingAPI } from './MessagingAPI'
@@ -238,7 +239,7 @@ export class SocialClient implements SocialAPI {
         return this.messaging.createChannel(channelName, userIds)
     }
 
-    getOrCreateChannel(channelName: string, userIds: string[]): Promise<Conversation> {
+    getOrCreateChannel(channelName: string, userIds: string[]): Promise<GetOrCreateConversationResponse> {
         return this.messaging.getOrCreateChannel(channelName, userIds)
     }
 
