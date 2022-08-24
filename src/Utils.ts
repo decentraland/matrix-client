@@ -4,7 +4,15 @@ import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { Room } from 'matrix-js-sdk/lib/models/room'
 import { Filter } from 'matrix-js-sdk/lib/filter'
 import { EthAddress, AuthChain } from '@dcl/crypto'
-import { ConversationType, MessageStatus, TextMessage, SocialId, BasicMessageInfo, Timestamp } from './types'
+import {
+    ConversationType,
+    MessageStatus,
+    TextMessage,
+    SocialId,
+    BasicMessageInfo,
+    Timestamp,
+    CHANNEL_TYPE
+} from './types'
 import { WebStorageSessionStore } from 'matrix-js-sdk/lib/store/session/webstorage'
 
 export async function login(
@@ -60,7 +68,7 @@ export function buildTextMessage(event: MatrixEvent, status: MessageStatus): Tex
 }
 
 export function getConversationTypeFromRoom(client: MatrixClient, room: Room): ConversationType {
-    if (room.getType() === 'channel') {
+    if (room.getType() === CHANNEL_TYPE) {
         return ConversationType.CHANNEL
     }
     if (room.getInvitedAndJoinedMemberCount() === 2) {

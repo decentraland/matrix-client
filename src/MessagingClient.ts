@@ -11,7 +11,8 @@ import {
     MessageId,
     CursorOptions,
     ConversationId,
-    BasicMessageInfo
+    BasicMessageInfo,
+    CHANNEL_TYPE
 } from './types'
 import {
     findEventInRoom,
@@ -304,7 +305,7 @@ export class MessagingClient implements MessagingAPI {
                     is_direct: false,
                     visibility: Visibility.Public,
                     creation_content: {
-                        type: 'channel'
+                        type: CHANNEL_TYPE
                     }
                 }
             )

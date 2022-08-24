@@ -3,6 +3,8 @@ export type SocialId = string
 export type ConversationId = string
 export type MessageId = string
 
+export const CHANNEL_TYPE = 'channel'
+
 export enum ConversationType {
     GROUP,
     DIRECT,
