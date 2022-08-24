@@ -5,6 +5,11 @@ export type MessageId = string
 
 export const CHANNEL_TYPE = 'channel'
 
+export interface GetOrCreateConversationResponse {
+    conversation: Conversation
+    created: boolean
+}
+
 export enum ConversationType {
     GROUP,
     DIRECT,

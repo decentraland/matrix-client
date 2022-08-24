@@ -5,7 +5,8 @@ import {
     MessageId,
     CursorOptions,
     ConversationId,
-    BasicMessageInfo
+    BasicMessageInfo,
+    GetOrCreateConversationResponse
 } from './types'
 import { ConversationCursor } from './ConversationCursor'
 
@@ -76,7 +77,7 @@ export interface MessagingAPI {
      * If the channel already exists this will return the channel and won't invite the passed ids
      * If the channel is created, all user ids will be invited to join
      */
-    getOrCreateChannel(channelName: string, userIds: SocialId[]): Promise<Conversation>
+    getOrCreateChannel(channelName: string, userIds: SocialId[]): Promise<GetOrCreateConversationResponse>
 
     /** Join a channel */
     joinChannel(roomIdOrChannelAlias: string): Promise<void>

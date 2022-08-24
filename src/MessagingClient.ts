@@ -12,7 +12,8 @@ import {
     CursorOptions,
     ConversationId,
     BasicMessageInfo,
-    CHANNEL_TYPE
+    CHANNEL_TYPE,
+    GetOrCreateConversationResponse
 } from './types'
 import {
     findEventInRoom,
@@ -320,9 +321,9 @@ export class MessagingClient implements MessagingAPI {
      * If the channel already exists this will return the channel and won't invite the passed ids
      * If the channel is created, all user ids will be invited to join
      */
-    async getOrCreateChannel(channelName: string, userIds: SocialId[]): Promise<Conversation> {
+    async getOrCreateChannel(channelName: string, userIds: SocialId[]): Promise<GetOrCreateConversationResponse> {
         try {
-            const { conversation } = await this.getOrCreateConversation(
+            return this.getOrCreateConversation(
                 this.matrixClient,
                 ConversationType.CHANNEL,
                 userIds,
@@ -337,7 +338,6 @@ export class MessagingClient implements MessagingAPI {
                     }
                 }
             )
-            return conversation
         } catch (error) {
             throw error
         }
