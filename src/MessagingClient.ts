@@ -290,13 +290,38 @@ export class MessagingClient implements MessagingAPI {
         return conversation
     }
 
-    /** Get or create a channel with the given users 
+    /** Get or create a channel with the given users
      * If the channel already exists this will return the channel and won't invite the passed ids
      * If the channel is created, all user ids will be invited to join
-    */
+     */
+    async createChannel(channelName: string, userIds: SocialId[]): Promise<Conversation> {
+        try {
+            const { room_id } = await this.matrixClient.createRoom({
+                room_alias_name: channelName,
+                preset: Preset.PublicChat,
+                is_direct: false,
+                invite: userIds,
+                name: channelName,
+                visibility: Visibility.Public,
+                creation_content: {
+                    type: CHANNEL_TYPE
+                }
+            })
+            return {
+                id: room_id,
+                type: ConversationType.CHANNEL
+            }
+        } catch (error) {
+            throw error
+        }
+    }
+
+    /** Get or create a channel with the given users
+     * If the channel already exists this will return the channel and won't invite the passed ids
+     * If the channel is created, all user ids will be invited to join
+     */
     async getOrCreateChannel(channelName: string, userIds: SocialId[]): Promise<Conversation> {
         try {
-            this.matrixClient.getRoomIdForAlias(`#${channelName}:${this.matrixClient.getDomain()}`)
             const { conversation } = await this.getOrCreateConversation(
                 this.matrixClient,
                 ConversationType.CHANNEL,

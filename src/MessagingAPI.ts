@@ -69,6 +69,9 @@ export interface MessagingAPI {
     /** Return a conversation unread messages */
     getConversationUnreadMessages(conversationId: ConversationId): BasicMessageInfo[]
 
+    /** Create a channel with the given users */
+    createChannel(channelName: string, userIds: SocialId[]): Promise<Conversation>
+
     /** Get or create a channel with the given users
      * If the channel already exists this will return the channel and won't invite the passed ids
      * If the channel is created, all user ids will be invited to join
