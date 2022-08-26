@@ -79,6 +79,12 @@ export interface MessagingAPI {
      */
     getOrCreateChannel(channelName: string, userIds: SocialId[]): Promise<GetOrCreateConversationResponse>
 
+    /**
+     * Get the conversation for a channel if it exists, otherwise returns undefined
+     * @param roomId the roomId of the channel
+     */
+    getChannel(roomId: string): Conversation | undefined
+
     /** Join a channel */
     joinChannel(roomIdOrChannelAlias: string): Promise<void>
 

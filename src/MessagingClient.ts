@@ -69,30 +69,33 @@ export class MessagingClient implements MessagingAPI {
         })
     }
 
+    getRoomInformation(room: Room): { conversation: Conversation; unreadMessages: boolean } {
+        const otherId = room.guessDMUserId()
+        const unreadMessages = this.getRoomUnreadMessages(room)
+        const type = getConversationTypeFromRoom(this.matrixClient, room)
+        return {
+            unreadMessages: this.doesRoomHaveUnreadMessages(room),
+            conversation: {
+                id: room.roomId,
+                type,
+                unreadMessages: unreadMessages.length > 0 ? unreadMessages : undefined,
+                lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
+                userIds:
+                    type === ConversationType.DIRECT
+                        ? [this.matrixClient.getUserId(), otherId]
+                        : room.getMembers().map(x => x.userId),
+                hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage),
+                name: room.name
+            }
+        }
+    }
+
     /** Get all conversation the user has joined */
     getAllCurrentConversations(): { conversation: Conversation; unreadMessages: boolean }[] {
         const rooms = this.getAllRooms()
         return rooms
             .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
-            .map(room => {
-                const otherId = room.guessDMUserId()
-                const unreadMessages = this.getRoomUnreadMessages(room)
-                const type = getConversationTypeFromRoom(this.matrixClient, room)
-                return {
-                    unreadMessages: this.doesRoomHaveUnreadMessages(room),
-                    conversation: {
-                        id: room.roomId,
-                        type,
-                        unreadMessages: unreadMessages.length > 0 ? unreadMessages : undefined,
-                        lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
-                        userIds:
-                            type === ConversationType.DIRECT
-                                ? [this.matrixClient.getUserId(), otherId]
-                                : room.getMembers().map(x => x.userId),
-                        hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage)
-                    }
-                }
-            })
+            .map(this.getRoomInformation)
     }
 
     /** Get all conversation the user has joined */
@@ -370,6 +373,19 @@ export class MessagingClient implements MessagingAPI {
     getConversationUnreadMessages(conversationId: ConversationId): BasicMessageInfo[] {
         const room = this.matrixClient.getRoom(conversationId)
         return this.getRoomUnreadMessages(room)
+    }
+
+    /**
+     * Get the conversation for a channel that exists locally, if it doesn't returns undefined
+     * @param roomId the roomId of the channel
+     */
+    getChannel(roomId: string): Conversation | undefined {
+        const room = this.matrixClient.getRoom(roomId)
+        if (!room) {
+            return
+        }
+
+        return this.getRoomInformation(room).conversation
     }
 
     private async assertThatUsersExist(userIds: SocialId[]): Promise<void> {

@@ -23,6 +23,7 @@ export type Conversation = {
     userIds?: Array<string>
     lastEventTimestamp?: number
     hasMessages?: boolean
+    name?: string
 }
 
 export type BasicMessageInfo = {
