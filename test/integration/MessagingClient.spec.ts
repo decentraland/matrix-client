@@ -53,6 +53,7 @@ describe('Integration - Messaging Client', () => {
         expect(conversation2.userIds).to.deep.equal([client2.getUserId(), client1.getUserId()])
         expect(conversation2.hasMessages).to.equal(false)
         expect(conversation2.lastEventTimestamp).not.to.be.undefined
+        expect(conversation2.name).not.to.be.undefined
     })
 
     it(`When a direct conversation is started with a client that doesn't exist, then an exception is thrown`, async () => {
@@ -329,7 +330,12 @@ describe('Integration - Messaging Client', () => {
     })
 
     /** Assert that the message was received, and return the message id */
-    function assertMessageWasReceivedByEvent(spy, sender: SocialClient, conversation: Conversation, message: string): MessageId {
+    function assertMessageWasReceivedByEvent(
+        spy,
+        sender: SocialClient,
+        conversation: Conversation,
+        message: string
+    ): MessageId {
         // Make sure that the spy was called
         expect(spy).to.have.been.calledOnce
 
@@ -346,5 +352,4 @@ describe('Integration - Messaging Client', () => {
 
         return id
     }
-
 })
