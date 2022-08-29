@@ -16,7 +16,6 @@ import {
 import {
     findEventInRoom,
     buildTextMessage,
-    getOnlyMessagesTimelineSetFromRoom,
     getOnlyMessagesSentByMeTimelineSetFromRoom,
     matrixEventToBasicEventInfo,
     getConversationTypeFromRoom
@@ -423,7 +422,7 @@ export class MessagingClient implements MessagingAPI {
             return []
         }
         // Fetch message events
-        
+
         // this line should use `getOnlyMessagesTimelineSetFromRoom` but there's a bug in the client
         // that for some reason the last message (in real time) it's not always in the `room.getLiveTimeline()`
         // generating a bug where the only unread message is discarded by this function
