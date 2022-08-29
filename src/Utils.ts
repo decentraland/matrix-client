@@ -73,7 +73,7 @@ export function getConversationTypeFromRoom(client: MatrixClient, room: Room): C
     return ConversationType.GROUP
 }
 
-export function getOnlyMessagesTimelineSetFromRoom(client: MatrixClient, room, limit?: number) {
+export function getOnlyMessagesTimelineSetFromRoom(client: MatrixClient, room: Room, limit?: number) {
     const filter = GET_ONLY_MESSAGES_FILTER(client.getUserId(), limit)
     return room.getOrCreateFilteredTimelineSet(filter)
 }

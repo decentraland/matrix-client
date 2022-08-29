@@ -418,10 +418,16 @@ export class MessagingClient implements MessagingAPI {
         await this.matrixClient.setAccountData('m.direct', directRoomMap)
     }
 
-    private getRoomUnreadMessages(room): Array<BasicMessageInfo> {
+    private getRoomUnreadMessages(room: Room | null): Array<BasicMessageInfo> {
+        if (!room) {
+            return []
+        }
         // Fetch message events
-        const timelineSet = getOnlyMessagesTimelineSetFromRoom(this.matrixClient, room)
-        const timeline: Array<any> = timelineSet.getLiveTimeline().getEvents()
+        
+        // this line should use `getOnlyMessagesTimelineSetFromRoom` but there's a bug in the client
+        // that for some reason the last message (in real time) it's not always in the `room.getLiveTimeline()`
+        // generating a bug where the only unread message is discarded by this function
+        const timeline: Array<any> = room.timeline.filter(x => x.getType() === 'm.room.message')
 
         // If there are no messages, then there are no unread messages
         if (timeline.length === 0) {
