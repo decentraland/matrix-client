@@ -12,7 +12,8 @@ import {
     FriendshipRequest,
     CurrentUserStatus,
     UpdateUserStatus,
-    GetOrCreateConversationResponse
+    GetOrCreateConversationResponse,
+    SearchChannelsResponse
 } from './types'
 import { ConversationCursor } from './ConversationCursor'
 import { MessagingAPI } from './MessagingAPI'
@@ -253,5 +254,9 @@ export class SocialClient implements SocialAPI {
 
     leaveChannel(roomId: string): Promise<void> {
         return this.messaging.leaveChannel(roomId)
+    }
+
+    searchChannel(searchTerm: string, limit: number, since?: string): Promise<SearchChannelsResponse> {
+        return this.messaging.searchChannel(searchTerm, limit, since)
     }
 }

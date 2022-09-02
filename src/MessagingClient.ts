@@ -13,7 +13,8 @@ import {
     ConversationId,
     BasicMessageInfo,
     CHANNEL_TYPE,
-    GetOrCreateConversationResponse
+    GetOrCreateConversationResponse,
+    SearchChannelsResponse
 } from './types'
 import {
     findEventInRoom,
@@ -25,7 +26,23 @@ import {
 } from './Utils'
 import { ConversationCursor } from './ConversationCursor'
 import { MessagingAPI } from './MessagingAPI'
-import { ClientEvent, EventType, ICreateRoomOpts, Preset, RoomMemberEvent, Visibility } from 'matrix-js-sdk'
+import {
+    ClientEvent,
+    EventType,
+    ICreateRoomOpts,
+    IPublicRoomsChunkRoom,
+    Preset,
+    RoomMemberEvent,
+    Visibility
+} from 'matrix-js-sdk'
+
+// TODO: Delete this when matrix-client exports the actual one
+interface IPublicRoomsResponse {
+    chunk: IPublicRoomsChunkRoom[]
+    next_batch?: string
+    prev_batch?: string
+    total_room_count_estimate?: number
+}
 
 export class MessagingClient implements MessagingAPI {
     private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()
@@ -386,6 +403,38 @@ export class MessagingClient implements MessagingAPI {
         }
 
         return this.getRoomInformation(room).conversation
+    }
+
+    async searchChannel(searchTerm: string, limit: number, since?: string): Promise<SearchChannelsResponse> {
+        try {
+            let publicRooms: Array<IPublicRoomsChunkRoom> = []
+            let res: IPublicRoomsResponse
+            let nextBatch: string | undefined = since
+            do {
+                res = await this.matrixClient.publicRooms({
+                    filter: {
+                        generic_search_term: searchTerm
+                    },
+                    limit,
+                    since
+                })
+                publicRooms.push(...res.chunk)
+                nextBatch = res.next_batch
+            } while (publicRooms.length < limit || !res.next_batch)
+
+            return {
+                conversations: publicRooms.map(
+                    (room): Conversation => ({
+                        id: room.room_id,
+                        name: room.name,
+                        type: ConversationType.CHANNEL
+                    })
+                ),
+                nextBatch
+            }
+        } catch (error) {
+            throw error
+        }
     }
 
     private async assertThatUsersExist(userIds: SocialId[]): Promise<void> {

@@ -6,7 +6,8 @@ import {
     CursorOptions,
     ConversationId,
     BasicMessageInfo,
-    GetOrCreateConversationResponse
+    GetOrCreateConversationResponse,
+    SearchChannelsResponse
 } from './types'
 import { ConversationCursor } from './ConversationCursor'
 
@@ -90,4 +91,7 @@ export interface MessagingAPI {
 
     /** Leave a channel */
     leaveChannel(roomId: string): Promise<void>
+
+    /** Search channels */
+    searchChannel(searchTerm: string, limit: number, since?: string): Promise<SearchChannelsResponse>
 }
