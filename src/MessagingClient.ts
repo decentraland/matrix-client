@@ -416,7 +416,7 @@ export class MessagingClient implements MessagingAPI {
                         generic_search_term: searchTerm
                     },
                     limit,
-                    since
+                    since: nextBatch
                 })
                 publicRooms.push(...res.chunk)
                 nextBatch = res.next_batch
