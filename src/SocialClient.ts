@@ -236,10 +236,6 @@ export class SocialClient implements SocialAPI {
         return this.friendsManagement.onFriendshipDeletion(listener)
     }
 
-    createChannel(channelName: string, userIds: SocialId[]): Promise<Conversation> {
-        return this.messaging.createChannel(channelName, userIds)
-    }
-
     getChannel(roomId: string): Conversation | undefined {
         return this.messaging.getChannel(roomId)
     }
