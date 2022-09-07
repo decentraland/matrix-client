@@ -26,6 +26,11 @@ export type Conversation = {
     name?: string
 }
 
+export type Channel = Conversation & {
+    description: string | undefined
+    memberCount: number
+}
+
 export type BasicMessageInfo = {
     id: MessageId
     timestamp: Timestamp
@@ -52,7 +57,7 @@ export enum CursorDirection {
 }
 
 export interface SearchChannelsResponse {
-    conversations: Conversation[]
+    channels: Channel[]
     nextBatch: string | undefined
 }
 

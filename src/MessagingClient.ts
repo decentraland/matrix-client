@@ -14,7 +14,8 @@ import {
     BasicMessageInfo,
     CHANNEL_TYPE,
     GetOrCreateConversationResponse,
-    SearchChannelsResponse
+    SearchChannelsResponse,
+    Channel
 } from './types'
 import {
     findEventInRoom,
@@ -405,10 +406,12 @@ export class MessagingClient implements MessagingAPI {
             } while (publicRooms.length < limit || !res.next_batch)
 
             return {
-                conversations: publicRooms.map(
-                    (room): Conversation => ({
+                channels: publicRooms.map(
+                    (room): Channel => ({
                         id: room.room_id,
                         name: room.name,
+                        description: room.topic,
+                        memberCount: room.num_joined_members,
                         type: ConversationType.CHANNEL
                     })
                 ),
