@@ -127,7 +127,7 @@ export class MessagingClient implements MessagingAPI {
         const rooms = this.getAllRooms()
         return rooms
             .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
-            .map(this.getRoomInformation)
+            .map(room => this.getRoomInformation(room))
     }
 
     /** Get all conversation the user has joined */
