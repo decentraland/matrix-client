@@ -285,29 +285,21 @@ export class MessagingClient implements MessagingAPI {
 
     /** Get or create a direct conversation with the given user */
     async createDirectConversation(userId: SocialId): Promise<Conversation> {
-        const { conversation, created } = await this.getOrCreateConversation(
-            this.matrixClient,
-            ConversationType.DIRECT,
-            [userId]
-        )
+        const { conversation, created } = await this.getOrCreateConversation(ConversationType.DIRECT, [userId])
         if (created) {
             await this.addDirectRoomToUser(userId, conversation.id)
         }
         return conversation
     }
 
-    /** Get or create a group conversation with the given users */
-    // This is a direct conversation between multiple users
+    /** Get or create a group conversation with the given users
+     * This is a direct conversation between multiple users
+     */
     async createGroupConversation(conversationName: string, userIds: SocialId[]): Promise<Conversation> {
         if (userIds.length < 2) {
             throw new Error('Group conversations must include two or more people. ')
         }
-        const { conversation } = await this.getOrCreateConversation(
-            this.matrixClient,
-            ConversationType.GROUP,
-            userIds,
-            conversationName
-        )
+        const { conversation } = await this.getOrCreateConversation(ConversationType.GROUP, userIds, conversationName)
         return conversation
     }
 
@@ -333,7 +325,7 @@ export class MessagingClient implements MessagingAPI {
                 type: ConversationType.CHANNEL
             }
         } catch (error) {
-            throw error
+            throw new ChannelsError(ChannelErrorKind.CREATE)
         }
     }
 
@@ -343,23 +335,16 @@ export class MessagingClient implements MessagingAPI {
      */
     async getOrCreateChannel(channelName: string, userIds: SocialId[]): Promise<GetOrCreateConversationResponse> {
         try {
-            return this.getOrCreateConversation(
-                this.matrixClient,
-                ConversationType.CHANNEL,
-                userIds,
-                channelName,
-                channelName,
-                {
-                    preset: Preset.PublicChat,
-                    is_direct: false,
-                    visibility: Visibility.Public,
-                    creation_content: {
-                        type: CHANNEL_TYPE
-                    }
+            return this.getOrCreateConversation(ConversationType.CHANNEL, userIds, channelName, channelName, {
+                preset: Preset.PublicChat,
+                is_direct: false,
+                visibility: Visibility.Public,
+                creation_content: {
+                    type: CHANNEL_TYPE
                 }
-            )
+            })
         } catch (error) {
-            throw error
+            throw new ChannelsError(ChannelErrorKind.GET_OR_CREATE)
         }
     }
 
@@ -368,7 +353,7 @@ export class MessagingClient implements MessagingAPI {
         try {
             await this.matrixClient.joinRoom(roomIdOrChannelAlias)
         } catch (error) {
-            throw error
+            throw new ChannelsError(ChannelErrorKind.JOIN)
         }
     }
 
@@ -376,7 +361,7 @@ export class MessagingClient implements MessagingAPI {
         try {
             await this.matrixClient.leave(roomId)
         } catch (error) {
-            throw error
+            throw new ChannelsError(ChannelErrorKind.LEAVE)
         }
     }
 
@@ -409,7 +394,7 @@ export class MessagingClient implements MessagingAPI {
         try {
             let publicRooms: Array<IPublicRoomsChunkRoom> = []
             let res: IPublicRoomsResponse
-            let nextBatch: string | undefined = since
+            let nextBatch = since
             do {
                 res = await this.matrixClient.publicRooms({
                     filter: {
@@ -433,7 +418,7 @@ export class MessagingClient implements MessagingAPI {
                 nextBatch
             }
         } catch (error) {
-            throw error
+            throw new ChannelsError(ChannelErrorKind.SEARCH)
         }
     }
 
@@ -458,7 +443,6 @@ export class MessagingClient implements MessagingAPI {
      * current user id.
      */
     private async getOrCreateConversation(
-        client: MatrixClient,
         type: ConversationType,
         userIds: SocialId[],
         conversationName?: string,
@@ -466,26 +450,26 @@ export class MessagingClient implements MessagingAPI {
         createRoomOptions?: ICreateRoomOpts
     ): Promise<{ conversation: Conversation; created: boolean }> {
         await this.assertThatUsersExist(userIds)
-        const allUsersInConversation = [client.getUserIdLocalpart(), ...userIds]
+        const allUsersInConversation = [this.matrixClient.getUserIdLocalpart(), ...userIds]
         const alias = defaultAlias ?? this.buildAliasForConversationWithUsers(allUsersInConversation)
         let roomId: string
         let created: boolean
         // First, try to find the alias locally
-        const room: Room | undefined = this.findRoomByAliasLocally(`#${alias}:${client.getDomain()}`)
+        const room: Room | undefined = this.findRoomByAliasLocally(`#${alias}:${this.matrixClient.getDomain()}`)
         if (room) {
             roomId = room.roomId
             created = false
         } else {
             // Try to find alias on the server
-            const result: { room_id: string } | undefined = await this.undefinedIfError(() =>
-                client.getRoomIdForAlias(`#${alias}:${client.getDomain()}`)
+            const result = await this.undefinedIfError(() =>
+                this.matrixClient.getRoomIdForAlias(`#${alias}:${this.matrixClient.getDomain()}`)
             )
             if (result) {
                 roomId = result.room_id
                 created = false
             } else {
                 // If alias wasn't found, then create the room
-                const creationResult = await client.createRoom({
+                const creationResult = await this.matrixClient.createRoom({
                     room_alias_name: alias,
                     preset: Preset.TrustedPrivateChat,
                     is_direct: type === ConversationType.DIRECT,
@@ -581,6 +565,24 @@ export class MessagingClient implements MessagingAPI {
 
     private doesRoomHaveUnreadMessages(room): boolean {
         return this.getRoomUnreadMessages(room).length > 0
+    }
+}
+
+export enum ChannelErrorKind {
+    CREATE,
+    GET_OR_CREATE,
+    JOIN,
+    LEAVE,
+    SEARCH
+}
+
+export class ChannelsError extends Error {
+    constructor(private readonly kind: ChannelErrorKind) {
+        super(`Failed to interact with channel: ${kind}`)
+    }
+
+    getKind(): ChannelErrorKind {
+        return this.kind
     }
 }
 
