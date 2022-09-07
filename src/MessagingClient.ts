@@ -35,6 +35,7 @@ import {
     RoomMemberEvent,
     Visibility
 } from 'matrix-js-sdk'
+import { RoomMember } from 'matrix-js-sdk'
 
 // TODO: Delete this when matrix-client exports the actual one
 interface IPublicRoomsResponse {
@@ -374,7 +375,7 @@ export class MessagingClient implements MessagingAPI {
     /** Return a conversation unread messages */
     getConversationUnreadMessages(conversationId: ConversationId): BasicMessageInfo[] {
         const room = this.matrixClient.getRoom(conversationId)
-        return this.getRoomUnreadMessages(room)
+        return room ? this.getRoomUnreadMessages(room) : []
     }
 
     /**
@@ -495,10 +496,14 @@ export class MessagingClient implements MessagingAPI {
         return this.getAllRooms().filter(room => room.getCanonicalAlias() === alias)[0]
     }
 
-    private async joinRoom(member): Promise<void> {
+    private async joinRoom(member: RoomMember | null): Promise<void> {
+        if (!member) {
+            return
+        }
         const event = member.events.member
-        const isDirect = event.getContent().is_direct
-        if (isDirect) {
+        const memberContent = event?.getContent()
+        const isDirect = memberContent?.membership === 'invite' && memberContent?.is_direct
+        if (event && isDirect) {
             await this.addDirectRoomToUser(event.getSender(), member.roomId)
         }
         await this.matrixClient.joinRoom(member.roomId)
@@ -546,7 +551,7 @@ export class MessagingClient implements MessagingAPI {
         await this.matrixClient.setAccountData('m.direct', directRoomMap)
     }
 
-    private getRoomUnreadMessages(room): Array<BasicMessageInfo> {
+    private getRoomUnreadMessages(room: Room): Array<BasicMessageInfo> {
         // Fetch message events
         const timelineSet = getOnlyMessagesTimelineSetFromRoom(this.matrixClient, room)
         const timeline: Array<any> = timelineSet.getLiveTimeline().getEvents()
@@ -563,8 +568,8 @@ export class MessagingClient implements MessagingAPI {
             .map(event => matrixEventToBasicEventInfo(event))
     }
 
-    private doesRoomHaveUnreadMessages(room): boolean {
-        return this.getRoomUnreadMessages(room).length > 0
+    private doesRoomHaveUnreadMessages(room: Room | null): boolean {
+        return room ? this.getRoomUnreadMessages(room).length > 0 : false
     }
 }
 
