@@ -45,6 +45,20 @@ interface IPublicRoomsResponse {
     total_room_count_estimate?: number
 }
 
+/**
+ * The channel name should always match with the regex: ^[a-zA-Z0-9-]{3,20}$
+ * @param channelId a string with the channelId to validate
+ * */
+function validateRegexChannelId(channelId: string) {
+    const regex = /^[a-zA-Z0-9-]{3,20}$/
+
+    if (channelId.match(regex)) return true
+
+    return false
+}
+
+const CHANNEL_RESERVED_IDS = ['nearby']
+
 export class MessagingClient implements MessagingAPI {
     private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()
 
@@ -309,6 +323,14 @@ export class MessagingClient implements MessagingAPI {
      * If the channel is created, all user ids will be invited to join
      */
     async getOrCreateChannel(channelName: string, userIds: SocialId[]): Promise<GetOrCreateConversationResponse> {
+        if (CHANNEL_RESERVED_IDS.includes(channelName.toLocaleLowerCase())) {
+            throw new ChannelsError(ChannelErrorKind.RESERVED_NAME)
+        }
+
+        if (!validateRegexChannelId(channelName)) {
+            throw new ChannelsError(ChannelErrorKind.BAD_REGEX)
+        }
+
         try {
             return this.getOrCreateConversation(ConversationType.CHANNEL, userIds, channelName, channelName, {
                 preset: Preset.PublicChat,
@@ -548,8 +570,9 @@ export class MessagingClient implements MessagingAPI {
 }
 
 export enum ChannelErrorKind {
-    CREATE,
     GET_OR_CREATE,
+    BAD_REGEX,
+    RESERVED_NAME,
     JOIN,
     LEAVE,
     SEARCH
