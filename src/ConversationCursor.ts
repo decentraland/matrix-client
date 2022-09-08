@@ -62,7 +62,7 @@ export class ConversationCursor {
     ) {
         const limit = ConversationCursor.calculateLimit(options)
         const initialSize = options?.initialSize ?? this.DEFAULT_INITIAL_SIZE
-        const room = client.getRoom(roomId)
+        const room = client.getRoom(roomId)!
         const timelineSet = getOnlyMessagesTimelineSetFromRoom(client, room, limit)
         const window = new TimelineWindow(client, timelineSet, { windowLimit: limit })
         await window.load(initialEventId, initialSize)
