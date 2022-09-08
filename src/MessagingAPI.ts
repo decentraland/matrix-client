@@ -5,7 +5,9 @@ import {
     MessageId,
     CursorOptions,
     ConversationId,
-    BasicMessageInfo
+    BasicMessageInfo,
+    GetOrCreateConversationResponse,
+    SearchChannelsResponse
 } from './types'
 import { ConversationCursor } from './ConversationCursor'
 
@@ -68,4 +70,25 @@ export interface MessagingAPI {
 
     /** Return a conversation unread messages */
     getConversationUnreadMessages(conversationId: ConversationId): BasicMessageInfo[]
+
+    /** Get or create a channel with the given users
+     * If the channel already exists this will return the channel and won't invite the passed ids
+     * If the channel is created, all user ids will be invited to join
+     */
+    getOrCreateChannel(channelName: string, userIds: SocialId[]): Promise<GetOrCreateConversationResponse>
+
+    /**
+     * Get the conversation for a channel if it exists, otherwise returns undefined
+     * @param roomId the roomId of the channel
+     */
+    getChannel(roomId: string): Conversation | undefined
+
+    /** Join a channel */
+    joinChannel(roomIdOrChannelAlias: string): Promise<void>
+
+    /** Leave a channel */
+    leaveChannel(roomId: string): Promise<void>
+
+    /** Search channels */
+    searchChannel(searchTerm: string, limit: number, since?: string): Promise<SearchChannelsResponse>
 }

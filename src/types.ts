@@ -3,9 +3,17 @@ export type SocialId = string
 export type ConversationId = string
 export type MessageId = string
 
+export const CHANNEL_TYPE = 'channel'
+
+export interface GetOrCreateConversationResponse {
+    conversation: Conversation
+    created: boolean
+}
+
 export enum ConversationType {
     GROUP,
-    DIRECT
+    DIRECT,
+    CHANNEL
 }
 
 export type Conversation = {
@@ -15,6 +23,12 @@ export type Conversation = {
     userIds?: Array<string>
     lastEventTimestamp?: number
     hasMessages?: boolean
+    name?: string
+}
+
+export type Channel = Conversation & {
+    description: string | undefined
+    memberCount: number
 }
 
 export type BasicMessageInfo = {
@@ -40,6 +54,11 @@ export enum MessageType {
 export enum CursorDirection {
     BACKWARDS,
     FORWARDS
+}
+
+export interface SearchChannelsResponse {
+    channels: Channel[]
+    nextBatch: string | undefined
 }
 
 export type CursorOptions = {

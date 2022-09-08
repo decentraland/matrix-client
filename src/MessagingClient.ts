@@ -11,7 +11,11 @@ import {
     MessageId,
     CursorOptions,
     ConversationId,
-    BasicMessageInfo
+    BasicMessageInfo,
+    CHANNEL_TYPE,
+    GetOrCreateConversationResponse,
+    SearchChannelsResponse,
+    Channel
 } from './types'
 import {
     findEventInRoom,
@@ -22,7 +26,38 @@ import {
 } from './Utils'
 import { ConversationCursor } from './ConversationCursor'
 import { MessagingAPI } from './MessagingAPI'
-import { ClientEvent, EventType, Preset, RoomMemberEvent } from 'matrix-js-sdk'
+import {
+    ClientEvent,
+    EventType,
+    ICreateRoomOpts,
+    IPublicRoomsChunkRoom,
+    Preset,
+    RoomMemberEvent,
+    Visibility
+} from 'matrix-js-sdk'
+import { RoomMember } from 'matrix-js-sdk'
+
+// TODO: Delete this when matrix-client exports the actual one
+interface IPublicRoomsResponse {
+    chunk: IPublicRoomsChunkRoom[]
+    next_batch?: string
+    prev_batch?: string
+    total_room_count_estimate?: number
+}
+
+/**
+ * The channel name should always match with the regex: ^[a-zA-Z0-9-]{3,20}$
+ * @param channelId a string with the channelId to validate
+ * */
+function validateRegexChannelId(channelId: string) {
+    const regex = /^[a-zA-Z0-9-]{3,20}$/
+
+    if (channelId.match(regex)) return true
+
+    return false
+}
+
+const CHANNEL_RESERVED_IDS = ['nearby']
 
 export class MessagingClient implements MessagingAPI {
     private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()
@@ -66,26 +101,33 @@ export class MessagingClient implements MessagingAPI {
         })
     }
 
+    getRoomInformation(room: Room): { conversation: Conversation; unreadMessages: boolean } {
+        const otherId = room.guessDMUserId()
+        const unreadMessages = this.getRoomUnreadMessages(room)
+        const type = getConversationTypeFromRoom(this.matrixClient, room)
+        return {
+            unreadMessages: this.doesRoomHaveUnreadMessages(room),
+            conversation: {
+                id: room.roomId,
+                type,
+                unreadMessages: unreadMessages.length > 0 ? unreadMessages : undefined,
+                lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
+                userIds:
+                    type === ConversationType.DIRECT
+                        ? [this.matrixClient.getUserId(), otherId]
+                        : room.getMembers().map(x => x.userId),
+                hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage),
+                name: room.name
+            }
+        }
+    }
+
     /** Get all conversation the user has joined */
     getAllCurrentConversations(): { conversation: Conversation; unreadMessages: boolean }[] {
         const rooms = this.getAllRooms()
         return rooms
             .filter(room => room.getMyMembership() === 'join') // Consider rooms that I have joined
-            .map(room => {
-                const otherId = room.guessDMUserId()
-                const unreadMessages = this.getRoomUnreadMessages(room)
-                return {
-                    unreadMessages: this.doesRoomHaveUnreadMessages(room),
-                    conversation: {
-                        id: room.roomId,
-                        type: getConversationTypeFromRoom(this.matrixClient, room),
-                        unreadMessages: unreadMessages.length > 0 ? unreadMessages : undefined,
-                        lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
-                        userIds: [this.matrixClient.getUserId(), otherId],
-                        hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage)
-                    }
-                }
-            })
+            .map(room => this.getRoomInformation(room))
     }
 
     /** Get all conversation the user has joined */
@@ -258,29 +300,66 @@ export class MessagingClient implements MessagingAPI {
 
     /** Get or create a direct conversation with the given user */
     async createDirectConversation(userId: SocialId): Promise<Conversation> {
-        const { conversation, created } = await this.getOrCreateConversation(
-            this.matrixClient,
-            ConversationType.DIRECT,
-            [userId]
-        )
+        const { conversation, created } = await this.getOrCreateConversation(ConversationType.DIRECT, [userId])
         if (created) {
             await this.addDirectRoomToUser(userId, conversation.id)
         }
         return conversation
     }
 
-    /** Get or create a group conversation with the given users */
+    /** Get or create a group conversation with the given users
+     * This is a direct conversation between multiple users
+     */
     async createGroupConversation(conversationName: string, userIds: SocialId[]): Promise<Conversation> {
         if (userIds.length < 2) {
             throw new Error('Group conversations must include two or more people. ')
         }
-        const { conversation } = await this.getOrCreateConversation(
-            this.matrixClient,
-            ConversationType.GROUP,
-            userIds,
-            conversationName
-        )
+        const { conversation } = await this.getOrCreateConversation(ConversationType.GROUP, userIds, conversationName)
         return conversation
+    }
+
+    /** Get or create a channel with the given users
+     * If the channel already exists this will return the channel and won't invite the passed ids
+     * If the channel is created, all user ids will be invited to join
+     */
+    async getOrCreateChannel(channelName: string, userIds: SocialId[]): Promise<GetOrCreateConversationResponse> {
+        if (CHANNEL_RESERVED_IDS.includes(channelName.toLocaleLowerCase())) {
+            throw new ChannelsError(ChannelErrorKind.RESERVED_NAME)
+        }
+
+        if (!validateRegexChannelId(channelName)) {
+            throw new ChannelsError(ChannelErrorKind.BAD_REGEX)
+        }
+
+        try {
+            return this.getOrCreateConversation(ConversationType.CHANNEL, userIds, channelName, channelName, {
+                preset: Preset.PublicChat,
+                is_direct: false,
+                visibility: Visibility.Public,
+                creation_content: {
+                    type: CHANNEL_TYPE
+                }
+            })
+        } catch (error) {
+            throw new ChannelsError(ChannelErrorKind.GET_OR_CREATE)
+        }
+    }
+
+    /** Join a channel */
+    async joinChannel(roomIdOrChannelAlias: string): Promise<void> {
+        try {
+            await this.matrixClient.joinRoom(roomIdOrChannelAlias)
+        } catch (error) {
+            throw new ChannelsError(ChannelErrorKind.JOIN)
+        }
+    }
+
+    async leaveChannel(roomId: string): Promise<void> {
+        try {
+            await this.matrixClient.leave(roomId)
+        } catch (error) {
+            throw new ChannelsError(ChannelErrorKind.LEAVE)
+        }
     }
 
     /** Return whether a conversation has unread messages or not */
@@ -292,7 +371,54 @@ export class MessagingClient implements MessagingAPI {
     /** Return a conversation unread messages */
     getConversationUnreadMessages(conversationId: ConversationId): BasicMessageInfo[] {
         const room = this.matrixClient.getRoom(conversationId)
-        return this.getRoomUnreadMessages(room)
+        return room ? this.getRoomUnreadMessages(room) : []
+    }
+
+    /**
+     * Get the conversation for a channel that exists locally, if it doesn't returns undefined
+     * @param roomId the roomId of the channel
+     */
+    getChannel(roomId: string): Conversation | undefined {
+        const room = this.matrixClient.getRoom(roomId)
+        if (!room) {
+            return
+        }
+
+        return this.getRoomInformation(room).conversation
+    }
+
+    async searchChannel(searchTerm: string, limit: number, since?: string): Promise<SearchChannelsResponse> {
+        try {
+            let publicRooms: Array<IPublicRoomsChunkRoom> = []
+            let res: IPublicRoomsResponse
+            let nextBatch = since
+            do {
+                res = await this.matrixClient.publicRooms({
+                    filter: {
+                        generic_search_term: searchTerm
+                    },
+                    limit,
+                    since: nextBatch
+                })
+                publicRooms.push(...res.chunk)
+                nextBatch = res.next_batch
+            } while (publicRooms.length < limit || !res.next_batch)
+
+            return {
+                channels: publicRooms.map(
+                    (room): Channel => ({
+                        id: room.room_id,
+                        name: room.name,
+                        description: room.topic,
+                        memberCount: room.num_joined_members,
+                        type: ConversationType.CHANNEL
+                    })
+                ),
+                nextBatch
+            }
+        } catch (error) {
+            throw new ChannelsError(ChannelErrorKind.SEARCH)
+        }
     }
 
     private async assertThatUsersExist(userIds: SocialId[]): Promise<void> {
@@ -316,37 +442,39 @@ export class MessagingClient implements MessagingAPI {
      * current user id.
      */
     private async getOrCreateConversation(
-        client: MatrixClient,
         type: ConversationType,
         userIds: SocialId[],
-        conversationName?: string
+        conversationName?: string,
+        defaultAlias?: string,
+        createRoomOptions?: ICreateRoomOpts
     ): Promise<{ conversation: Conversation; created: boolean }> {
         await this.assertThatUsersExist(userIds)
-        const allUsersInConversation = [client.getUserIdLocalpart(), ...userIds]
-        const alias = this.buildAliasForConversationWithUsers(allUsersInConversation)
+        const allUsersInConversation = [this.matrixClient.getUserIdLocalpart(), ...userIds]
+        const alias = defaultAlias ?? this.buildAliasForConversationWithUsers(allUsersInConversation)
         let roomId: string
         let created: boolean
         // First, try to find the alias locally
-        const room: Room | undefined = this.findRoomByAliasLocally(`#${alias}:${client.getDomain()}`)
+        const room: Room | undefined = this.findRoomByAliasLocally(`#${alias}:${this.matrixClient.getDomain()}`)
         if (room) {
             roomId = room.roomId
             created = false
         } else {
             // Try to find alias on the server
-            const result: { room_id: string } | undefined = await this.undefinedIfError(() =>
-                client.getRoomIdForAlias(`#${alias}:${client.getDomain()}`)
+            const result = await this.undefinedIfError(() =>
+                this.matrixClient.getRoomIdForAlias(`#${alias}:${this.matrixClient.getDomain()}`)
             )
             if (result) {
                 roomId = result.room_id
                 created = false
             } else {
                 // If alias wasn't found, then create the room
-                const creationResult = await client.createRoom({
+                const creationResult = await this.matrixClient.createRoom({
                     room_alias_name: alias,
                     preset: Preset.TrustedPrivateChat,
                     is_direct: type === ConversationType.DIRECT,
                     invite: userIds,
-                    name: conversationName
+                    name: conversationName,
+                    ...createRoomOptions
                 })
                 roomId = creationResult.room_id
                 created = true
@@ -366,10 +494,14 @@ export class MessagingClient implements MessagingAPI {
         return this.getAllRooms().filter(room => room.getCanonicalAlias() === alias)[0]
     }
 
-    private async joinRoom(member): Promise<void> {
+    private async joinRoom(member: RoomMember | null): Promise<void> {
+        if (!member) {
+            return
+        }
         const event = member.events.member
-        const isDirect = event.getContent().is_direct
-        if (isDirect) {
+        const memberContent = event?.getContent()
+        const isDirect = memberContent?.membership === 'invite' && memberContent?.is_direct
+        if (event && isDirect) {
             await this.addDirectRoomToUser(event.getSender(), member.roomId)
         }
         await this.matrixClient.joinRoom(member.roomId)
@@ -440,8 +572,27 @@ export class MessagingClient implements MessagingAPI {
             .map(event => matrixEventToBasicEventInfo(event))
     }
 
-    private doesRoomHaveUnreadMessages(room): boolean {
-        return this.getRoomUnreadMessages(room).length > 0
+    private doesRoomHaveUnreadMessages(room: Room | null): boolean {
+        return room ? this.getRoomUnreadMessages(room).length > 0 : false
+    }
+}
+
+export enum ChannelErrorKind {
+    GET_OR_CREATE,
+    BAD_REGEX,
+    RESERVED_NAME,
+    JOIN,
+    LEAVE,
+    SEARCH
+}
+
+export class ChannelsError extends Error {
+    constructor(private readonly kind: ChannelErrorKind) {
+        super(`Failed to interact with channel: ${kind}`)
+    }
+
+    getKind(): ChannelErrorKind {
+        return this.kind
     }
 }
 

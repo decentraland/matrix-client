@@ -11,7 +11,9 @@ import {
     BasicMessageInfo,
     FriendshipRequest,
     CurrentUserStatus,
-    UpdateUserStatus
+    UpdateUserStatus,
+    GetOrCreateConversationResponse,
+    SearchChannelsResponse
 } from './types'
 import { ConversationCursor } from './ConversationCursor'
 import { MessagingAPI } from './MessagingAPI'
@@ -232,5 +234,25 @@ export class SocialClient implements SocialAPI {
 
     onFriendshipDeletion(listener: (deletedBy: SocialId) => void): void {
         return this.friendsManagement.onFriendshipDeletion(listener)
+    }
+
+    getChannel(roomId: string): Conversation | undefined {
+        return this.messaging.getChannel(roomId)
+    }
+
+    getOrCreateChannel(channelName: string, userIds: string[]): Promise<GetOrCreateConversationResponse> {
+        return this.messaging.getOrCreateChannel(channelName, userIds)
+    }
+
+    joinChannel(roomIdOrChannelAlias: string): Promise<void> {
+        return this.messaging.joinChannel(roomIdOrChannelAlias)
+    }
+
+    leaveChannel(roomId: string): Promise<void> {
+        return this.messaging.leaveChannel(roomId)
+    }
+
+    searchChannel(searchTerm: string, limit: number, since?: string): Promise<SearchChannelsResponse> {
+        return this.messaging.searchChannel(searchTerm, limit, since)
     }
 }
