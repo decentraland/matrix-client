@@ -402,7 +402,7 @@ export class MessagingClient implements MessagingAPI {
                 })
                 publicRooms.push(...res.chunk)
                 nextBatch = res.next_batch
-            } while (publicRooms.length < limit || !res.next_batch)
+            } while (publicRooms.length < limit && res.next_batch)
 
             return {
                 channels: publicRooms.map(
