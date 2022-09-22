@@ -60,7 +60,6 @@ export class SessionManagementClient implements SessionManagementAPI {
                 )}`
             )
             if (sender !== this.getUserId() && socialClient.isUserMyFriend(sender)) {
-                console.log('entro')
                 listener(sender, SessionManagementClient.eventToStatus(user))
             }
             console.log('------------------- USER EVENT: PRESENCE FIN ------------------------')
