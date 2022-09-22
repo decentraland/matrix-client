@@ -51,18 +51,11 @@ export class SessionManagementClient implements SessionManagementAPI {
 
         this.matrixClient.on(UserEvent.Presence, async (event, user) => {
             if (!event) return
-            console.log('------------------- USER EVENT: PRESENCE BEGIN ------------------------')
 
             const sender = event.getSender()
-            console.log(
-                `Sender: ${sender} - My user ID: ${this.getUserId()} - are we friends?: ${socialClient.isUserMyFriend(
-                    sender
-                )}`
-            )
             if (sender !== this.getUserId() && socialClient.isUserMyFriend(sender)) {
                 listener(sender, SessionManagementClient.eventToStatus(user))
             }
-            console.log('------------------- USER EVENT: PRESENCE FIN ------------------------')
         })
     }
 
