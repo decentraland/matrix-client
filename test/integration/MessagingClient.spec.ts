@@ -335,9 +335,9 @@ describe('Integration - Messaging Client', () => {
 
       const ownId = client.getUserId()
 
-      await client.getOrCreateChannel('the-coolest-marthas', [ownId])
-      await client.getOrCreateChannel('channel-name', [ownId])
-      await client.getOrCreateChannel('read-club-marthas', [ownId])
+      await client.getOrCreateChannel('the-coolest-marthas', [ownId]).catch()
+      await client.getOrCreateChannel('channel-name', [ownId]).catch
+      await client.getOrCreateChannel('read-club-marthas', [ownId]).catch()
 
       // We search with the requested limit (5), token to paginate from (undefined) and search term (marthas)
       // The loop breaks, as expected, when nextBatch is undefined
@@ -352,9 +352,9 @@ describe('Integration - Messaging Client', () => {
  
       const ownId = client.getUserId()
 
-      await client.getOrCreateChannel('the-coolest-marthas', [ownId])
-      await client.getOrCreateChannel('channel-name', [ownId])
-      await client.getOrCreateChannel('read-club-marthas', [ownId])
+      await client.getOrCreateChannel('the-coolest-marthas', [ownId]).catch()
+      await client.getOrCreateChannel('channel-name', [ownId]).catch()
+      await client.getOrCreateChannel('read-club-marthas', [ownId]).catch()
 
       // We search with the requested limit (2) and token to paginate from (undefined)
       const pagination1 = await client.searchChannel(2, undefined, undefined)
