@@ -333,9 +333,7 @@ describe('Integration - Messaging Client', () => {
     it('When a user wants to browse through channels with a search term, we search with the requested limit, the token to paginate from and the search term.', async () => {
       const client = await testEnv.getRandomClient()
 
-      await client.getOrCreateChannel('the-coolest-marthas', [client.getUserId()])
-      await client.getOrCreateChannel('channel-name', [client.getUserId()])
-      await client.getOrCreateChannel('read-club-marthas', [client.getUserId()])
+      await createChannel()
 
       // We search with the requested limit (5), token to paginate from (undefined) and search term (marthas)
       // The loop breaks, as expected, when nextBatch is undefined
@@ -348,9 +346,7 @@ describe('Integration - Messaging Client', () => {
     it('When a user wants to browse through existing channels, we search with the requested limit and token to paginate from.', async () => {
       const client = await testEnv.getRandomClient()
  
-      await client.getOrCreateChannel('the-coolest-marthas', [client.getUserId()])
-      await client.getOrCreateChannel('channel-name', [client.getUserId()])
-      await client.getOrCreateChannel('read-club-marthas', [client.getUserId()])
+      await createChannel()
 
       // We search with the requested limit (2) and token to paginate from (undefined)
       const pagination1 = await client.searchChannel(2, undefined, undefined)
@@ -362,6 +358,19 @@ describe('Integration - Messaging Client', () => {
       expect(pagination2.channels.length).to.be.equal(2)
       expect(pagination2.nextBatch).to.be.undefined
     })
+
+    async function createChannel() {
+      try {
+        const client = await testEnv.getRandomClient()
+
+        await client.getOrCreateChannel('the-coolest-marthas', [client.getUserId()])
+        await client.getOrCreateChannel('channel-name', [client.getUserId()])
+        await client.getOrCreateChannel('read-club-marthas', [client.getUserId()])
+      }
+      catch {
+
+      }
+    }
 
     /** Assert that the message was received, and return the message id */
     function assertMessageWasReceivedByEvent(
