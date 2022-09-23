@@ -392,15 +392,14 @@ export class MessagingClient implements MessagingAPI {
             let publicRooms: Array<IPublicRoomsChunkRoom> = []
             let res: IPublicRoomsResponse
             let nextBatch = since
-            let options = searchTerm ? {
-                filter: {
-                  generic_search_term: searchTerm
-                },
+            const filter = searchTerm ? { filter: {
+                generic_search_term: searchTerm
+            }
+            } : {}
+            const options = {
                 limit,
-                since: nextBatch
-            } : {
-                limit,
-                since: nextBatch
+                since: nextBatch,
+                ...filter
             }
             do {
                 res = await this.matrixClient.publicRooms(options)
