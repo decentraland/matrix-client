@@ -333,7 +333,7 @@ describe('Integration - Messaging Client', () => {
     it('When a user wants to browse through channels with a search term, we search with the requested limit, the token to paginate from and the search term.', async () => {
       const client = await testEnv.getRandomClient()
 
-      const ownId = '@0xa07dd4a4966c0d2fb3f51e133a517cf11f31e37e:localhost'
+      const ownId = client.getUserId()
 
       await client.getOrCreateChannel('the-coolest-marthas', [ownId])
       await client.getOrCreateChannel('channel-name', [ownId])
@@ -350,7 +350,7 @@ describe('Integration - Messaging Client', () => {
     it('When a user wants to browse through existing channels, we search with the requested limit and token to paginate from.', async () => {
       const client = await testEnv.getRandomClient()
  
-      const ownId = '@0xa07dd4a4966c0d2fb3f51e133a517cf11f31e37e:localhost'
+      const ownId = client.getUserId()
 
       await client.getOrCreateChannel('the-coolest-marthas', [ownId])
       await client.getOrCreateChannel('channel-name', [ownId])
