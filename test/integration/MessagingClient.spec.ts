@@ -353,7 +353,7 @@ describe('Integration - Messaging Client', () => {
       const client = await testEnv.getRandomClient()
 
       // We search with the requested limit (2) and token to paginate from (undefined)
-      // The loop breaks, as expected, when publicRooms < limit
+      // The loop breaks, as expected, when publicRooms > limit
       const pagination1 = await client.searchChannel(2, undefined, undefined)
       expect(pagination1.channels.length).to.be.equal(2)
       expect(pagination1.nextBatch).to.not.be.undefined
