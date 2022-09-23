@@ -14,6 +14,14 @@ const expect = chai.expect
 describe('Integration - Messaging Client', () => {
     const testEnv: TestEnvironment = loadTestEnvironment()
 
+    before(async () => {
+      const client = await testEnv.getRandomClient()
+
+      await client.getOrCreateChannel('the-coolest-marthas', [])
+      await client.getOrCreateChannel('channel-name', [])
+      await client.getOrCreateChannel('read-club-marthas', [])
+    })
+
     it(`When a direct conversation is started, then both participants can see it`, async () => {
         const client1 = await testEnv.getRandomClient()
         const client2 = await testEnv.getRandomClient()
@@ -333,12 +341,6 @@ describe('Integration - Messaging Client', () => {
     it('When a user wants to browse through channels with a search term, we search with the requested limit, the token to paginate from and the search term.', async () => {
       const client = await testEnv.getRandomClient()
 
-      const ownId = client.getUserId()
-
-      await client.getOrCreateChannel('the-coolest-marthas', [ownId]).catch()
-      await client.getOrCreateChannel('channel-name', [ownId]).catch
-      await client.getOrCreateChannel('read-club-marthas', [ownId]).catch()
-
       // We search with the requested limit (5), token to paginate from (undefined) and search term (marthas)
       // The loop breaks, as expected, when nextBatch is undefined
       const response = await client.searchChannel(5, 'marthas', undefined)
@@ -349,12 +351,6 @@ describe('Integration - Messaging Client', () => {
     // Bug: The search uses an empty string to search for
     it('When a user wants to browse through existing channels, we search with the requested limit and token to paginate from.', async () => {
       const client = await testEnv.getRandomClient()
- 
-      const ownId = client.getUserId()
-
-      await client.getOrCreateChannel('the-coolest-marthas', [ownId]).catch()
-      await client.getOrCreateChannel('channel-name', [ownId]).catch()
-      await client.getOrCreateChannel('read-club-marthas', [ownId]).catch()
 
       // We search with the requested limit (2) and token to paginate from (undefined)
       const pagination1 = await client.searchChannel(2, undefined, undefined)
