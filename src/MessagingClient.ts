@@ -387,19 +387,23 @@ export class MessagingClient implements MessagingAPI {
         return this.getRoomInformation(room).conversation
     }
 
-    async searchChannel(searchTerm: string, limit: number, since?: string): Promise<SearchChannelsResponse> {
+    async searchChannel(limit: number, searchTerm?: string, since?: string): Promise<SearchChannelsResponse> {
         try {
             let publicRooms: Array<IPublicRoomsChunkRoom> = []
             let res: IPublicRoomsResponse
             let nextBatch = since
+            let options = searchTerm ? {
+                filter: {
+                  generic_search_term: searchTerm
+                },
+                limit,
+                since: nextBatch
+            } : {
+                limit,
+                since: nextBatch
+            }
             do {
-                res = await this.matrixClient.publicRooms({
-                    filter: {
-                        generic_search_term: searchTerm
-                    },
-                    limit,
-                    since: nextBatch
-                })
+                res = await this.matrixClient.publicRooms(options)
                 publicRooms.push(...res.chunk)
                 nextBatch = res.next_batch
             } while (publicRooms.length < limit && res.next_batch)

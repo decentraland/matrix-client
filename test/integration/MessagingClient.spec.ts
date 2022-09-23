@@ -329,6 +329,40 @@ describe('Integration - Messaging Client', () => {
         assertMessageWasReceivedByEvent(spy, client1, conversation, 'Hi there!')
     })
 
+    // Bug: Infinite loop in searchChannel func
+    it('When a user wants to browse through channels with a search term, we search with the requested limit, the token to paginate from and the search term.', async () => {
+      const client = await testEnv.getRandomClient()
+
+      await client.getOrCreateChannel('the-coolest-marthas', [client.getUserId()])
+      await client.getOrCreateChannel('channel-name', [client.getUserId()])
+      await client.getOrCreateChannel('read-club-marthas', [client.getUserId()])
+
+      // We search with the requested limit (5), token to paginate from (undefined) and search term (marthas)
+      // The loop breaks, as expected, when nextBatch is undefined
+      const {channels, nextBatch} = await client.searchChannel(5, 'marthas', undefined)
+      expect(channels.length).to.be.equal(2)
+      expect(nextBatch).to.be.undefined
+    })
+
+    // Bug: The search uses an empty string to search for
+    it('When a user wants to browse through existing channels, we search with the requested limit and token to paginate from.', async () => {
+      const client = await testEnv.getRandomClient()
+ 
+      await client.getOrCreateChannel('the-coolest-marthas', [client.getUserId()])
+      await client.getOrCreateChannel('channel-name', [client.getUserId()])
+      await client.getOrCreateChannel('read-club-marthas', [client.getUserId()])
+
+      // We search with the requested limit (2) and token to paginate from (undefined)
+      const pagination1 = await client.searchChannel(2, undefined, undefined)
+      expect(pagination1.channels.length).to.be.equal(2)
+      expect(pagination1.nextBatch).to.not.be.undefined
+
+      // We search with the requested limit (2) and token to paginate from (the value of the variable `nextBatch` we got from the last query)
+      const pagination2 = await client.searchChannel(2, undefined, pagination1.nextBatch)
+      expect(pagination2.channels.length).to.be.equal(2)
+      expect(pagination2.nextBatch).to.be.undefined
+    })
+
     /** Assert that the message was received, and return the message id */
     function assertMessageWasReceivedByEvent(
         spy,
