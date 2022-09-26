@@ -90,5 +90,5 @@ export interface MessagingAPI {
     leaveChannel(roomId: string): Promise<void>
 
     /** Search channels */
-    searchChannel(searchTerm: string, limit: number, since?: string): Promise<SearchChannelsResponse>
+    searchChannel(limit: number, searchTerm?: string, since?: string): Promise<SearchChannelsResponse>
 }

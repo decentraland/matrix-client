@@ -14,6 +14,14 @@ const expect = chai.expect
 describe('Integration - Messaging Client', () => {
     const testEnv: TestEnvironment = loadTestEnvironment()
 
+    before(async () => {
+      const client = await testEnv.getRandomClient()
+
+      await client.getOrCreateChannel('the-coolest-marthas', [])
+      await client.getOrCreateChannel('channel-name', [])
+      await client.getOrCreateChannel('read-club-marthas', [])
+    })
+
     it(`When a direct conversation is started, then both participants can see it`, async () => {
         const client1 = await testEnv.getRandomClient()
         const client2 = await testEnv.getRandomClient()
@@ -327,6 +335,33 @@ describe('Integration - Messaging Client', () => {
 
         // Assert that the message sent by client 1 was received once
         assertMessageWasReceivedByEvent(spy, client1, conversation, 'Hi there!')
+    })
+
+    // Bug: Infinite loop in searchChannel func
+    it('When a user wants to browse through channels with a search term, we search with the requested limit, the token to paginate from and the search term.', async () => {
+      const client = await testEnv.getRandomClient()
+
+      // We search with the requested limit (5), token to paginate from (undefined) and search term (marthas)
+      // The loop breaks, as expected, when nextBatch is undefined
+      const response = await client.searchChannel(5, 'marthas', undefined)
+      expect(response.channels.length).to.be.equal(2)
+      expect(response.nextBatch).to.be.undefined
+    })
+
+    // Bug: The search uses an empty string to search for
+    it('When a user wants to browse through existing channels, we search with the requested limit and token to paginate from.', async () => {
+      const client = await testEnv.getRandomClient()
+
+      // We search with the requested limit (2) and token to paginate from (undefined)
+      // The loop breaks, as expected, when publicRooms > limit
+      const pagination1 = await client.searchChannel(2, undefined, undefined)
+      expect(pagination1.channels.length).to.be.equal(2)
+      expect(pagination1.nextBatch).to.not.be.undefined
+
+      // We search with the requested limit (2) and token to paginate from (the value of the variable `nextBatch` we got from the last query)
+      const pagination2 = await client.searchChannel(2, undefined, pagination1.nextBatch)
+      expect(pagination2.channels.length).to.be.equal(1)
+      expect(pagination2.nextBatch).to.be.undefined
     })
 
     /** Assert that the message was received, and return the message id */

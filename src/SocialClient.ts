@@ -252,7 +252,7 @@ export class SocialClient implements SocialAPI {
         return this.messaging.leaveChannel(roomId)
     }
 
-    searchChannel(searchTerm: string, limit: number, since?: string): Promise<SearchChannelsResponse> {
-        return this.messaging.searchChannel(searchTerm, limit, since)
+    searchChannel(limit: number, searchTerm?: string, since?: string): Promise<SearchChannelsResponse> {
+        return this.messaging.searchChannel(limit, searchTerm, since)
     }
 }
