@@ -141,7 +141,7 @@ describe('Integration - Messaging Client', () => {
         const receiver = await testEnv.getClientWithIdentity(receiverIdentity)
 
         // Wait for sync
-        await sleep('2s')
+        await sleep('1s')
 
         // Set the listener
         const spy = sinon.spy()
