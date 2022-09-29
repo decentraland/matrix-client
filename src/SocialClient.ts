@@ -58,13 +58,13 @@ export class SocialClient implements SocialAPI {
         // Destructure options
         const _options: ClientLoginOptions = {
             pendingEventOrdering: PendingEventOrdering.Detached,
-            initialSyncLimit: 20, // This is the value that the Matrix React SDK uses
+            initialSyncLimit: 3,
             disablePresence: false,
             ...options
         }
 
         // Login
-        const matrixClient = await login(synapseUrl, ethAddress, timestamp, authChain, _options.getLocalStorage)
+        const matrixClient = await login(synapseUrl, ethAddress, timestamp, authChain)
 
         // Listen to initial sync
         const waitForInitialSync = new Promise<void>((resolve, reject) => {
