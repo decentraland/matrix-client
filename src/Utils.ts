@@ -1,4 +1,3 @@
-import Matrix, { MemoryStore } from 'matrix-js-sdk'
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { Room } from 'matrix-js-sdk/lib/models/room'
@@ -13,29 +12,44 @@ import {
     Timestamp,
     CHANNEL_TYPE
 } from './types'
-// import { WebStorageSessionStore } from 'matrix-js-sdk/lib/store/session/webstorage'
+import { IndexedDBStore, MemoryStore, createClient } from 'matrix-js-sdk'
+import { IStore } from 'matrix-js-sdk/lib/store'
+import { LocalStorage } from 'node-localstorage'
+
+import request from 'request'
+
+// just *accessing* indexedDB throws an exception in firefox with
+// indexeddb disabled.
+let localStorage: Storage | undefined
+let indexedDB: IDBFactory | undefined
+try {
+    indexedDB = window.indexedDB
+    localStorage = window.localStorage
+} catch (e) {}
 
 export async function login(
     synapseUrl: string,
     ethAddress: EthAddress,
     timestamp: Timestamp,
-    authChain: AuthChain,
-    getLocalStorage?: () => Storage
+    authChain: AuthChain
 ): Promise<MatrixClient> {
-    let sessionStore
-    if (getLocalStorage) {
-        sessionStore = new MemoryStore({localStorage: getLocalStorage()})
+    let store: IStore
+    let storage = localStorage ?? new LocalStorage('.storage')
+    if (indexedDB) {
+        let opts = { indexedDB, localStorage: storage, dbName: 'matrix-client-cache' }
+        store = new IndexedDBStore(opts) as IStore
+        await store.startup() // load from indexed db
     } else {
-        sessionStore = new MemoryStore({localStorage})
+        store = new MemoryStore({ localStorage: storage }) as IStore
     }
 
     // Create the client
-    const matrixClient: MatrixClient = Matrix.createClient({
+    const matrixClient: MatrixClient = createClient({
         baseUrl: synapseUrl,
-        //@ts-ignore
         timelineSupport: true,
         useAuthorizationHeader: true,
-        store: sessionStore
+        store,
+        request
     })
 
     // Actual login
