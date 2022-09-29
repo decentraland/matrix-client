@@ -4,6 +4,8 @@ import { Authenticator, AuthChain } from '@dcl/crypto'
 import { ClientLoginOptions, SocialClient } from 'SocialClient'
 import { login } from 'Utils'
 import { SocialId } from 'types'
+import { LocalStorage } from 'node-localstorage'
+import request from 'request'
 
 export function sleep(time: string): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms(time)))
@@ -19,15 +21,25 @@ export function getDataToLogin(
     return { ethAddress: identity.address, timestamp: timestamp, authChain }
 }
 
+const getLocalStorage = () => new LocalStorage('.storage')
+
 export async function loginWithIdentity(serverUrl: string, identity, options?: Partial<ClientLoginOptions>) {
     const { ethAddress, timestamp, authChain } = getDataToLogin(Date.now(), identity)
-    const client = await SocialClient.loginToServer(serverUrl, ethAddress, timestamp, authChain, options)
+    const client = await SocialClient.loginToServer(serverUrl, ethAddress, timestamp, authChain, {
+        ...options,
+        getLocalStorage,
+        createOpts: {
+            request
+        }
+    })
     return client
 }
 
 export async function createUser(serverUrl: string, identity): Promise<SocialId> {
     const { ethAddress, timestamp, authChain } = getDataToLogin(Date.now(), identity)
-    const matrixClient = await login(serverUrl, ethAddress, timestamp, authChain)
+    const matrixClient = await login(serverUrl, ethAddress, timestamp, authChain, getLocalStorage, {
+        request
+    })
     const userId = matrixClient.getUserId()
     await matrixClient.logout()
     return userId!

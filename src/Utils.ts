@@ -12,7 +12,7 @@ import {
     Timestamp,
     CHANNEL_TYPE
 } from './types'
-import { IndexedDBStore, MemoryStore, createClient } from 'matrix-js-sdk'
+import { IndexedDBStore, MemoryStore, createClient, ICreateClientOpts } from 'matrix-js-sdk'
 import { IStore } from 'matrix-js-sdk/lib/store'
 
 // just *accessing* indexedDB throws an exception in firefox with
@@ -28,12 +28,19 @@ export async function login(
     synapseUrl: string,
     ethAddress: EthAddress,
     timestamp: Timestamp,
-    authChain: AuthChain
+    authChain: AuthChain,
+    getLocalStorage?: () => Storage,
+    createOpts?: Partial<ICreateClientOpts>
 ): Promise<MatrixClient> {
     let store: IStore
-    let storage = localStorage ?? new LocalStorage('.storage')
+    let storage: Storage | undefined
+    if (getLocalStorage) {
+        storage = getLocalStorage()
+    } else {
+        storage = localStorage
+    }
     if (indexedDB) {
-        let opts = { indexedDB, localStorage: storage, dbName: 'matrix-client-cache' }
+        let opts = { indexedDB, localStorage: storage, dbName: `matrix-${ethAddress}` }
         store = new IndexedDBStore(opts) as IStore
         await store.startup() // load from indexed db
     } else {
@@ -42,11 +49,11 @@ export async function login(
 
     // Create the client
     const matrixClient: MatrixClient = createClient({
+        ...createOpts,
         baseUrl: synapseUrl,
         timelineSupport: true,
         useAuthorizationHeader: true,
-        store,
-        request
+        store
     })
 
     // Actual login

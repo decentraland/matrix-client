@@ -24,13 +24,14 @@ import { FriendsManagementAPI } from './FriendsManagementAPI'
 import { FriendsManagementClient } from './FriendsManagementClient'
 import { SocialAPI } from './SocialAPI'
 import { login } from './Utils'
-import { ClientEvent, PendingEventOrdering } from 'matrix-js-sdk'
+import { ClientEvent, ICreateClientOpts, PendingEventOrdering } from 'matrix-js-sdk'
 
 export type ClientLoginOptions = {
     pendingEventOrdering: PendingEventOrdering
     disablePresence: boolean
     initialSyncLimit: number
     getLocalStorage?: () => Storage
+    createOpts?: Partial<ICreateClientOpts>
 }
 
 export class SocialClient implements SocialAPI {
@@ -64,7 +65,14 @@ export class SocialClient implements SocialAPI {
         }
 
         // Login
-        const matrixClient = await login(synapseUrl, ethAddress, timestamp, authChain)
+        const matrixClient = await login(
+            synapseUrl,
+            ethAddress,
+            timestamp,
+            authChain,
+            options?.getLocalStorage,
+            options?.createOpts
+        )
 
         // Listen to initial sync
         const waitForInitialSync = new Promise<void>((resolve, reject) => {
