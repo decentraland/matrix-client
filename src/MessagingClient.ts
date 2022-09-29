@@ -70,7 +70,7 @@ export class MessagingClient implements MessagingAPI {
                 const join: Promise<void>[] = rooms
                     .filter(room => room.getMyMembership() === 'invite') // Consider rooms that I have been invited to
                     .map(room => {
-                        const member = room.getMember(this.matrixClient.getUserId())
+                        const member = room.getMember(this.matrixClient.getUserId()!)
                         return this.joinRoom(member)
                     })
                 await Promise.all(join)
@@ -114,7 +114,7 @@ export class MessagingClient implements MessagingAPI {
                 lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
                 userIds:
                     type === ConversationType.DIRECT
-                        ? [this.matrixClient.getUserId(), otherId]
+                        ? [this.matrixClient.getUserId()!, otherId]
                         : room.getMembers().map(x => x.userId),
                 hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage),
                 name: room.name
@@ -220,7 +220,7 @@ export class MessagingClient implements MessagingAPI {
     getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined {
         // Fetch last message marked as read
         const room = this.matrixClient.getRoom(conversationId)
-        const lastReadEventId = room?.getEventReadUpTo(this.matrixClient.getUserId(), false)
+        const lastReadEventId = room?.getEventReadUpTo(this.matrixClient.getUserId()!, false)
         const lastReadMatrixEvent = lastReadEventId
             ? findEventInRoom(this.matrixClient, conversationId, lastReadEventId)
             : undefined
@@ -452,7 +452,7 @@ export class MessagingClient implements MessagingAPI {
         createRoomOptions?: ICreateRoomOpts
     ): Promise<{ conversation: Conversation; created: boolean }> {
         await this.assertThatUsersExist(userIds)
-        const allUsersInConversation = [this.matrixClient.getUserIdLocalpart(), ...userIds]
+        const allUsersInConversation = [this.matrixClient.getUserIdLocalpart()!, ...userIds]
         const alias = defaultAlias ?? this.buildAliasForConversationWithUsers(allUsersInConversation)
         let roomId: string
         let created: boolean

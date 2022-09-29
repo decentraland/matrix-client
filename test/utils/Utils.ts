@@ -31,5 +31,5 @@ export async function createUser(serverUrl: string, identity): Promise<SocialId>
     const matrixClient = await login(serverUrl, ethAddress, timestamp, authChain, () => new LocalStorage('.storage'))
     const userId = matrixClient.getUserId()
     await matrixClient.logout()
-    return userId
+    return userId!
 }

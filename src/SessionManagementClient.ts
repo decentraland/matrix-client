@@ -20,7 +20,7 @@ export class SessionManagementClient implements SessionManagementAPI {
     }
 
     getUserId(): SocialId {
-        return this.matrixClient.getUserId()
+        return this.matrixClient.getUserId()!
     }
 
     getDomain(): string {
@@ -42,7 +42,7 @@ export class SessionManagementClient implements SessionManagementAPI {
             .filter(userId => friends.includes(userId))
             .map(userId => this.matrixClient.getUser(userId))
             .filter(user => !!user)
-            .map(user => [user.userId, SessionManagementClient.userToStatus(user)])
+            .map(user => [user!.userId, SessionManagementClient.userToStatus(user!)])
         return new Map(entries)
     }
 

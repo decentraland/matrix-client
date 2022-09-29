@@ -1,4 +1,4 @@
-import Matrix from 'matrix-js-sdk'
+import Matrix, { MemoryStore } from 'matrix-js-sdk'
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { Room } from 'matrix-js-sdk/lib/models/room'
@@ -13,7 +13,7 @@ import {
     Timestamp,
     CHANNEL_TYPE
 } from './types'
-import { WebStorageSessionStore } from 'matrix-js-sdk/lib/store/session/webstorage'
+// import { WebStorageSessionStore } from 'matrix-js-sdk/lib/store/session/webstorage'
 
 export async function login(
     synapseUrl: string,
@@ -24,9 +24,9 @@ export async function login(
 ): Promise<MatrixClient> {
     let sessionStore
     if (getLocalStorage) {
-        sessionStore = new WebStorageSessionStore(getLocalStorage())
+        sessionStore = new MemoryStore({localStorage: getLocalStorage()})
     } else {
-        sessionStore = new WebStorageSessionStore(localStorage)
+        sessionStore = new MemoryStore({localStorage})
     }
 
     // Create the client
@@ -35,7 +35,7 @@ export async function login(
         //@ts-ignore
         timelineSupport: true,
         useAuthorizationHeader: true,
-        sessionStore
+        store: sessionStore
     })
 
     // Actual login
@@ -85,7 +85,7 @@ export function getConversationTypeFromRoom(client: MatrixClient, room: Room): C
 }
 
 export function getOnlyMessagesTimelineSetFromRoom(client: MatrixClient, room: Room, limit?: number) {
-    const filter = GET_ONLY_MESSAGES_FILTER(client.getUserId(), limit)
+    const filter = GET_ONLY_MESSAGES_FILTER(client.getUserId()!, limit)
     return room.getOrCreateFilteredTimelineSet(filter)
 }
 
