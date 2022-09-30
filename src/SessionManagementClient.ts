@@ -15,7 +15,7 @@ export class SessionManagementClient implements SessionManagementAPI {
 
     async logout(): Promise<void> {
         this.loggedIn = false
-        await this.matrixClient.stopClient()
+        this.matrixClient.stopClient()
         await this.matrixClient.logout()
     }
 
