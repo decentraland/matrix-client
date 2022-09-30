@@ -13,7 +13,6 @@ import {
     Timestamp,
     CHANNEL_TYPE
 } from './types'
-// import { WebStorageSessionStore } from 'matrix-js-sdk/lib/store/session/webstorage'
 
 export async function login(
     synapseUrl: string,
