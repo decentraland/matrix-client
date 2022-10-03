@@ -41,8 +41,8 @@ export class SocialClient implements SocialAPI {
 
     private constructor(matrixClient: MatrixClient) {
         this.sessionManagement = new SessionManagementClient(matrixClient, this)
-        this.messaging = new MessagingClient(matrixClient, this)
         this.friendsManagement = new FriendsManagementClient(matrixClient, this)
+        this.messaging = new MessagingClient(matrixClient, this)
     }
 
     listenToEvents(): void {
