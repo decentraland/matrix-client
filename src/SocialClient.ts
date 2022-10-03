@@ -24,13 +24,14 @@ import { FriendsManagementAPI } from './FriendsManagementAPI'
 import { FriendsManagementClient } from './FriendsManagementClient'
 import { SocialAPI } from './SocialAPI'
 import { login } from './Utils'
-import { ClientEvent, PendingEventOrdering } from 'matrix-js-sdk'
+import { ClientEvent, ICreateClientOpts, PendingEventOrdering } from 'matrix-js-sdk'
 
 export type ClientLoginOptions = {
     pendingEventOrdering: PendingEventOrdering
     disablePresence: boolean
     initialSyncLimit: number
     getLocalStorage?: () => Storage
+    createOpts?: Partial<ICreateClientOpts>
 }
 
 export class SocialClient implements SocialAPI {
@@ -40,7 +41,7 @@ export class SocialClient implements SocialAPI {
 
     private constructor(matrixClient: MatrixClient) {
         this.sessionManagement = new SessionManagementClient(matrixClient, this)
-        this.messaging = new MessagingClient(matrixClient)
+        this.messaging = new MessagingClient(matrixClient, this)
         this.friendsManagement = new FriendsManagementClient(matrixClient, this)
     }
 
@@ -58,13 +59,20 @@ export class SocialClient implements SocialAPI {
         // Destructure options
         const _options: ClientLoginOptions = {
             pendingEventOrdering: PendingEventOrdering.Detached,
-            initialSyncLimit: 20, // This is the value that the Matrix React SDK uses
+            initialSyncLimit: 3,
             disablePresence: false,
             ...options
         }
 
         // Login
-        const matrixClient = await login(synapseUrl, ethAddress, timestamp, authChain, _options.getLocalStorage)
+        const matrixClient = await login(
+            synapseUrl,
+            ethAddress,
+            timestamp,
+            authChain,
+            options?.getLocalStorage,
+            options?.createOpts
+        )
 
         // Listen to initial sync
         const waitForInitialSync = new Promise<void>((resolve, reject) => {

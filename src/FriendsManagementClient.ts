@@ -39,9 +39,9 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             .map(([room, status]) => {
                 const other = room.guessDMUserId()
                 if (status === FriendshipStatus.REQUEST_SENT_BY_ME_PENDING) {
-                    return { from: this.matrixClient.getUserId(), to: other, createdAt: room.timeline[0].getTs() }
+                    return { from: this.socialClient.getUserId(), to: other, createdAt: room.timeline[0].getTs() }
                 } else {
-                    return { to: this.matrixClient.getUserId(), from: other, createdAt: room.timeline[0].getTs() }
+                    return { to: this.socialClient.getUserId(), from: other, createdAt: room.timeline[0].getTs() }
                 }
             })
     }
@@ -134,7 +134,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
 
             if (event.getType() === FriendsManagementClient.FRIENDSHIP_EVENT_TYPE && event.getStateKey() === '') {
                 const { type } = event.getContent()
-                if (type === eventToListenTo && event.getSender() !== this.matrixClient.getUserId()) {
+                if (type === eventToListenTo && event.getSender() !== this.socialClient.getUserId()) {
                     listener(event.getSender())
                 }
             }
@@ -149,7 +149,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             roomId,
             FriendsManagementClient.FRIENDSHIP_EVENT_TYPE,
             content,
-            this.matrixClient.getUserId()
+            this.socialClient.getUserId()
         )
     }
 
@@ -180,7 +180,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             const { type }: { type: FriendshipEvent } = event.getContent()
             switch (type) {
                 case FriendshipEvent.REQUEST:
-                    if (sender === this.matrixClient.getUserId()) {
+                    if (sender === this.socialClient.getUserId()) {
                         return FriendshipStatus.REQUEST_SENT_BY_ME_PENDING
                     } else {
                         return FriendshipStatus.REQUEST_SENT_TO_ME_PENDING
@@ -193,9 +193,9 @@ export class FriendsManagementClient implements FriendsManagementAPI {
                             ? event
                             : this.getLastFriendshipEventInRoomByUser(room, room.guessDMUserId())
                     const myLastFriendshipEvent: MatrixEvent | undefined =
-                        sender === this.matrixClient.getUserId()
+                        sender === this.socialClient.getUserId()
                             ? event
-                            : this.getLastFriendshipEventInRoomByUser(room, this.matrixClient.getUserId())
+                            : this.getLastFriendshipEventInRoomByUser(room, this.socialClient.getUserId())
                     if (othersLastFriendshipEvent && myLastFriendshipEvent) {
                         const wasInvited =
                             othersLastFriendshipEvent.getContent().type === FriendshipEvent.REQUEST &&
