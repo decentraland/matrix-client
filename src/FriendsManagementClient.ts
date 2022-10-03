@@ -39,9 +39,9 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             .map(([room, status]) => {
                 const other = room.guessDMUserId()
                 if (status === FriendshipStatus.REQUEST_SENT_BY_ME_PENDING) {
-                    return { from: this.socialClient.getUserId()!, to: other, createdAt: room.timeline[0].getTs() }
+                    return { from: this.socialClient.getUserId(), to: other, createdAt: room.timeline[0].getTs() }
                 } else {
-                    return { to: this.socialClient.getUserId()!, from: other, createdAt: room.timeline[0].getTs() }
+                    return { to: this.socialClient.getUserId(), from: other, createdAt: room.timeline[0].getTs() }
                 }
             })
     }
@@ -149,7 +149,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             roomId,
             FriendsManagementClient.FRIENDSHIP_EVENT_TYPE,
             content,
-            this.socialClient.getUserId()!
+            this.socialClient.getUserId()
         )
     }
 

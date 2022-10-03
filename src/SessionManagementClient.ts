@@ -3,6 +3,7 @@ import { SocialId, PresenceType, CurrentUserStatus, UpdateUserStatus } from './t
 import { SessionManagementAPI } from './SessionManagementAPI'
 import { SocialClient } from './SocialClient'
 import { User, UserEvent } from 'matrix-js-sdk'
+import { isUserPresent } from 'Utils'
 
 export class SessionManagementClient implements SessionManagementAPI {
     private loggedIn: boolean = true
@@ -49,8 +50,8 @@ export class SessionManagementClient implements SessionManagementAPI {
         const entries: [SocialId, CurrentUserStatus][] = users
             .filter(userId => friends.includes(userId))
             .map(userId => this.matrixClient.getUser(userId))
-            .filter(user => !!user)
-            .map(user => [user!.userId, SessionManagementClient.userToStatus(user!)])
+            .filter((user): user is User => !!user)
+            .map(user => [user.userId, SessionManagementClient.userToStatus(user!)])
         return new Map(entries)
     }
 
