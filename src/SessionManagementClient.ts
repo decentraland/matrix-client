@@ -19,8 +19,16 @@ export class SessionManagementClient implements SessionManagementAPI {
         await this.matrixClient.logout()
     }
 
+    /*
+     * UserId should be present when client is logged-in
+     */
     getUserId(): SocialId {
-        return this.matrixClient.getUserId()!
+        const userId = this.matrixClient.getUserId()
+        if (!userId) {
+            // shouldn't happen since user id must be present when client is logged in
+            throw new Error('UserId not present when it should')
+        }
+        return userId
     }
 
     getDomain(): string {
