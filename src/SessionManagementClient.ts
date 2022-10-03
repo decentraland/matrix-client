@@ -3,7 +3,6 @@ import { SocialId, PresenceType, CurrentUserStatus, UpdateUserStatus } from './t
 import { SessionManagementAPI } from './SessionManagementAPI'
 import { SocialClient } from './SocialClient'
 import { User, UserEvent } from 'matrix-js-sdk'
-import { isUserPresent } from 'Utils'
 
 export class SessionManagementClient implements SessionManagementAPI {
     private loggedIn: boolean = true
