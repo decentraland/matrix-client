@@ -151,6 +151,10 @@ export class SocialClient implements SocialAPI {
         return this.messaging.onMessage(listener)
     }
 
+    onChannelJoin(listener: (conversation: Conversation) => void): void {
+        return this.messaging.onChannelJoin(listener)
+    }
+
     getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined {
         return this.messaging.getLastReadMessage(conversationId)
     }

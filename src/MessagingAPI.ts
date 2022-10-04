@@ -39,6 +39,8 @@ export interface MessagingAPI {
     /** Listen to new messages */
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void
 
+    onChannelJoin(listener: (conversation: Conversation) => void): void
+
     /**
      * Return basic information about the last read message. Since we don't mark messages sent by the logged in user as read,
      * we also check against the last sent message.

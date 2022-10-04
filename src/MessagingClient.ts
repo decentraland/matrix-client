@@ -213,6 +213,23 @@ export class MessagingClient implements MessagingAPI {
         })
     }
 
+    onChannelJoin(listener: (conversation: Conversation) => void): void {
+        this.matrixClient.on(RoomEvent.MyMembership, (room, membership) => {
+            if (
+                !room || // make sure we have a room
+                room.getType() !== CHANNEL_TYPE || // we only want to know about the update related to channels
+                membership !== 'join' || // we only want to know about the updates related to join a channel
+                room.getJoinedMemberCount() === 0 // Todo Juli: talk about this one :)
+            ) {
+                return
+            }
+
+            const conversation = this.getRoomInformation(room).conversation
+
+            listener(conversation)
+        })
+    }
+
     /**
      * Return basic information about the last read message. Since we don't mark messages sent by me as read,
      * we also check against the last sent message.
@@ -392,10 +409,13 @@ export class MessagingClient implements MessagingAPI {
             let publicRooms: Array<IPublicRoomsChunkRoom> = []
             let res: IPublicRoomsResponse
             let nextBatch = since
-            const filter = searchTerm ? { filter: {
-                generic_search_term: searchTerm
-            }
-            } : {}
+            const filter = searchTerm
+                ? {
+                      filter: {
+                          generic_search_term: searchTerm
+                      }
+                  }
+                : {}
             const options = {
                 limit,
                 since: nextBatch,
