@@ -105,3 +105,6 @@ dist
 
 # Files created for docker integration tests
 **/mount/**
+
+# Local storage used for matrix memory store
+.storage

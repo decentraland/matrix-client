@@ -6,7 +6,6 @@ import { CatalystContainerBuilder } from './containers/catalyst/CatalystContaine
 import { SynapseContainerBuilder } from './containers/synapse/SynapseContainerBuilder'
 import { loginWithIdentity, createUser } from '../utils/Utils'
 import { SocialId } from 'types'
-import { LocalStorage } from 'node-localstorage'
 
 /**
  * Almost every test on this project will need to set up a synapse server, a catalyst server,
@@ -47,9 +46,7 @@ export class TestEnvironment {
     }
 
     async getClientWithIdentity(identity): Promise<SocialClient> {
-        const client = await loginWithIdentity(this.synapseContainer.getAddress(), identity, {
-            getLocalStorage: () => new LocalStorage('.storage')
-        })
+        const client = await loginWithIdentity(this.synapseContainer.getAddress(), identity)
         this.clients.push(client)
         return client
     }

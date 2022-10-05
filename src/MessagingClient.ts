@@ -36,6 +36,7 @@ import {
     Visibility
 } from 'matrix-js-sdk'
 import { RoomMember } from 'matrix-js-sdk'
+import { SocialClient } from 'SocialClient'
 
 // TODO: Delete this when matrix-client exports the actual one
 interface IPublicRoomsResponse {
@@ -62,7 +63,7 @@ const CHANNEL_RESERVED_IDS = ['nearby']
 export class MessagingClient implements MessagingAPI {
     private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()
 
-    constructor(private readonly matrixClient: MatrixClient) {
+    constructor(private readonly matrixClient: MatrixClient, private readonly socialClient: SocialClient) {
         // Listen to when the sync is finishes, and join all rooms I was invited to
         matrixClient.once(ClientEvent.Sync, async state => {
             if (state === 'PREPARED') {
@@ -70,7 +71,7 @@ export class MessagingClient implements MessagingAPI {
                 const join: Promise<void>[] = rooms
                     .filter(room => room.getMyMembership() === 'invite') // Consider rooms that I have been invited to
                     .map(room => {
-                        const member = room.getMember(this.matrixClient.getUserId())
+                        const member = room.getMember(this.socialClient.getUserId())
                         return this.joinRoom(member)
                     })
                 await Promise.all(join)
@@ -84,7 +85,7 @@ export class MessagingClient implements MessagingAPI {
             if (
                 event.getType() === 'm.room.message' &&
                 event.getContent().msgtype === MessageType.TEXT &&
-                event.getSender() === this.matrixClient.getUserId()
+                event.getSender() === this.socialClient.getUserId()
             ) {
                 const currentLastSentMessage = this.lastSentMessage.get(room.roomId)
                 if (!currentLastSentMessage || currentLastSentMessage.timestamp < event.getTs()) {
@@ -95,7 +96,7 @@ export class MessagingClient implements MessagingAPI {
 
         // Listen to invitations and accept them automatically
         this.matrixClient.on(RoomMemberEvent.Membership, async (_, member) => {
-            if (member.membership === 'invite' && member.userId === this.matrixClient.getUserId()) {
+            if (member.membership === 'invite' && member.userId === this.socialClient.getUserId()) {
                 await this.joinRoom(member)
             }
         })
@@ -114,7 +115,7 @@ export class MessagingClient implements MessagingAPI {
                 lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
                 userIds:
                     type === ConversationType.DIRECT
-                        ? [this.matrixClient.getUserId(), otherId]
+                        ? [this.socialClient.getUserId(), otherId]
                         : room.getMembers().map(x => x.userId),
                 hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage),
                 name: room.name
@@ -190,7 +191,7 @@ export class MessagingClient implements MessagingAPI {
             if (
                 event.getType() !== 'm.room.message' || // Make sure that it is in fact a message
                 event.getContent().msgtype !== MessageType.TEXT || // Make sure that the message is of type text
-                event.getSender() === this.matrixClient.getUserId()
+                event.getSender() === this.socialClient.getUserId()
             ) {
                 // Don't raise an event if I was the sender
                 return
@@ -236,7 +237,7 @@ export class MessagingClient implements MessagingAPI {
     getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined {
         // Fetch last message marked as read
         const room = this.matrixClient.getRoom(conversationId)
-        const lastReadEventId = room?.getEventReadUpTo(this.matrixClient.getUserId(), false)
+        const lastReadEventId = room?.getEventReadUpTo(this.socialClient.getUserId(), false)
         const lastReadMatrixEvent = lastReadEventId
             ? findEventInRoom(this.matrixClient, conversationId, lastReadEventId)
             : undefined
@@ -279,6 +280,7 @@ export class MessagingClient implements MessagingAPI {
     ): Promise<ConversationCursor> {
         return ConversationCursor.build(
             this.matrixClient,
+            this.socialClient.getUserId(),
             conversationId,
             messageId,
             roomId => this.getLastReadMessage(roomId),
@@ -294,6 +296,7 @@ export class MessagingClient implements MessagingAPI {
         const lastReadMessage = this.getLastReadMessage(conversationId)
         return ConversationCursor.build(
             this.matrixClient,
+            this.socialClient.getUserId(),
             conversationId,
             lastReadMessage?.id,
             roomId => this.getLastReadMessage(roomId),
@@ -307,6 +310,7 @@ export class MessagingClient implements MessagingAPI {
     getCursorOnLastMessage(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor> {
         return ConversationCursor.build(
             this.matrixClient,
+            this.socialClient.getUserId(),
             conversationId,
             undefined,
             roomId => this.getLastReadMessage(roomId),
@@ -471,7 +475,7 @@ export class MessagingClient implements MessagingAPI {
         createRoomOptions?: ICreateRoomOpts
     ): Promise<{ conversation: Conversation; created: boolean }> {
         await this.assertThatUsersExist(userIds)
-        const allUsersInConversation = [this.matrixClient.getUserIdLocalpart(), ...userIds]
+        const allUsersInConversation = [this.matrixClient.getUserIdLocalpart()!, ...userIds]
         const alias = defaultAlias ?? this.buildAliasForConversationWithUsers(allUsersInConversation)
         let roomId: string
         let created: boolean

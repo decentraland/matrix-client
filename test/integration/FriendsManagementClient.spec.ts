@@ -225,8 +225,8 @@ describe('Integration - Friends Management Client', () => {
         const [ fromPendingRequest ] = fromPendingRequests
         const [ toPendingRequest ] = toPendingRequests
 
-        expect(fromPendingRequest).to.deep.equal(toPendingRequest)
-        expect(fromPendingRequest.from).to.equal(from.getUserId())
+        expect(fromPendingRequest.from).to.equal(toPendingRequest.from)
+        expect(fromPendingRequest.to).to.equal(toPendingRequest.to)
         expect(fromPendingRequest.to).to.equal(to.getUserId())
         expect(fromPendingRequest.createdAt).not.to.equal(null)
         expect(typeof fromPendingRequest.createdAt).to.equal(typeof 1)

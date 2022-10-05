@@ -15,12 +15,20 @@ export class SessionManagementClient implements SessionManagementAPI {
 
     async logout(): Promise<void> {
         this.loggedIn = false
-        await this.matrixClient.stopClient()
+        this.matrixClient.stopClient()
         await this.matrixClient.logout()
     }
 
+    /*
+     * UserId should be present when client is logged-in
+     */
     getUserId(): SocialId {
-        return this.matrixClient.getUserId()
+        const userId = this.matrixClient.getUserId()
+        if (!userId) {
+            // shouldn't happen since user id must be present when client is logged in
+            throw new Error('UserId not present when it should')
+        }
+        return userId
     }
 
     getDomain(): string {
@@ -41,8 +49,8 @@ export class SessionManagementClient implements SessionManagementAPI {
         const entries: [SocialId, CurrentUserStatus][] = users
             .filter(userId => friends.includes(userId))
             .map(userId => this.matrixClient.getUser(userId))
-            .filter(user => !!user)
-            .map(user => [user.userId, SessionManagementClient.userToStatus(user)])
+            .filter((user): user is User => !!user)
+            .map(user => [user.userId, SessionManagementClient.userToStatus(user!)])
         return new Map(entries)
     }
 

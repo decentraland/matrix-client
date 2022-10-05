@@ -2,7 +2,15 @@ import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { TimelineWindow } from 'matrix-js-sdk/lib/timeline-window'
 import { EventTimeline } from 'matrix-js-sdk/lib/models/event-timeline'
 import { buildTextMessage, getOnlyMessagesTimelineSetFromRoom } from './Utils'
-import { TextMessage, Timestamp, MessageStatus, CursorOptions, CursorDirection, BasicMessageInfo } from './types'
+import {
+    TextMessage,
+    Timestamp,
+    MessageStatus,
+    CursorOptions,
+    CursorDirection,
+    BasicMessageInfo,
+    SocialId
+} from './types'
 
 /**
  * This class can be used to navigate a conversation's history. You can load more messages
@@ -55,6 +63,7 @@ export class ConversationCursor {
 
     static async build(
         client: MatrixClient,
+        userId: SocialId,
         roomId: string,
         initialEventId: string | undefined, // If no eventId is set, then we will start at the last message
         lastReadMessageTimestampFetch: (roomId: string) => BasicMessageInfo | undefined,
@@ -63,7 +72,7 @@ export class ConversationCursor {
         const limit = ConversationCursor.calculateLimit(options)
         const initialSize = options?.initialSize ?? this.DEFAULT_INITIAL_SIZE
         const room = client.getRoom(roomId)!
-        const timelineSet = getOnlyMessagesTimelineSetFromRoom(client, room, limit)
+        const timelineSet = getOnlyMessagesTimelineSetFromRoom(userId, room, limit)
         const window = new TimelineWindow(client, timelineSet, { windowLimit: limit })
         await window.load(initialEventId, initialSize)
 
