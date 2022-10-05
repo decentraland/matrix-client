@@ -374,8 +374,10 @@ describe('Integration - Messaging Client', () => {
       // Set listener
       client.onChannelMembership(spy)
 
-      // Create a conversation
-      await client.joinChannel('channel-name')
+      const { conversation } = await client.getOrCreateChannel('channel-name', [])
+
+      // Join channel
+      await client.joinChannel(conversation.id)
 
       // Wait for sync
       await sleep('1s')
@@ -383,9 +385,14 @@ describe('Integration - Messaging Client', () => {
       // Make sure that the spy was called
       expect(spy).to.have.been.calledOnce
 
-      // Assert that the event received was sent by the actual sender
-      const sender = spy.firstCall.args[0]
-      expect(sender).to.equal(client.getUserId())
+      // Leave channel
+      await client.leaveChannel(conversation.id)
+
+      // Wait for sync
+      await sleep('1s')
+
+      // Make sure that the spy was called
+      expect(spy).to.have.been.calledTwice
     })
 
     /** Assert that the message was received, and return the message id */
