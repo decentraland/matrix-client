@@ -13,7 +13,8 @@ import {
     CurrentUserStatus,
     UpdateUserStatus,
     GetOrCreateConversationResponse,
-    SearchChannelsResponse
+    SearchChannelsResponse,
+    ProfileInfo
 } from './types'
 import { ConversationCursor } from './ConversationCursor'
 import { MessagingAPI } from './MessagingAPI'
@@ -120,6 +121,18 @@ export class SocialClient implements SocialAPI {
 
     setStatus(status: UpdateUserStatus): Promise<void> {
         return this.sessionManagement.setStatus(status)
+    }
+
+    getMemberInfo(roomId: string, userId: string): ProfileInfo {
+        return this.messaging.getMemberInfo(roomId, userId)
+    }
+
+    getProfileInfo(userId: string): Promise<ProfileInfo> {
+        return this.messaging.getProfileInfo(userId)
+    }
+
+    setProfileInfo(profileInfo: ProfileInfo): Promise<void> {
+        return this.sessionManagement.setProfileInfo(profileInfo)
     }
 
     getUserStatuses(...users: SocialId[]): Map<SocialId, CurrentUserStatus> {

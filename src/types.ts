@@ -100,3 +100,8 @@ export type UserPosition = {
     x: number
     y: number
 }
+
+export type ProfileInfo = {
+    displayName?: string
+    avatarUrl?: string
+}
