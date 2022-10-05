@@ -1,5 +1,5 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
-import { SocialId, PresenceType, CurrentUserStatus, UpdateUserStatus } from './types'
+import { SocialId, PresenceType, CurrentUserStatus, UpdateUserStatus, ProfileInfo } from './types'
 import { SessionManagementAPI } from './SessionManagementAPI'
 import { SocialClient } from './SocialClient'
 import { User, UserEvent } from 'matrix-js-sdk'
@@ -35,14 +35,14 @@ export class SessionManagementClient implements SessionManagementAPI {
         return this.matrixClient.getDomain()
     }
 
-    async setProfileInfo(displayName: string, avatarUrl: string): Promise<void> {
+    async setProfileInfo({ displayName, avatarUrl }: ProfileInfo): Promise<void> {
         const userId = this.getUserId()
 
         const userInfo = await this.matrixClient.getProfileInfo(userId)
-        if (userInfo.displayname !== displayName) {
+        if (displayName && userInfo.displayname !== displayName) {
             await this.matrixClient.setDisplayName(displayName)
         }
-        if (userInfo.avatar_url !== avatarUrl) {
+        if (avatarUrl && userInfo.avatar_url !== avatarUrl) {
             await this.matrixClient.setAvatarUrl(avatarUrl)
         }
     }
