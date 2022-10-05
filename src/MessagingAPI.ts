@@ -7,7 +7,8 @@ import {
     ConversationId,
     BasicMessageInfo,
     GetOrCreateConversationResponse,
-    SearchChannelsResponse
+    SearchChannelsResponse,
+    ProfileInfo
 } from './types'
 import { ConversationCursor } from './ConversationCursor'
 
@@ -24,6 +25,9 @@ export interface MessagingAPI {
     /** Get total number of unseen messages from all conversations the user has joined */
     getTotalUnseenMessages(): number
 
+    getProfileInfo(userId: string): Promise<ProfileInfo>
+
+    getMemberInfo(roomId: string, userId: string): ProfileInfo
     /**
      * Send a text message  to a conversation.
      * Returns the message id
