@@ -15,7 +15,8 @@ import {
     CHANNEL_TYPE,
     GetOrCreateConversationResponse,
     SearchChannelsResponse,
-    Channel
+    Channel,
+    ProfileInfo
 } from './types'
 import {
     findEventInRoom,
@@ -120,6 +121,22 @@ export class MessagingClient implements MessagingAPI {
                 hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage),
                 name: room.name
             }
+        }
+    }
+
+    async getProfileInfo(userId: string): Promise<ProfileInfo> {
+        const profile = await this.matrixClient.getProfileInfo(userId)
+
+        return { displayName: profile.displayname, avatarUrl: profile.avatar_url }
+    }
+
+    getMemberInfo(roomId: string, userId: string): ProfileInfo {
+        const member = this.matrixClient.getRoom(roomId)?.getMember(userId)
+        if (!member) return {}
+
+        return {
+            displayName: member.name,
+            avatarUrl: member.getMxcAvatarUrl() ?? undefined
         }
     }
 
