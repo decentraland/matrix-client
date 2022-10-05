@@ -218,8 +218,7 @@ export class MessagingClient implements MessagingAPI {
             if (
                 !room || // make sure we have a room
                 room.getType() !== CHANNEL_TYPE || // we only want to know about the update related to channels
-                membership !== 'join' || // we only want to know about the updates related to join a channel
-                room.name === 'Empty room' // Todo Juli: talk about this one :)
+                membership !== 'join' // we only want to know about the updates related to join a channel
             ) {
                 return
             }
