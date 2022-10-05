@@ -125,7 +125,18 @@ export class MessagingClient implements MessagingAPI {
 
     async getProfileInfo(userId: string): Promise<{ displayName?: string; avatarUrl?: string }> {
         const profile = await this.matrixClient.getProfileInfo(userId)
+
         return { displayName: profile.displayname, avatarUrl: profile.avatar_url }
+    }
+
+    getMemberInfo(roomId: string, userId: string): { displayName?: string; avatarUrl?: string } {
+        const member = this.matrixClient.getRoom(roomId)?.getMember(userId)
+        if (!member) return {}
+
+        return {
+            displayName: member.name,
+            avatarUrl: member.getMxcAvatarUrl() ?? undefined
+        }
     }
 
     /** Get all conversation the user has joined */

@@ -25,6 +25,8 @@ export interface MessagingAPI {
     getTotalUnseenMessages(): number
 
     getProfileInfo(userId: string): Promise<{ displayName?: string; avatarUrl?: string }>
+
+    getMemberInfo(roomId: string, userId: string): { displayName?: string; avatarUrl?: string }
     /**
      * Send a text message  to a conversation.
      * Returns the message id
