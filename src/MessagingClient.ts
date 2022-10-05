@@ -217,19 +217,18 @@ export class MessagingClient implements MessagingAPI {
     /**
      * Listen to updates on the membership of a channel
      */
-    onChannelJoin(listener: (conversation: Conversation) => void): void {
+    onChannelJoin(listener: (conversation: Conversation, membership: string) => void): void {
         this.matrixClient.on(RoomEvent.MyMembership, (room, membership) => {
             if (
                 !room || // make sure we have a room
-                room.getType() !== CHANNEL_TYPE || // we only want to know about the updates related to channels
-                membership !== 'join' // we only want to know about the updates related to join a channel
+                room.getType() !== CHANNEL_TYPE // we only want to know about the updates related to channels
             ) {
                 return
             }
 
             const conversation = this.getRoomInformation(room).conversation
 
-            listener(conversation)
+            listener(conversation, membership)
         })
     }
 
