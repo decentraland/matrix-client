@@ -35,6 +35,18 @@ export class SessionManagementClient implements SessionManagementAPI {
         return this.matrixClient.getDomain()
     }
 
+    async setProfileInfo(displayName: string, avatarUrl: string): Promise<void> {
+        const userId = this.getUserId()
+
+        const userInfo = await this.matrixClient.getProfileInfo(userId)
+        if (userInfo.displayname !== displayName) {
+            await this.matrixClient.setDisplayName(displayName)
+        }
+        if (userInfo.avatar_url !== avatarUrl) {
+            await this.matrixClient.setAvatarUrl(avatarUrl)
+        }
+    }
+
     setStatus(status: UpdateUserStatus): Promise<void> {
         const input = {
             presence: status.presence,

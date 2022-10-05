@@ -123,6 +123,11 @@ export class MessagingClient implements MessagingAPI {
         }
     }
 
+    async getProfileInfo(userId: string): Promise<{ displayName?: string; avatarUrl?: string }> {
+        const profile = await this.matrixClient.getProfileInfo(userId)
+        return { displayName: profile.displayname, avatarUrl: profile.avatar_url }
+    }
+
     /** Get all conversation the user has joined */
     getAllCurrentConversations(): { conversation: Conversation; unreadMessages: boolean }[] {
         const rooms = this.getAllRooms()

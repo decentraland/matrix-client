@@ -122,6 +122,14 @@ export class SocialClient implements SocialAPI {
         return this.sessionManagement.setStatus(status)
     }
 
+    getProfileInfo(userId: string): Promise<{ displayName?: string; avatarUrl?: string }> {
+        return this.messaging.getProfileInfo(userId)
+    }
+
+    setProfileInfo(displayName: String, avatarUrl: String): Promise<void> {
+        return this.sessionManagement.setProfileInfo(displayName, avatarUrl)
+    }
+
     getUserStatuses(...users: SocialId[]): Map<SocialId, CurrentUserStatus> {
         return this.sessionManagement.getUserStatuses(...users)
     }

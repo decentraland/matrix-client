@@ -24,6 +24,7 @@ export interface MessagingAPI {
     /** Get total number of unseen messages from all conversations the user has joined */
     getTotalUnseenMessages(): number
 
+    getProfileInfo(userId: string): Promise<{ displayName?: string; avatarUrl?: string }>
     /**
      * Send a text message  to a conversation.
      * Returns the message id
