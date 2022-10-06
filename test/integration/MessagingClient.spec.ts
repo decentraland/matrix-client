@@ -364,7 +364,6 @@ describe('Integration - Messaging Client', () => {
       expect(pagination2.nextBatch).to.be.undefined
     })
 
-    //
     it ('Listen for events related to the membership updates a room receives during the sync', async () => {
       const client = await testEnv.getRandomClient()
 
@@ -376,6 +375,7 @@ describe('Integration - Messaging Client', () => {
 
       const { conversation } = await client.getOrCreateChannel('channel-name', [])
 
+      // TODO: We should add an aditional test where the user joins the channel with the alias!
       // Join channel
       await client.joinChannel(conversation.id)
 
