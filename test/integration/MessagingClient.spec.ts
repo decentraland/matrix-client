@@ -364,6 +364,37 @@ describe('Integration - Messaging Client', () => {
       expect(pagination2.nextBatch).to.be.undefined
     })
 
+    it ('Listen for events related to the membership updates a room receives during the sync', async () => {
+      const client = await testEnv.getRandomClient()
+
+      // Prepare spy
+      const spy = sinon.spy()
+
+      // Set listener
+      client.onChannelMembership(spy)
+
+      const { conversation } = await client.getOrCreateChannel('channel-name', [])
+
+      // TODO: We should add an aditional test where the user joins the channel with the alias!
+      // Join channel
+      await client.joinChannel(conversation.id)
+
+      // Wait for sync
+      await sleep('1s')
+
+      // Make sure that the spy was called
+      expect(spy).to.have.been.calledOnce
+
+      // Leave channel
+      await client.leaveChannel(conversation.id)
+
+      // Wait for sync
+      await sleep('1s')
+
+      // Make sure that the spy was called
+      expect(spy).to.have.been.calledTwice
+    })
+
     /** Assert that the message was received, and return the message id */
     function assertMessageWasReceivedByEvent(
         spy,

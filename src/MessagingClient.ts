@@ -232,6 +232,25 @@ export class MessagingClient implements MessagingAPI {
     }
 
     /**
+     * Listen to updates on the membership of a channel
+     * @doc {membership} join | leave | invite
+     */
+    onChannelMembership(listener: (conversation: Conversation, membership: string) => void): void {
+        this.matrixClient.on(RoomEvent.MyMembership, (room, membership) => {
+            if (
+                !room || // make sure we have a room
+                room.getType() !== CHANNEL_TYPE // we only want to know about the updates related to channels
+            ) {
+                return
+            }
+
+            const conversation = this.getRoomInformation(room).conversation
+
+            listener(conversation, membership)
+        })
+    }
+
+    /**
      * Return basic information about the last read message. Since we don't mark messages sent by me as read,
      * we also check against the last sent message.
      */

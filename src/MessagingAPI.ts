@@ -43,6 +43,11 @@ export interface MessagingAPI {
     /** Listen to new messages */
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void
 
+    /** Listen to updates on the membership of a channel 
+     * @doc {membership} join | leave | invite
+    */
+    onChannelMembership(listener: (conversation: Conversation, membership: string) => void): void
+
     /**
      * Return basic information about the last read message. Since we don't mark messages sent by the logged in user as read,
      * we also check against the last sent message.
