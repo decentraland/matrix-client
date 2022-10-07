@@ -113,12 +113,12 @@ export class MessagingClient implements MessagingAPI {
                 id: room.roomId,
                 type,
                 unreadMessages: unreadMessages.length > 0 ? unreadMessages : undefined,
-                lastEventTimestamp: room.getLiveTimeline().getEvents()[room.getLiveTimeline().getEvents().length - 1]?.getTs(),
+                lastEventTimestamp: room.timeline[room.timeline.length - 1]?.getTs(),
                 userIds:
                     type === ConversationType.DIRECT
                         ? [this.socialClient.getUserId(), otherId]
                         : room.getMembers().map(x => x.userId),
-                hasMessages: room.getLiveTimeline().getEvents().some(event => event.getType() === EventType.RoomMessage),
+                hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage),
                 name: room.name
             }
         }
@@ -194,7 +194,7 @@ export class MessagingClient implements MessagingAPI {
             return
         }
 
-        const roomMessages = room.getLiveTimeline().getEvents().filter(event => event.getType() === EventType.RoomMessage)
+        const roomMessages = room.timeline.filter(event => event.getType() === EventType.RoomMessage)
         const lastMessage = roomMessages[roomMessages.length - 1].getId()
 
         await this.markAsRead(conversationId, lastMessage)
@@ -270,7 +270,7 @@ export class MessagingClient implements MessagingAPI {
             lastEventSentByMe = knownLastSentMessage
         } else {
             const timelineSet = getOnlyMessagesSentByMeTimelineSetFromRoom(this.matrixClient, room)
-            const events = timelineSet?.getLiveTimeline().getEvents()
+            const events = timelineSet?.timeline
             const lastMatrixEventSentByMe = events ? events[events.length - 1] : undefined
             if (lastMatrixEventSentByMe) {
                 lastEventSentByMe = matrixEventToBasicEventInfo(lastMatrixEventSentByMe)
@@ -605,7 +605,7 @@ export class MessagingClient implements MessagingAPI {
         // this line should use `getOnlyMessagesTimelineSetFromRoom` but there's a bug in the client
         // that for some reason the last message (in real time) it's not always in the `room.getLiveTimeline()`
         // generating a bug where the only unread message is discarded by this function
-        const timeline: Array<any> = room.getLiveTimeline().getEvents().filter(x => x.getType() === 'm.room.message')
+        const timeline: Array<any> = room.timeline.filter(x => x.getType() === 'm.room.message')
 
         // If there are no messages, then there are no unread messages
         if (timeline.length === 0) {
