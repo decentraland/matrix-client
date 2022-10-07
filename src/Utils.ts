@@ -104,12 +104,12 @@ export function getConversationTypeFromRoom(client: MatrixClient, room: Room): C
 
 export function getOnlyMessagesTimelineSetFromRoom(userId: SocialId, room: Room, limit?: number) {
     const filter = GET_ONLY_MESSAGES_FILTER(userId, limit)
-    return room.getOrCreateFilteredTimelineSet(filter)
+    return room?.getOrCreateFilteredTimelineSet(filter)
 }
 
 export function getOnlyMessagesSentByMeTimelineSetFromRoom(client, room) {
     const filter = GET_ONLY_MESSAGES_SENT_BY_ME_FILTER(client.getUserId())
-    return room.getOrCreateFilteredTimelineSet(filter)
+    return room?.getOrCreateFilteredTimelineSet(filter)
 }
 
 export function matrixEventToBasicEventInfo(event: MatrixEvent): BasicMessageInfo {
