@@ -591,6 +591,7 @@ export class MessagingClient implements MessagingAPI {
         // However, we only support having one direct room to each user, so the list will only have one element
         const mDirectEvent = this.matrixClient.getAccountData('m.direct')
         const directRoomMap = mDirectEvent ? mDirectEvent.getContent() : {}
+        if (directRoomMap[userId]?.includes(roomId)) return;
         directRoomMap[userId] = [roomId]
         await this.matrixClient.setAccountData('m.direct', directRoomMap)
     }
