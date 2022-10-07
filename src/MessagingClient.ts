@@ -270,7 +270,7 @@ export class MessagingClient implements MessagingAPI {
             lastEventSentByMe = knownLastSentMessage
         } else {
             const timelineSet = getOnlyMessagesSentByMeTimelineSetFromRoom(this.matrixClient, room)
-            const events = timelineSet?.timeline
+            const events = timelineSet?.getLiveTimeline().getEvents()
             const lastMatrixEventSentByMe = events ? events[events.length - 1] : undefined
             if (lastMatrixEventSentByMe) {
                 lastEventSentByMe = matrixEventToBasicEventInfo(lastMatrixEventSentByMe)
