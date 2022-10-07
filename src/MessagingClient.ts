@@ -113,7 +113,7 @@ export class MessagingClient implements MessagingAPI {
                 id: room.roomId,
                 type,
                 unreadMessages: unreadMessages.length > 0 ? unreadMessages : undefined,
-                lastEventTimestamp: room.timeline[room.timeline.length - 1].getTs(),
+                lastEventTimestamp: room.timeline[room.timeline.length - 1]?.getTs(),
                 userIds:
                     type === ConversationType.DIRECT
                         ? [this.socialClient.getUserId(), otherId]
@@ -270,8 +270,8 @@ export class MessagingClient implements MessagingAPI {
             lastEventSentByMe = knownLastSentMessage
         } else {
             const timelineSet = getOnlyMessagesSentByMeTimelineSetFromRoom(this.matrixClient, room)
-            const events = timelineSet.getLiveTimeline().getEvents()
-            const lastMatrixEventSentByMe = events[events.length - 1]
+            const events = timelineSet?.getLiveTimeline().getEvents()
+            const lastMatrixEventSentByMe = events ? events[events.length - 1] : undefined
             if (lastMatrixEventSentByMe) {
                 lastEventSentByMe = matrixEventToBasicEventInfo(lastMatrixEventSentByMe)
                 this.lastSentMessage.set(conversationId, lastEventSentByMe)
@@ -615,7 +615,7 @@ export class MessagingClient implements MessagingAPI {
         const lastReadMessage = this.getLastReadMessage(room.roomId)
 
         return timeline
-            .filter(event => !lastReadMessage || event.getTs() > lastReadMessage.timestamp)
+            .filter(event => !lastReadMessage || event.getTs() > lastReadMessage?.timestamp)
             .map(event => matrixEventToBasicEventInfo(event))
     }
 
