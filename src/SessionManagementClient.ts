@@ -57,9 +57,7 @@ export class SessionManagementClient implements SessionManagementAPI {
     }
 
     getUserStatuses(...users: SocialId[]): Map<SocialId, CurrentUserStatus> {
-        const friends = this.socialClient.getAllFriends()
         const entries: [SocialId, CurrentUserStatus][] = users
-            .filter(userId => friends.includes(userId))
             .map(userId => this.matrixClient.getUser(userId))
             .filter((user): user is User => !!user)
             .map(user => [user.userId, SessionManagementClient.userToStatus(user!)])
