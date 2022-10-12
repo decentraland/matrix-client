@@ -240,14 +240,15 @@ export class MessagingClient implements MessagingAPI {
      */
     onChannelMembership(listener: (conversation: Conversation, membership: string) => void): void {
         this.matrixClient.on(RoomEvent.MyMembership, (room, membership) => {
-            if (
-                !room || // make sure we have a room
-                room.getType() !== CHANNEL_TYPE // we only want to know about the updates related to channels
-            ) {
-                return
-            }
+            if (!room || room.getType() !== CHANNEL_TYPE) return // we only want to know about the updates related to channels
 
+            // Room creators already know about this room
+            if (membership === 'join' && this.socialClient.getUserId() === room.getCreator()) return
+
+            const nameEvents = room.currentState.getStateEvents(EventType.RoomName)
+            const name = nameEvents[0]?.getContent()['name']
             const conversation = this.getRoomInformation(room).conversation
+            conversation.name = name ?? conversation.name
 
             listener(conversation, membership)
         })
