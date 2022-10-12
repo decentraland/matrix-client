@@ -43,9 +43,9 @@ export interface MessagingAPI {
     /** Listen to new messages */
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void
 
-    /** Listen to updates on the membership of a channel 
+    /** Listen to updates on the membership of a channel
      * @doc {membership} join | leave | invite
-    */
+     */
     onChannelMembership(listener: (conversation: Conversation, membership: string) => void): void
 
     /**
