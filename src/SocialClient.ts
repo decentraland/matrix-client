@@ -26,6 +26,7 @@ import { FriendsManagementClient } from './FriendsManagementClient'
 import { SocialAPI } from './SocialAPI'
 import { login } from './Utils'
 import { ClientEvent, ICreateClientOpts, PendingEventOrdering } from 'matrix-js-sdk'
+import { SyncState } from 'matrix-js-sdk/lib/sync'
 
 export type ClientLoginOptions = {
     pendingEventOrdering: PendingEventOrdering
@@ -76,14 +77,16 @@ export class SocialClient implements SocialAPI {
         )
 
         // Listen to initial sync
-        const waitForInitialSync = new Promise<void>((resolve, reject) => {
-            matrixClient.once(ClientEvent.Sync, async state => {
-                if (state === 'PREPARED') {
+        const waitForInitialSync = new Promise<void>((resolve) => {
+            const resolveOnSync = (state: SyncState) => {
+                if (state === 'SYNCING') {
                     resolve(void 0)
-                } else {
-                    reject()
+                    // remove this listener, otherwhise, it'll be listening all the session and calling an invalid function
+                    matrixClient.removeListener(ClientEvent.Sync, resolveOnSync) 
+                    return
                 }
-            })
+            }
+            matrixClient.on(ClientEvent.Sync, resolveOnSync)
         })
 
         // Create the client before starting the matrix client, so our event hooks can detect all events during the initial sync
@@ -92,7 +95,7 @@ export class SocialClient implements SocialAPI {
         // Start the client
         await matrixClient.startClient(_options)
 
-        // Wait for initial sync
+        // Wait for sync from cache + incremental sync
         await waitForInitialSync
 
         // Starting listening to new events after initial sync
