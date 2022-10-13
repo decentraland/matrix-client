@@ -92,6 +92,13 @@ export interface MessagingAPI {
      */
     getChannel(roomId: string): Conversation | undefined
 
+    /**
+     * Get the conversation for a channel by its name.
+     * @param alias the name of the channel.
+     * @returns `Promise<Conversation>` if it exists | `Promise<undefined>` if it does not exist.
+     */
+    getChannelByName(alias: string): Promise<Conversation | undefined>
+
     /** Join a channel */
     joinChannel(roomIdOrChannelAlias: string): Promise<void>
 

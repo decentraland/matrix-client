@@ -431,6 +431,40 @@ export class MessagingClient implements MessagingAPI {
         return this.getRoomInformation(room).conversation
     }
 
+    /**
+     * Get the conversation for a channel by its name.
+     * @param alias the name of the channel.
+     * @returns `Promise<Conversation>` if it exists | `Promise<undefined>` if it does not exist.
+     */
+    async getChannelByName(alias: string): Promise<Conversation | undefined> {
+        try {
+            // Try to find it locally
+            const room: Room | undefined = this.findRoomByAliasLocally(`#${alias}:${this.matrixClient.getDomain()}`)
+
+            if (room) {
+                return {
+                    id: room.roomId,
+                    type: ConversationType.CHANNEL
+                }
+            } else {
+                // Try to find it on the server
+                const result = await this.undefinedIfError(() =>
+                    this.matrixClient.getRoomIdForAlias(`#${alias}:${this.matrixClient.getDomain()}`)
+                )
+                if (result) {
+                    return {
+                        id: result.room_id,
+                        type: ConversationType.CHANNEL
+                    }
+                } else {
+                    return
+                }
+            }
+        } catch (error) {
+            throw new ChannelsError(ChannelErrorKind.GET_OR_CREATE)
+        }
+    }
+
     async searchChannel(limit: number, searchTerm?: string, since?: string): Promise<SearchChannelsResponse> {
         try {
             let publicRooms: Array<IPublicRoomsChunkRoom> = []

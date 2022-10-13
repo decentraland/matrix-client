@@ -265,6 +265,10 @@ export class SocialClient implements SocialAPI {
         return this.messaging.getChannel(roomId)
     }
 
+    getChannelByName(alias: string): Promise<Conversation | undefined> {
+        return this.messaging.getChannelByName(alias)
+    }
+
     getOrCreateChannel(channelName: string, userIds: string[]): Promise<GetOrCreateConversationResponse> {
         return this.messaging.getOrCreateChannel(channelName, userIds)
     }
