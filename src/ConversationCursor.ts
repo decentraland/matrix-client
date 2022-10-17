@@ -1,7 +1,7 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { TimelineWindow } from 'matrix-js-sdk/lib/timeline-window'
 import { EventTimeline } from 'matrix-js-sdk/lib/models/event-timeline'
-import { buildTextMessage, getOnlyMessagesTimelineSetFromRoom } from './Utils'
+import { buildTextMessage, delay, getOnlyMessagesTimelineSetFromRoom } from './Utils'
 import {
     TextMessage,
     Timestamp,
@@ -76,7 +76,7 @@ export class ConversationCursor {
 
             for (let i = 0; i < 3; i++) {
                 if (!room) {
-                    await this.delay(1000)
+                    await delay(1000)
                     room = client.getRoom(roomId)
                 } else {
                     break
@@ -120,9 +120,5 @@ export class ConversationCursor {
         }
 
         return ConversationCursor.DEFAULT_LIMIT
-    }
-
-    private static delay(ms: number) {
-        return new Promise(resolve => setTimeout(resolve, ms))
     }
 }
