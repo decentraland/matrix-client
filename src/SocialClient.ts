@@ -77,12 +77,12 @@ export class SocialClient implements SocialAPI {
         )
 
         // Listen to initial sync
-        const waitForInitialSync = new Promise<void>((resolve) => {
+        const waitForInitialSync = new Promise<void>(resolve => {
             const resolveOnSync = (state: SyncState) => {
                 if (state === 'SYNCING') {
                     resolve(void 0)
                     // remove this listener, otherwhise, it'll be listening all the session and calling an invalid function
-                    matrixClient.removeListener(ClientEvent.Sync, resolveOnSync) 
+                    matrixClient.removeListener(ClientEvent.Sync, resolveOnSync)
                     return
                 }
             }
@@ -187,15 +187,21 @@ export class SocialClient implements SocialAPI {
         conversationId: ConversationId,
         messageId?: MessageId,
         options?: CursorOptions
-    ): Promise<ConversationCursor> {
+    ): Promise<ConversationCursor | undefined> {
         return this.messaging.getCursorOnMessage(conversationId, messageId, options)
     }
 
-    getCursorOnLastRead(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor> {
+    getCursorOnLastRead(
+        conversationId: ConversationId,
+        options?: CursorOptions
+    ): Promise<ConversationCursor | undefined> {
         return this.messaging.getCursorOnLastRead(conversationId, options)
     }
 
-    getCursorOnLastMessage(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor> {
+    getCursorOnLastMessage(
+        conversationId: ConversationId,
+        options?: CursorOptions
+    ): Promise<ConversationCursor | undefined> {
         return this.messaging.getCursorOnLastMessage(conversationId, options)
     }
 
