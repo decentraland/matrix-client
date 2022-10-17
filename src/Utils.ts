@@ -137,3 +137,10 @@ const GET_ONLY_MESSAGES_SENT_BY_ME_FILTER = (userId: SocialId, limit?: number) =
             }
         }
     })
+
+/** Delay function
+ * @param ms - miliseconds for the timeout.
+ */
+export function delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}

@@ -1,7 +1,7 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { TimelineWindow } from 'matrix-js-sdk/lib/timeline-window'
 import { EventTimeline } from 'matrix-js-sdk/lib/models/event-timeline'
-import { buildTextMessage, getOnlyMessagesTimelineSetFromRoom } from './Utils'
+import { buildTextMessage, delay, getOnlyMessagesTimelineSetFromRoom } from './Utils'
 import {
     TextMessage,
     Timestamp,
@@ -69,28 +69,46 @@ export class ConversationCursor {
         lastReadMessageTimestampFetch: (roomId: string) => BasicMessageInfo | undefined,
         options?: CursorOptions
     ) {
-        const limit = ConversationCursor.calculateLimit(options)
-        const initialSize = options?.initialSize ?? this.DEFAULT_INITIAL_SIZE
-        const room = client.getRoom(roomId)!
-        const timelineSet = getOnlyMessagesTimelineSetFromRoom(userId, room, limit)
-        const window = new TimelineWindow(client, timelineSet, { windowLimit: limit })
-        await window.load(initialEventId, initialSize)
+        try {
+            const limit = ConversationCursor.calculateLimit(options)
+            const initialSize = options?.initialSize ?? this.DEFAULT_INITIAL_SIZE
+            let room = client.getRoom(roomId)
 
-        // It could happen that the initial size of the window isn't respected. That's why we will try to fix it
-        let windowSize = window.getEvents().length
-        let gotResults = true
-        while (windowSize < initialSize && gotResults) {
-            gotResults = await window.paginate(EventTimeline.BACKWARDS, initialSize - windowSize)
-            windowSize = window.getEvents().length
+            // wait for a sync call which has 30s of timeout
+            for (let i = 0; i < 6; i++) {
+                if (!room) {
+                    await delay(5000)
+                    room = client.getRoom(roomId)
+                } else {
+                    break
+                }
+            }
+            if (!room) {
+                return
+            }
+
+            const timelineSet = getOnlyMessagesTimelineSetFromRoom(userId, room, limit)
+            const window = new TimelineWindow(client, timelineSet, { windowLimit: limit })
+            await window.load(initialEventId, initialSize)
+
+            // It could happen that the initial size of the window isn't respected. That's why we will try to fix it
+            let windowSize = window.getEvents().length
+            let gotResults = true
+            while (windowSize < initialSize && gotResults) {
+                gotResults = await window.paginate(EventTimeline.BACKWARDS, initialSize - windowSize)
+                windowSize = window.getEvents().length
+            }
+
+            gotResults = true
+            while (windowSize < initialSize && gotResults) {
+                gotResults = await window.paginate(EventTimeline.FORWARDS, initialSize - windowSize)
+                windowSize = window.getEvents().length
+            }
+
+            return new ConversationCursor(roomId, window, lastReadMessageTimestampFetch)
+        } catch (err) {
+            return
         }
-
-        gotResults = true
-        while (windowSize < initialSize && gotResults) {
-            gotResults = await window.paginate(EventTimeline.FORWARDS, initialSize - windowSize)
-            windowSize = window.getEvents().length
-        }
-
-        return new ConversationCursor(roomId, window, lastReadMessageTimestampFetch)
     }
 
     private static calculateLimit(options: CursorOptions | undefined): number {

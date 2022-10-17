@@ -60,16 +60,22 @@ export interface MessagingAPI {
         conversationId: ConversationId,
         messageId?: MessageId,
         options?: CursorOptions
-    ): Promise<ConversationCursor>
+    ): Promise<ConversationCursor | undefined>
 
     /**
      * Returns a cursor located on the last read message. If no messages were read, then
      * it is located at the end of the conversation.
      */
-    getCursorOnLastRead(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor>
+    getCursorOnLastRead(
+        conversationId: ConversationId,
+        options?: CursorOptions
+    ): Promise<ConversationCursor | undefined>
 
     /** Returns a cursor located at the end of the conversation */
-    getCursorOnLastMessage(conversationId: ConversationId, options?: CursorOptions): Promise<ConversationCursor>
+    getCursorOnLastMessage(
+        conversationId: ConversationId,
+        options?: CursorOptions
+    ): Promise<ConversationCursor | undefined>
 
     /** Get or create a direct conversation with the given user */
     createDirectConversation(userId: SocialId): Promise<Conversation>

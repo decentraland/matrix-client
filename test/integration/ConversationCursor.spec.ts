@@ -29,6 +29,8 @@ describe('Integration - Conversation cursor', () => {
         // Get cursor on specific message
         const cursor = await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 3 })
 
+        if (!cursor) return
+
         // Read the messages
         const messages = cursor.getMessages()
 
@@ -56,6 +58,8 @@ describe('Integration - Conversation cursor', () => {
 
         // Get cursor on specific message
         const cursor = await receiver.getCursorOnMessage(conversationId, undefined, { initialSize: 3 })
+
+        if (!cursor) return
 
         // Read the messages
         const messages = cursor.getMessages()
@@ -89,6 +93,8 @@ describe('Integration - Conversation cursor', () => {
         // Get cursor on specific message
         const cursor = await receiver.getCursorOnLastRead(conversationId, { initialSize: 3 })
 
+        if (!cursor) return
+
         // Read the messages
         const messages = cursor.getMessages()
 
@@ -115,6 +121,8 @@ describe('Integration - Conversation cursor', () => {
 
         // Get cursor on last message
         const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 10 })
+
+        if (!cursor) return
 
         // Read the messages
         const messages = cursor.getMessages()
@@ -152,6 +160,8 @@ describe('Integration - Conversation cursor', () => {
         // Get cursor on last message
         const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 5, limit: 5 })
 
+        if (!cursor) return
+
         // Assert that the available messages are the expected ones
         assertMessagesAre(cursor.getMessages(), 15, 19)
 
@@ -187,6 +197,8 @@ describe('Integration - Conversation cursor', () => {
         const senderCursor = await sender.getCursorOnMessage(conversationId, messageId, { initialSize: 20 })
         const receiverCursor = await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 20 })
 
+        if (!senderCursor || !receiverCursor) return
+
         // Mark message as read
         await receiver.markAsRead(conversationId, messageId)
 
@@ -219,6 +231,8 @@ describe('Integration - Conversation cursor', () => {
 
         // Get cursor on last message
         const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 20 })
+
+        if (!cursor) return
 
         // Assert that the available messages are the expected ones
         assertMessagesAre(cursor.getMessages(), 0, 19)
