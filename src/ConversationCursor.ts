@@ -74,9 +74,10 @@ export class ConversationCursor {
             const initialSize = options?.initialSize ?? this.DEFAULT_INITIAL_SIZE
             let room = client.getRoom(roomId)
 
-            for (let i = 0; i < 3; i++) {
+            // wait for a sync call which has 30s of timeout
+            for (let i = 0; i < 6; i++) {
                 if (!room) {
-                    await delay(1000)
+                    await delay(5000)
                     room = client.getRoom(roomId)
                 } else {
                     break
