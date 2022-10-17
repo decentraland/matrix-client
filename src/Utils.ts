@@ -22,7 +22,7 @@ let indexedDB: IDBFactory | undefined
 try {
     indexedDB = window.indexedDB
     localStorage = window.localStorage
-} catch (e) {}
+} catch (e) { }
 
 export async function login(
     synapseUrl: string,
@@ -40,7 +40,7 @@ export async function login(
         storage = localStorage
     }
     if (indexedDB) {
-        let opts = { indexedDB, localStorage: storage, dbName: `matrix-${ethAddress}` }
+        let opts = { indexedDB, localStorage: storage, dbName: `${ethAddress}:${synapseUrl}` }
         store = new IndexedDBStore(opts) as IStore
         await store.startup() // load from indexed db
     } else {
