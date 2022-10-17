@@ -16,7 +16,8 @@ import {
     GetOrCreateConversationResponse,
     SearchChannelsResponse,
     Channel,
-    ProfileInfo
+    ProfileInfo,
+    Member
 } from './types'
 import {
     findEventInRoom,
@@ -34,6 +35,7 @@ import {
     IPublicRoomsChunkRoom,
     Preset,
     RoomMemberEvent,
+    RoomStateEvent,
     Visibility
 } from 'matrix-js-sdk'
 import { RoomMember } from 'matrix-js-sdk'
@@ -254,6 +256,21 @@ export class MessagingClient implements MessagingAPI {
         })
     }
 
+    /**
+     * Listen to updates on the members of a channel
+     */
+    onChannelMembers(listener: (conversation: Conversation, members: Member[]) => void): void {
+        this.matrixClient.on(RoomStateEvent.Members, (_event, state) => {
+            const room = this.matrixClient.getRoom(state.roomId)
+            if (!room) return
+
+            const stateMembers = state.getMembers()
+            const members = stateMembers.map(member => ({ name: member.name, userId: member.userId }))
+
+            const conversation = this.getRoomInformation(room).conversation
+            listener(conversation, members)
+        })
+    }
     /**
      * Return basic information about the last read message. Since we don't mark messages sent by me as read,
      * we also check against the last sent message.

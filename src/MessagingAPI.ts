@@ -8,7 +8,8 @@ import {
     BasicMessageInfo,
     GetOrCreateConversationResponse,
     SearchChannelsResponse,
-    ProfileInfo
+    ProfileInfo,
+    Member
 } from './types'
 import { ConversationCursor } from './ConversationCursor'
 
@@ -43,10 +44,15 @@ export interface MessagingAPI {
     /** Listen to new messages */
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void
 
-    /** Listen to updates on the membership of a channel
+    /** Listen to updates on the current user membership of a channel
      * @doc {membership} join | leave | invite
      */
     onChannelMembership(listener: (conversation: Conversation, membership: string) => void): void
+
+    /**
+     * Listen to updates on the members of a channel
+     */
+    onChannelMembers(listener: (conversation: Conversation, members: Member[]) => void): void
 
     /**
      * Return basic information about the last read message. Since we don't mark messages sent by the logged in user as read,

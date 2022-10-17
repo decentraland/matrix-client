@@ -105,3 +105,9 @@ export type ProfileInfo = {
     displayName?: string
     avatarUrl?: string
 }
+
+export type Member = {
+    userId: string
+    name: string
+}
+
