@@ -24,7 +24,7 @@ export class ConversationCursor {
         private readonly roomId: string,
         private readonly window: TimelineWindow,
         private readonly lastReadMessageTimestampFetch: (roomId: string) => BasicMessageInfo | undefined
-    ) {}
+    ) { }
 
     getMessages(): TextMessage[] {
         const latestReadTimestamp: Timestamp | undefined = this.lastReadMessageTimestampFetch(this.roomId)?.timestamp
@@ -73,18 +73,8 @@ export class ConversationCursor {
             const limit = ConversationCursor.calculateLimit(options)
             const initialSize = options?.initialSize ?? this.DEFAULT_INITIAL_SIZE
             let room = client.getRoom(roomId)
-
-            // wait for a sync call which has 30s of timeout
-            for (let i = 0; i < 6; i++) {
-                if (!room) {
-                    await delay(5000)
-                    room = client.getRoom(roomId)
-                } else {
-                    break
-                }
-            }
             if (!room) {
-                return
+                room = await client.peekInRoom(roomId)
             }
 
             const timelineSet = getOnlyMessagesTimelineSetFromRoom(userId, room, limit)
