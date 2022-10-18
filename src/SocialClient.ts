@@ -14,7 +14,8 @@ import {
     UpdateUserStatus,
     GetOrCreateConversationResponse,
     SearchChannelsResponse,
-    ProfileInfo
+    ProfileInfo,
+    Member
 } from './types'
 import { ConversationCursor } from './ConversationCursor'
 import { MessagingAPI } from './MessagingAPI'
@@ -177,6 +178,10 @@ export class SocialClient implements SocialAPI {
 
     onChannelMembership(listener: (conversation: Conversation, membership: string) => void): void {
         return this.messaging.onChannelMembership(listener)
+    }
+
+    onChannelMembers(listener: (conversation: Conversation, members: Member[]) => void): void {
+        return this.messaging.onChannelMembers(listener)
     }
 
     getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined {

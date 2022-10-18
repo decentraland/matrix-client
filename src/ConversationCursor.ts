@@ -1,7 +1,7 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { TimelineWindow } from 'matrix-js-sdk/lib/timeline-window'
 import { EventTimeline } from 'matrix-js-sdk/lib/models/event-timeline'
-import { buildTextMessage, delay, getOnlyMessagesTimelineSetFromRoom } from './Utils'
+import { buildTextMessage, getOnlyMessagesTimelineSetFromRoom } from './Utils'
 import {
     TextMessage,
     Timestamp,
@@ -73,18 +73,8 @@ export class ConversationCursor {
             const limit = ConversationCursor.calculateLimit(options)
             const initialSize = options?.initialSize ?? this.DEFAULT_INITIAL_SIZE
             let room = client.getRoom(roomId)
-
-            // wait for a sync call which has 30s of timeout
-            for (let i = 0; i < 6; i++) {
-                if (!room) {
-                    await delay(5000)
-                    room = client.getRoom(roomId)
-                } else {
-                    break
-                }
-            }
             if (!room) {
-                return
+                room = await client.peekInRoom(roomId)
             }
 
             const timelineSet = getOnlyMessagesTimelineSetFromRoom(userId, room, limit)
