@@ -117,9 +117,6 @@ describe('Integration - Messaging Client', () => {
         // Wait for sync
         await sleep('1s')
 
-        // Make sure that client1 didn't get its own message
-        expect(spy1).to.not.have.been.called
-
         // Assert that the message sent by client 1 was received
         assertMessageWasReceivedByEvent(spy2, client1, conversation, 'Hi there!')
     })
