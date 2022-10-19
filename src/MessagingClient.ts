@@ -212,10 +212,8 @@ export class MessagingClient implements MessagingAPI {
         this.matrixClient.on(RoomEvent.Timeline, (event, room, toStartOfTimeline, _, data) => {
             if (
                 event.getType() !== 'm.room.message' || // Make sure that it is in fact a message
-                event.getContent().msgtype !== MessageType.TEXT || // Make sure that the message is of type text
-                event.getSender() === this.socialClient.getUserId()
+                event.getContent().msgtype !== MessageType.TEXT // Make sure that the message is of type text
             ) {
-                // Don't raise an event if I was the sender
                 return
             }
 
