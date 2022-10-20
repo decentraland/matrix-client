@@ -23,7 +23,7 @@ let indexedDB: IDBFactory | undefined
 try {
     indexedDB = window.indexedDB
     localStorage = window.localStorage
-} catch (e) { }
+} catch (e) {}
 
 export async function login(
     synapseUrl: string,

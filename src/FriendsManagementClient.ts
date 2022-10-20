@@ -34,7 +34,6 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             }
         }
         matrixClient.on(ClientEvent.Sync, resolveOnSync)
-
     }
 
     /*
@@ -60,7 +59,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
 
     private getRoomIdByFriendId(friendId: SocialId): string | undefined {
         const rooms = this.matrixClient.getVisibleRooms()
-        return rooms.map((room) => room.guessDMUserId()).find((userId) => userId === friendId)
+        return rooms.map(room => room.guessDMUserId()).find(userId => userId === friendId)
     }
 
     getAllFriends(): SocialId[] {

@@ -124,9 +124,9 @@ export class MessagingClient implements MessagingAPI {
                     type === ConversationType.DIRECT
                         ? [this.socialClient.getUserId(), otherId]
                         : room
-                            .getMembers()
-                            .filter(x => x.membership === 'join')
-                            .map(x => x.userId),
+                              .getMembers()
+                              .filter(x => x.membership === 'join')
+                              .map(x => x.userId),
                 hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage),
                 name: room.name
             }
@@ -243,8 +243,8 @@ export class MessagingClient implements MessagingAPI {
      * @doc {membership} join | leave | invite
      */
     onChannelMembership(listener: (conversation: Conversation, membership: string) => void): void {
-        this.matrixClient.on(RoomEvent.MyMembership, (room, membership) => {
-            if (!room || room.getType() !== CHANNEL_TYPE) return // we only want to know about the updates related to channels
+        this.matrixClient.on(RoomEvent.MyMembership, (room, membership, prevMembership) => {
+            if (!room || room.getType() !== CHANNEL_TYPE || prevMembership === membership) return // we only want to know about new the updates related to channels
 
             // Room creators already know about this room
             if (membership === 'join' && this.socialClient.getUserId() === room.getCreator()) return
@@ -497,10 +497,10 @@ export class MessagingClient implements MessagingAPI {
             let nextBatch = since
             const filter = searchTerm
                 ? {
-                    filter: {
-                        generic_search_term: searchTerm
-                    }
-                }
+                      filter: {
+                          generic_search_term: searchTerm
+                      }
+                  }
                 : {}
             const options = {
                 limit,
