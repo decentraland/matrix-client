@@ -12,7 +12,7 @@ import {
     Timestamp,
     CHANNEL_TYPE
 } from './types'
-import { IndexedDBStore, MemoryStore, createClient, ICreateClientOpts } from 'matrix-js-sdk'
+import { IndexedDBStore, MemoryStore, createClient, ICreateClientOpts, ClientEvent } from 'matrix-js-sdk'
 import { IStore } from 'matrix-js-sdk/lib/store'
 import { FRIENDSHIP_EVENT_TYPE } from './FriendsManagementClient'
 
@@ -116,6 +116,18 @@ function isDirectRoom(client: MatrixClient, room: Room): boolean {
     return false
 }
 
+/*
+ * Call this function when you want to wait for sync to finish
+ * Not meant to be used in other place than Matrix event processing
+ */
+export async function waitForNextSync(client: MatrixClient): Promise<void> {
+    // Listen to Sync event
+    return new Promise<void>(resolve => {
+        client.once(ClientEvent.Sync, () => {
+            resolve(void 0)
+        })
+    })
+}
 export function getOnlyMessagesTimelineSetFromRoom(userId: SocialId, room: Room, limit?: number) {
     const filter = GET_ONLY_MESSAGES_FILTER(userId, limit)
     return room?.getOrCreateFilteredTimelineSet(filter)
