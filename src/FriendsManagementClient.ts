@@ -2,9 +2,10 @@ import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { SocialId, ConversationType, FriendshipRequest } from './types'
 import { FriendsManagementAPI } from './FriendsManagementAPI'
-import { getConversationTypeFromRoom } from './Utils'
+import { getConversationTypeFromRoom, getLastFriendshipEventInRoom } from './Utils'
 import { SocialClient } from './SocialClient'
-import { Room, RoomEvent } from 'matrix-js-sdk'
+import { ClientEvent, EventType, Room, RoomEvent } from 'matrix-js-sdk'
+import { SyncState } from 'matrix-js-sdk/lib/sync'
 
 enum FriendshipStatus {
     NOT_FRIENDS = 'not friends',
@@ -13,14 +14,54 @@ enum FriendshipStatus {
     FRIENDS = 'friends'
 }
 
+export const FRIENDSHIP_EVENT_TYPE = 'org.decentraland.friendship'
+
 export class FriendsManagementClient implements FriendsManagementAPI {
     private static readonly PENDING_STATUSES = [
         FriendshipStatus.REQUEST_SENT_TO_ME_PENDING,
         FriendshipStatus.REQUEST_SENT_BY_ME_PENDING
     ]
-    private static readonly FRIENDSHIP_EVENT_TYPE = 'org.decentraland.friendship'
 
-    constructor(private readonly matrixClient: MatrixClient, private readonly socialClient: SocialClient) {}
+    constructor(private readonly matrixClient: MatrixClient, private readonly socialClient: SocialClient) {
+        // Listen to when the sync is finishes, and join all rooms I was invited to
+        const resolveOnSync = async (state: SyncState) => {
+            if (state === 'SYNCING') {
+                const friends = this.getAllFriends()
+
+                await this.fixAccountData(friends)
+                // remove this listener, otherwhise, it'll be listening all the session and calling an invalid function
+                matrixClient.removeListener(ClientEvent.Sync, resolveOnSync)
+            }
+        }
+        matrixClient.on(ClientEvent.Sync, resolveOnSync)
+
+    }
+
+    /*
+     * Ensure all friends are declared as direct messages under the account data
+     */
+    private async fixAccountData(friends: SocialId[]) {
+        const mDirectEvent = this.matrixClient.getAccountData(EventType.Direct)
+        const directRoomMap = mDirectEvent ? mDirectEvent.getContent() : {}
+        let shouldUpdate = false
+        for (const friend of friends) {
+            const friendRooms = directRoomMap[friend]
+            const room = this.getRoomIdByFriendId(friend)
+            if (!room) continue
+            if (!friendRooms || !friendRooms.includes(room)) {
+                directRoomMap[friend] = [room]
+                shouldUpdate = true
+            }
+        }
+        if (shouldUpdate) {
+            await this.matrixClient.setAccountData(EventType.Direct, directRoomMap)
+        }
+    }
+
+    private getRoomIdByFriendId(friendId: SocialId): string | undefined {
+        const rooms = this.matrixClient.getVisibleRooms()
+        return rooms.map((room) => room.guessDMUserId()).find((userId) => userId === friendId)
+    }
 
     getAllFriends(): SocialId[] {
         const rooms = this.matrixClient.getVisibleRooms()
@@ -132,7 +173,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             // Just listen to the unfiltered timeline, so we don't raise the same event more than once
             if (data.timeline.getFilter()) return
 
-            if (event.getType() === FriendsManagementClient.FRIENDSHIP_EVENT_TYPE && event.getStateKey() === '') {
+            if (event.getType() === FRIENDSHIP_EVENT_TYPE && event.getStateKey() === '') {
                 const { type } = event.getContent()
                 if (type === eventToListenTo && event.getSender() !== this.socialClient.getUserId()) {
                     listener(event.getSender())
@@ -144,13 +185,8 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     private async sendFriendshipEvent(event: FriendshipEvent, otherUser: SocialId): Promise<void> {
         const { id: roomId } = await this.socialClient.createDirectConversation(otherUser)
         const content = { type: event }
-        await this.matrixClient.sendStateEvent(roomId, FriendsManagementClient.FRIENDSHIP_EVENT_TYPE, content, '')
-        await this.matrixClient.sendStateEvent(
-            roomId,
-            FriendsManagementClient.FRIENDSHIP_EVENT_TYPE,
-            content,
-            this.socialClient.getUserId()
-        )
+        await this.matrixClient.sendStateEvent(roomId, FRIENDSHIP_EVENT_TYPE, content, '')
+        await this.matrixClient.sendStateEvent(roomId, FRIENDSHIP_EVENT_TYPE, content, this.socialClient.getUserId())
     }
 
     /**
@@ -165,6 +201,9 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         const actionMap: Map<FriendshipStatus, (userId: SocialId) => Promise<void>> = new Map(actionsAsEntries)
         const { id: roomId } = await this.socialClient.createDirectConversation(userId)
         const room = this.matrixClient.getRoom(roomId)
+        if (!room) {
+            return
+        }
         const status = this.getFriendshipStatusInRoom(room)
         const action = actionMap.get(status)
         if (action) {
@@ -173,8 +212,8 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return Promise.resolve()
     }
 
-    private getFriendshipStatusInRoom(room): FriendshipStatus {
-        const event: MatrixEvent | null = this.getLastFriendshipEventInRoom(room)
+    private getFriendshipStatusInRoom(room: Room): FriendshipStatus {
+        const event: MatrixEvent | null = getLastFriendshipEventInRoom(room)
         if (event) {
             const sender = event.getSender()
             const { type }: { type: FriendshipEvent } = event.getContent()
@@ -218,17 +257,13 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return FriendshipStatus.NOT_FRIENDS
     }
 
-    private getLastFriendshipEventInRoomByUser(room, userId: SocialId): MatrixEvent | undefined {
-        const lastFriendshipEvent: MatrixEvent | null = this.getLastFriendshipEventInRoom(room, userId)
+    private getLastFriendshipEventInRoomByUser(room: Room, userId: SocialId): MatrixEvent | undefined {
+        const lastFriendshipEvent: MatrixEvent | null = getLastFriendshipEventInRoom(room, userId)
         // Make sure that the sender was the actual user
         if (lastFriendshipEvent && lastFriendshipEvent.getSender() === userId) {
             return lastFriendshipEvent
         }
         return undefined
-    }
-
-    private getLastFriendshipEventInRoom(room, key = ''): MatrixEvent | null {
-        return room.currentState.getStateEvents(FriendsManagementClient.FRIENDSHIP_EVENT_TYPE, key)
     }
 
     private action(status: FriendshipStatus, action: (userId: SocialId) => Promise<void>): ActionByStatus {

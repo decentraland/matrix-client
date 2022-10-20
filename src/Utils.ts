@@ -14,6 +14,7 @@ import {
 } from './types'
 import { IndexedDBStore, MemoryStore, createClient, ICreateClientOpts } from 'matrix-js-sdk'
 import { IStore } from 'matrix-js-sdk/lib/store'
+import { FRIENDSHIP_EVENT_TYPE } from './FriendsManagementClient'
 
 // just *accessing* indexedDB throws an exception in firefox with
 // indexeddb disabled.
@@ -89,17 +90,30 @@ export function getConversationTypeFromRoom(client: MatrixClient, room: Room): C
     if (room.getType() === CHANNEL_TYPE) {
         return ConversationType.CHANNEL
     }
-    if (room.getInvitedAndJoinedMemberCount() === 2) {
-        const membersWhoAreNotMe = room.currentState.getMembers().filter(member => member.userId !== client.getUserId())
-        const otherMember = membersWhoAreNotMe[0].userId
-        const mDirectEvent = client.getAccountData('m.direct')
-        const directRoomMap = mDirectEvent ? mDirectEvent.getContent() : {}
-        const directRoomsToClient = directRoomMap[otherMember] ?? []
-        if (directRoomsToClient.includes(room.roomId)) {
-            return ConversationType.DIRECT
-        }
+    if (room.getInvitedAndJoinedMemberCount() === 2 && isDirectRoom(client, room)) {
+        return ConversationType.DIRECT
     }
     return ConversationType.GROUP
+}
+
+function isDirectRoom(client: MatrixClient, room: Room): boolean {
+    // Check if there is a friendship event
+    const friendshipEvent = getLastFriendshipEventInRoom(room)
+    if (friendshipEvent) {
+        return true
+    }
+
+    // If there is no friendship event, then check if conversation was added as DM in the account data
+    const membersWhoAreNotMe = room.currentState.getMembers().filter(member => member.userId !== client.getUserId())
+    const otherMember = membersWhoAreNotMe[0].userId
+    const mDirectEvent = client.getAccountData('m.direct')
+    const directRoomMap = mDirectEvent ? mDirectEvent.getContent() : {}
+    const directRoomsToClient = directRoomMap[otherMember] ?? []
+    if (directRoomsToClient.includes(room.roomId)) {
+        return true
+    }
+
+    return false
 }
 
 export function getOnlyMessagesTimelineSetFromRoom(userId: SocialId, room: Room, limit?: number) {
@@ -114,6 +128,10 @@ export function getOnlyMessagesSentByMeTimelineSetFromRoom(client, room) {
 
 export function matrixEventToBasicEventInfo(event: MatrixEvent): BasicMessageInfo {
     return { id: event.getId(), timestamp: event.getTs() }
+}
+
+export function getLastFriendshipEventInRoom(room: Room, key = ''): MatrixEvent | null {
+    return room.currentState.getStateEvents(FRIENDSHIP_EVENT_TYPE, key)
 }
 
 /** Build a filter that only keeps messages in a room */
@@ -137,4 +155,3 @@ const GET_ONLY_MESSAGES_SENT_BY_ME_FILTER = (userId: SocialId, limit?: number) =
             }
         }
     })
-

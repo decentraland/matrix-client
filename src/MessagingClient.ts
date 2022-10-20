@@ -40,6 +40,7 @@ import {
 } from 'matrix-js-sdk'
 import { RoomMember } from 'matrix-js-sdk'
 import { SocialClient } from 'SocialClient'
+import { SyncState } from 'matrix-js-sdk/lib/sync'
 
 // TODO: Delete this when matrix-client exports the actual one
 interface IPublicRoomsResponse {
@@ -68,8 +69,8 @@ export class MessagingClient implements MessagingAPI {
 
     constructor(private readonly matrixClient: MatrixClient, private readonly socialClient: SocialClient) {
         // Listen to when the sync is finishes, and join all rooms I was invited to
-        matrixClient.once(ClientEvent.Sync, async state => {
-            if (state === 'PREPARED') {
+        const resolveOnSync = async (state: SyncState) => {
+            if (state === 'SYNCING') {
                 const rooms = this.getAllRooms()
                 const join: Promise<void>[] = rooms
                     .filter(room => room.getMyMembership() === 'invite') // Consider rooms that I have been invited to
@@ -78,8 +79,11 @@ export class MessagingClient implements MessagingAPI {
                         return this.joinRoom(member)
                     })
                 await Promise.all(join)
+                // remove this listener, otherwhise, it'll be listening all the session and calling an invalid function
+                matrixClient.removeListener(ClientEvent.Sync, resolveOnSync)
             }
-        })
+        }
+        matrixClient.on(ClientEvent.Sync, resolveOnSync)
     }
 
     listenToEvents(): void {
@@ -120,9 +124,9 @@ export class MessagingClient implements MessagingAPI {
                     type === ConversationType.DIRECT
                         ? [this.socialClient.getUserId(), otherId]
                         : room
-                              .getMembers()
-                              .filter(x => x.membership === 'join')
-                              .map(x => x.userId),
+                            .getMembers()
+                            .filter(x => x.membership === 'join')
+                            .map(x => x.userId),
                 hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage),
                 name: room.name
             }
@@ -493,10 +497,10 @@ export class MessagingClient implements MessagingAPI {
             let nextBatch = since
             const filter = searchTerm
                 ? {
-                      filter: {
-                          generic_search_term: searchTerm
-                      }
-                  }
+                    filter: {
+                        generic_search_term: searchTerm
+                    }
+                }
                 : {}
             const options = {
                 limit,
