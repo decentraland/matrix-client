@@ -1,7 +1,7 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { TimelineWindow } from 'matrix-js-sdk/lib/timeline-window'
 import { EventTimeline } from 'matrix-js-sdk/lib/models/event-timeline'
-import { buildTextMessage, getOnlyMessagesTimelineSetFromRoom } from './Utils'
+import { buildTextMessage, getOnlyMessagesTimelineSetFromRoom, waitForNextSync } from './Utils'
 import {
     TextMessage,
     Timestamp,
@@ -24,7 +24,7 @@ export class ConversationCursor {
         private readonly roomId: string,
         private readonly window: TimelineWindow,
         private readonly lastReadMessageTimestampFetch: (roomId: string) => BasicMessageInfo | undefined
-    ) {}
+    ) { }
 
     getMessages(): TextMessage[] {
         const latestReadTimestamp: Timestamp | undefined = this.lastReadMessageTimestampFetch(this.roomId)?.timestamp
@@ -73,9 +73,13 @@ export class ConversationCursor {
             const limit = ConversationCursor.calculateLimit(options)
             const initialSize = options?.initialSize ?? this.DEFAULT_INITIAL_SIZE
             let room = client.getRoom(roomId)
-            if (!room) {
-                room = await client.peekInRoom(roomId)
+            let retries = 0
+            while (!room && retries < 3) {
+                retries++
+                await waitForNextSync(client)
+                room = client.getRoom(roomId)
             }
+            if (!room) return
 
             const timelineSet = getOnlyMessagesTimelineSetFromRoom(userId, room, limit)
             const window = new TimelineWindow(client, timelineSet, { windowLimit: limit })
