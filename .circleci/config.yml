@@ -81,10 +81,10 @@ jobs:
           key: dependencies-{{ checksum "package-lock.json" }}
       - run:
           name: Build library
-          command: npm run build && git diff
+          command: npm run build
       - run:
           name: Test API extractor
-          command: npm run check-api-ci
+          command: npm run check-api-ci || git diff
       - save_cache:
           paths:
             - dist
