@@ -1,4 +1,4 @@
-import { MatrixClient } from 'matrix-js-sdk/lib/client'
+import { ClientEvent, ICreateClientOpts, MatrixClient } from 'matrix-js-sdk/lib/client'
 import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { Room } from 'matrix-js-sdk/lib/models/room'
 import { Filter } from 'matrix-js-sdk/lib/filter'
@@ -12,9 +12,12 @@ import {
     Timestamp,
     CHANNEL_TYPE
 } from './types'
-import { IndexedDBStore, MemoryStore, createClient, ICreateClientOpts, ClientEvent } from 'matrix-js-sdk'
 import { IStore } from 'matrix-js-sdk/lib/store'
 import { FRIENDSHIP_EVENT_TYPE } from './FriendsManagementClient'
+import { IndexedDBStore } from 'matrix-js-sdk/lib/store/indexeddb'
+import { MemoryStore } from 'matrix-js-sdk/lib/store/memory'
+import { MatrixScheduler } from 'matrix-js-sdk/lib/scheduler'
+import { MemoryCryptoStore } from 'matrix-js-sdk/lib/crypto/store/memory-crypto-store'
 
 // just *accessing* indexedDB throws an exception in firefox with
 // indexeddb disabled.
@@ -23,8 +26,21 @@ let indexedDB: IDBFactory | undefined
 try {
     indexedDB = window.indexedDB
     localStorage = window.localStorage
-} catch (e) { }
+} catch (e) {}
 
+// @internal
+export function createClient(opts: ICreateClientOpts) {
+    opts.store =
+        opts.store ||
+        new MemoryStore({
+            localStorage: globalThis.localStorage
+        })
+    opts.scheduler = opts.scheduler || new MatrixScheduler()
+    opts.cryptoStore = opts.cryptoStore || new MemoryCryptoStore()
+    return new MatrixClient(opts)
+}
+
+// @internal
 export async function login(
     synapseUrl: string,
     ethAddress: EthAddress,
@@ -70,12 +86,14 @@ export async function login(
     return matrixClient
 }
 
+// @internal
 export function findEventInRoom(client: MatrixClient, roomId: string, eventId: string): MatrixEvent | undefined {
     const room = client.getRoom(roomId)
     const timelineSet = room?.getUnfilteredTimelineSet()
     return timelineSet?.findEventById(eventId)
 }
 
+// @internal
 export function buildTextMessage(event: MatrixEvent, status: MessageStatus): TextMessage {
     return {
         text: event.getContent().body,
@@ -86,7 +104,8 @@ export function buildTextMessage(event: MatrixEvent, status: MessageStatus): Tex
     }
 }
 
-export function getConversationTypeFromRoom(client: MatrixClient, room: Room): ConversationType {
+// @internal
+export function getConversationTypeFromRoom(client: MatrixClient, room: any): ConversationType {
     if (room.getType() === CHANNEL_TYPE) {
         return ConversationType.CHANNEL
     }
@@ -116,9 +135,10 @@ function isDirectRoom(client: MatrixClient, room: Room): boolean {
     return false
 }
 
-/*
+/**
  * Call this function when you want to wait for sync to finish
  * Not meant to be used in other place than Matrix event processing
+ * @internal
  */
 export async function waitForNextSync(client: MatrixClient): Promise<void> {
     // Listen to Sync event
@@ -128,7 +148,7 @@ export async function waitForNextSync(client: MatrixClient): Promise<void> {
         })
     })
 }
-export function getOnlyMessagesTimelineSetFromRoom(userId: SocialId, room: Room, limit?: number) {
+export function getOnlyMessagesTimelineSetFromRoom(userId: SocialId, room: any, limit?: number) {
     const filter = GET_ONLY_MESSAGES_FILTER(userId, limit)
     return room?.getOrCreateFilteredTimelineSet(filter)
 }
@@ -138,11 +158,13 @@ export function getOnlyMessagesSentByMeTimelineSetFromRoom(client, room) {
     return room?.getOrCreateFilteredTimelineSet(filter)
 }
 
+// @internal
 export function matrixEventToBasicEventInfo(event: MatrixEvent): BasicMessageInfo {
     return { id: event.getId(), timestamp: event.getTs() }
 }
 
-export function getLastFriendshipEventInRoom(room: Room, key = ''): MatrixEvent | null {
+// @internal
+export function getLastFriendshipEventInRoom(room: any, key = ''): MatrixEvent | null {
     return room.currentState.getStateEvents(FRIENDSHIP_EVENT_TYPE, key)
 }
 

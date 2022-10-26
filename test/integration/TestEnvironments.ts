@@ -1,11 +1,11 @@
 import EthCrypto from 'eth-crypto'
-import { SocialClient } from 'SocialClient'
+import { SocialClient } from '../../src/SocialClient'
 import { DockerEnvironment, DockerEnvironmentBuilder } from './containers/commons/DockerEnvironment'
 import { ServiceContainer } from './containers/commons/ServiceContainer'
 import { CatalystContainerBuilder } from './containers/catalyst/CatalystContainerBuilder'
 import { SynapseContainerBuilder } from './containers/synapse/SynapseContainerBuilder'
 import { loginWithIdentity, createUser } from '../utils/Utils'
-import { SocialId } from 'types'
+import { SocialId } from '../../src/types'
 
 /**
  * Almost every test on this project will need to set up a synapse server, a catalyst server,
@@ -13,10 +13,10 @@ import { SocialId } from 'types'
  * In order to avoid repeating the code over and over again, we will group everything here.
  */
 export class TestEnvironment {
-    private dockerEnv: DockerEnvironment
-    private synapseContainer: ServiceContainer
-    private catalystContainer: ServiceContainer
-    private clients: SocialClient[]
+    dockerEnv!: DockerEnvironment
+    synapseContainer!: ServiceContainer
+    catalystContainer!: ServiceContainer
+    clients!: SocialClient[]
 
     async start(): Promise<void> {
         this.dockerEnv = await new DockerEnvironmentBuilder().withNetwork('some-network').build()

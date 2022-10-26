@@ -2,8 +2,8 @@
 import fs from 'fs'
 import ms from 'ms'
 import EthCrypto from 'eth-crypto'
-import { SocialClient } from 'SocialClient'
-import { UpdateUserStatus, PresenceType } from 'types'
+import { SocialClient } from '../../src/SocialClient'
+import { UpdateUserStatus, PresenceType } from '../../src/types'
 import { loginWithIdentity, createUser } from '../utils/Utils'
 
 describe.skip('Performance Test', () => {

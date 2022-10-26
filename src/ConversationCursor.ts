@@ -24,7 +24,7 @@ export class ConversationCursor {
         private readonly roomId: string,
         private readonly window: TimelineWindow,
         private readonly lastReadMessageTimestampFetch: (roomId: string) => BasicMessageInfo | undefined
-    ) { }
+    ) {}
 
     getMessages(): TextMessage[] {
         const latestReadTimestamp: Timestamp | undefined = this.lastReadMessageTimestampFetch(this.roomId)?.timestamp
@@ -61,6 +61,7 @@ export class ConversationCursor {
         this.window.unpaginate(numberOfEvents, oldestMessages)
     }
 
+    // @internal
     static async build(
         client: MatrixClient,
         userId: SocialId,

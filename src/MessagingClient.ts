@@ -1,4 +1,4 @@
-import { MatrixClient } from 'matrix-js-sdk/lib/client'
+import { ClientEvent, IPublicRoomsChunkRoom, MatrixClient } from 'matrix-js-sdk/lib/client'
 import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { Room, RoomEvent } from 'matrix-js-sdk/lib/models/room'
 import {
@@ -28,19 +28,13 @@ import {
 } from './Utils'
 import { ConversationCursor } from './ConversationCursor'
 import { MessagingAPI } from './MessagingAPI'
-import {
-    ClientEvent,
-    EventType,
-    ICreateRoomOpts,
-    IPublicRoomsChunkRoom,
-    Preset,
-    RoomMemberEvent,
-    RoomStateEvent,
-    Visibility
-} from 'matrix-js-sdk'
-import { RoomMember } from 'matrix-js-sdk'
-import { SocialClient } from 'SocialClient'
+import { SocialClient } from './SocialClient'
 import { SyncState } from 'matrix-js-sdk/lib/sync'
+import { RoomMember, RoomMemberEvent } from 'matrix-js-sdk/lib/models/room-member'
+import { EventType } from 'matrix-js-sdk/lib/@types/event'
+import { RoomStateEvent } from 'matrix-js-sdk/lib/models/room-state'
+import { Preset, Visibility } from 'matrix-js-sdk/lib/@types/partials'
+import { ICreateRoomOpts } from 'matrix-js-sdk/lib/@types/requests'
 
 // TODO: Delete this when matrix-client exports the actual one
 interface IPublicRoomsResponse {
@@ -67,6 +61,7 @@ const CHANNEL_RESERVED_IDS = ['nearby']
 export class MessagingClient implements MessagingAPI {
     private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()
 
+    // @internal
     constructor(private readonly matrixClient: MatrixClient, private readonly socialClient: SocialClient) {
         // Listen to when the sync is finishes, and join all rooms I was invited to
         const resolveOnSync = async (state: SyncState) => {
@@ -89,6 +84,7 @@ export class MessagingClient implements MessagingAPI {
     listenToEvents(): void {
         // Listen to events, and store the last message I send
         this.matrixClient.on(RoomEvent.Timeline, (event, room) => {
+            if (!room) return
             if (
                 event.getType() === 'm.room.message' &&
                 event.getContent().msgtype === MessageType.TEXT &&
@@ -109,6 +105,10 @@ export class MessagingClient implements MessagingAPI {
         })
     }
 
+    /** @internal */
+    getRoomInformation(room: Room): { conversation: Conversation; unreadMessages: boolean }
+    /** @public */
+    getRoomInformation(room: any): { conversation: Conversation; unreadMessages: boolean }
     getRoomInformation(room: Room): { conversation: Conversation; unreadMessages: boolean } {
         const otherId = room.guessDMUserId()
         const unreadMessages = this.getRoomUnreadMessages(room)
@@ -124,9 +124,9 @@ export class MessagingClient implements MessagingAPI {
                     type === ConversationType.DIRECT
                         ? [this.socialClient.getUserId(), otherId]
                         : room
-                            .getMembers()
-                            .filter(x => x.membership === 'join')
-                            .map(x => x.userId),
+                              .getMembers()
+                              .filter(x => x.membership === 'join')
+                              .map(x => x.userId),
                 hasMessages: room.timeline.some(event => event.getType() === EventType.RoomMessage),
                 name: room.name
             }
@@ -226,6 +226,8 @@ export class MessagingClient implements MessagingAPI {
 
             // Just listen to the unfiltered timeline, so we don't raise the same message more than once
             if (data.timeline.getFilter()) return
+
+            if (!room) return
 
             const conversation = {
                 type: getConversationTypeFromRoom(this.matrixClient, room),
@@ -497,10 +499,10 @@ export class MessagingClient implements MessagingAPI {
             let nextBatch = since
             const filter = searchTerm
                 ? {
-                    filter: {
-                        generic_search_term: searchTerm
-                    }
-                }
+                      filter: {
+                          generic_search_term: searchTerm
+                      }
+                  }
                 : {}
             const options = {
                 limit,

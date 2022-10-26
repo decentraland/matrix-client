@@ -111,3 +111,15 @@ export type Member = {
     name: string
 }
 
+export type MatrixRoom = {
+    name: string
+    normalizedName: string
+    tags: Record<string, Record<string, any>>
+    accountData: Record<string, any>
+    summary: any
+    timeline: any[]
+    oldState: any
+    currentState: any
+    lastThread?: any
+    roomId: string
+}

@@ -45,7 +45,7 @@ export interface MessagingAPI {
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void
 
     /** Listen to updates on the current user membership of a channel
-     * @doc {membership} join | leave | invite
+     * membership - join | leave | invite
      */
     onChannelMembership(listener: (conversation: Conversation, membership: string) => void): void
 
@@ -100,13 +100,13 @@ export interface MessagingAPI {
 
     /**
      * Get the conversation for a channel if it exists, otherwise returns undefined
-     * @param roomId the roomId of the channel
+     * @param roomId - the roomId of the channel
      */
     getChannel(roomId: string): Conversation | undefined
 
     /**
      * Get the conversation for a channel by its name.
-     * @param alias the name of the channel.
+     * @param alias - the name of the channel.
      * @returns `Promise<Conversation>` if it exists | `Promise<undefined>` if it does not exist.
      */
     getChannelByName(alias: string): Promise<Conversation | undefined>

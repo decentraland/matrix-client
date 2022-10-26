@@ -1,4 +1,4 @@
-import { MatrixClient } from 'matrix-js-sdk/lib/client'
+import { ClientEvent, IStartClientOpts, MatrixClient, PendingEventOrdering } from 'matrix-js-sdk/lib/client'
 import { AuthChain, EthAddress } from '@dcl/crypto'
 import {
     Timestamp,
@@ -26,20 +26,20 @@ import { FriendsManagementAPI } from './FriendsManagementAPI'
 import { FriendsManagementClient } from './FriendsManagementClient'
 import { SocialAPI } from './SocialAPI'
 import { login } from './Utils'
-import { ClientEvent, ICreateClientOpts, PendingEventOrdering } from 'matrix-js-sdk'
 import { SyncState } from 'matrix-js-sdk/lib/sync'
 
 export type ClientLoginOptions = {
-    pendingEventOrdering: PendingEventOrdering
+    pendingEventOrdering: 'chronological' | 'detached'
     disablePresence: boolean
     initialSyncLimit: number
     getLocalStorage?: () => Storage
-    createOpts?: Partial<ICreateClientOpts>
+    createOpts?: Record<string, any>
 }
 
 export class SocialClient implements SocialAPI {
     private readonly sessionManagement: SessionManagementAPI
     private readonly messaging: MessagingAPI
+    // @internal
     private readonly friendsManagement: FriendsManagementAPI
 
     private constructor(matrixClient: MatrixClient) {
@@ -60,11 +60,11 @@ export class SocialClient implements SocialAPI {
         options?: Partial<ClientLoginOptions> | undefined
     ): Promise<SocialClient> {
         // Destructure options
-        const _options: ClientLoginOptions = {
+        const _options: IStartClientOpts = {
             pendingEventOrdering: PendingEventOrdering.Detached,
             initialSyncLimit: 3,
             disablePresence: false,
-            ...options
+            ...(options as any)
         }
 
         // Login

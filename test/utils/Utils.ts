@@ -1,11 +1,12 @@
+/// <reference types="node" />
+
 import ms from 'ms'
 import EthCrypto from 'eth-crypto'
 import { Authenticator, AuthChain } from '@dcl/crypto'
-import { ClientLoginOptions, SocialClient } from 'SocialClient'
-import { login } from 'Utils'
-import { SocialId } from 'types'
+import { ClientLoginOptions, SocialClient } from '../../src/SocialClient'
+import { login } from '../../src/Utils'
+import { SocialId } from '../../src/types'
 import { LocalStorage } from 'node-localstorage'
-import request from 'request'
 
 export function sleep(time: string): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms(time)))
@@ -29,7 +30,6 @@ export async function loginWithIdentity(serverUrl: string, identity, options?: P
         ...options,
         getLocalStorage,
         createOpts: {
-            request
         }
     })
     return client
@@ -38,7 +38,6 @@ export async function loginWithIdentity(serverUrl: string, identity, options?: P
 export async function createUser(serverUrl: string, identity): Promise<SocialId> {
     const { ethAddress, timestamp, authChain } = getDataToLogin(Date.now(), identity)
     const matrixClient = await login(serverUrl, ethAddress, timestamp, authChain, getLocalStorage, {
-        request
     })
     const userId = matrixClient.getUserId()
     await matrixClient.logout()

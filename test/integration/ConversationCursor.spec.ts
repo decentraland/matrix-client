@@ -1,7 +1,7 @@
 
 import chai from 'chai'
-import { SocialClient } from 'SocialClient'
-import { TextMessage, MessageStatus, CursorDirection, ConversationId } from 'types'
+import { SocialClient } from '../../src/SocialClient'
+import { TextMessage, MessageStatus, CursorDirection, ConversationId } from '../../src/types'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
 import { sleep } from '../utils/Utils'
 
