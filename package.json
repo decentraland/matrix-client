@@ -11,7 +11,7 @@
     "watch": "tsc --watch --project tsconfig-build.json",
     "test": "nyc mocha -r ts-node/register -r tsconfig-paths/register --exit \"test/**/*.spec.ts\"",
     "refresh-api": "api-extractor run --local --verbose --diagnostics",
-    "check-api-ci": "api-extractor run",
+    "check-api-ci": "api-extractor run --verbose --diagnostics",
     "prepare-performance-test": "node -r ts-node/register -r tsconfig-paths/register test/performance/set-up-performance-test.ts",
     "semantic-release": "semantic-release",
     "commit-msg": "validate-commit-msg",
