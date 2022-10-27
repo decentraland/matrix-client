@@ -5,6 +5,8 @@ import EthCrypto from 'eth-crypto'
 import { SocialClient } from '../../src/SocialClient'
 import { UpdateUserStatus, PresenceType } from '../../src/types'
 import { loginWithIdentity, createUser } from '../utils/Utils'
+import 'isomorphic-fetch'
+globalThis.global = globalThis as any
 
 describe.skip('Performance Test', () => {
 

@@ -10,6 +10,8 @@ import { DockerEnvironment, DockerEnvironmentBuilder } from './containers/common
 import { ServiceContainer } from './containers/commons/ServiceContainer'
 import { CatalystContainerBuilder } from './containers/catalyst/CatalystContainerBuilder'
 import { LocalStorage } from 'node-localstorage'
+import 'isomorphic-fetch'
+globalThis.global = globalThis as any
 
 chai.use(chaiAsPromised)
 const expect = chai.expect

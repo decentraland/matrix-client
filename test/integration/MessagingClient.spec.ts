@@ -7,6 +7,8 @@ import { SocialClient } from '../../src/SocialClient'
 import { ConversationType, MessageStatus, Conversation, MessageId } from '../../src/types'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
 import { sleep } from '../utils/Utils'
+import 'isomorphic-fetch'
+globalThis.global = globalThis as any
 
 chai.use(sinonChai)
 const expect = chai.expect

@@ -7,6 +7,8 @@ import { ClientLoginOptions, SocialClient } from '../../src/SocialClient'
 import { login } from '../../src/Utils'
 import { SocialId } from '../../src/types'
 import { LocalStorage } from 'node-localstorage'
+import 'isomorphic-fetch'
+globalThis.global = globalThis as any
 
 export function sleep(time: string): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms(time)))

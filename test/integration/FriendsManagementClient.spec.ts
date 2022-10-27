@@ -5,6 +5,8 @@ import sinon from 'sinon'
 import { SocialClient } from '../../src/SocialClient'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
 import { sleep } from '../utils/Utils'
+import 'isomorphic-fetch'
+globalThis.global = globalThis as any
 
 chai.use(sinonChai)
 const expect = chai.expect
