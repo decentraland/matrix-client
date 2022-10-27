@@ -18,6 +18,7 @@ import { IndexedDBStore } from 'matrix-js-sdk/lib/store/indexeddb'
 import { MemoryStore } from 'matrix-js-sdk/lib/store/memory'
 import { MatrixScheduler } from 'matrix-js-sdk/lib/scheduler'
 import { MemoryCryptoStore } from 'matrix-js-sdk/lib/crypto/store/memory-crypto-store'
+import { SocialClient } from './SocialClient'
 
 // just *accessing* indexedDB throws an exception in firefox with
 // indexeddb disabled.
@@ -148,12 +149,15 @@ export async function waitForNextSync(client: MatrixClient): Promise<void> {
         })
     })
 }
-export function getOnlyMessagesTimelineSetFromRoom(userId: SocialId, room: any, limit?: number) {
+
+// @internal
+export function getOnlyMessagesTimelineSetFromRoom(userId: SocialId, room: Room, limit?: number) {
     const filter = GET_ONLY_MESSAGES_FILTER(userId, limit)
     return room?.getOrCreateFilteredTimelineSet(filter)
 }
 
-export function getOnlyMessagesSentByMeTimelineSetFromRoom(client, room) {
+// @internal
+export function getOnlyMessagesSentByMeTimelineSetFromRoom(client: SocialClient, room: Room) {
     const filter = GET_ONLY_MESSAGES_SENT_BY_ME_FILTER(client.getUserId())
     return room?.getOrCreateFilteredTimelineSet(filter)
 }
