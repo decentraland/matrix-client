@@ -108,3 +108,6 @@ dist
 
 # Local storage used for matrix memory store
 .storage
+
+temp
+decl

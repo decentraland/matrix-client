@@ -2,11 +2,12 @@ import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { SocialId, PresenceType, CurrentUserStatus, UpdateUserStatus, ProfileInfo } from './types'
 import { SessionManagementAPI } from './SessionManagementAPI'
 import { SocialClient } from './SocialClient'
-import { User, UserEvent } from 'matrix-js-sdk'
+import { User, UserEvent } from 'matrix-js-sdk/lib/models/user'
 
 export class SessionManagementClient implements SessionManagementAPI {
     private loggedIn: boolean = true
 
+    // @internal
     constructor(private readonly matrixClient: MatrixClient, private readonly socialClient: SocialClient) {}
 
     isLoggedIn(): boolean {
@@ -89,7 +90,7 @@ export class SessionManagementClient implements SessionManagementAPI {
     private static userToStatus(user: {
         presence: string
         lastActiveAgo: number
-        presenceStatusMsg: string
+        presenceStatusMsg?: string
     }): CurrentUserStatus {
         const presence: PresenceType = PresenceType[user.presence.toUpperCase().trim()]
 

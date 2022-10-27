@@ -4,13 +4,14 @@ import chaiAsPromised from 'chai-as-promised'
 import EthCrypto from 'eth-crypto'
 import ms from 'ms'
 import { Authenticator, AuthChain } from '@dcl/crypto'
-import { SocialClient } from 'SocialClient'
+import { SocialClient } from '../../src/SocialClient'
 import { SynapseContainerBuilder } from './containers/synapse/SynapseContainerBuilder'
 import { DockerEnvironment, DockerEnvironmentBuilder } from './containers/commons/DockerEnvironment'
 import { ServiceContainer } from './containers/commons/ServiceContainer'
 import { CatalystContainerBuilder } from './containers/catalyst/CatalystContainerBuilder'
 import { LocalStorage } from 'node-localstorage'
-import request from 'request'
+import 'isomorphic-fetch'
+globalThis.global = globalThis as any
 
 chai.use(chaiAsPromised)
 const expect = chai.expect
@@ -18,7 +19,6 @@ const expect = chai.expect
 const opts = {
     getLocalStorage: () => new LocalStorage('.storage'),
     createOpts: {
-        request
     }
 }
 

@@ -3,8 +3,10 @@ import EthCrypto from 'eth-crypto';
 import * as cliProgress from 'cli-progress';
 import asyncPool from "tiny-async-pool"
 import fs from 'fs-extra'
-import { SocialId } from 'types'
+import { SocialId } from '../../src/types'
 import { createUser, loginWithIdentity } from '../utils/Utils';
+import 'isomorphic-fetch'
+globalThis.global = globalThis as any
 
 /**
  * This script will create some users on the server, and make them all friends between each other.

@@ -3,10 +3,12 @@ import chai from 'chai'
 import sinonChai from 'sinon-chai'
 import sinon from 'sinon'
 import EthCrypto from 'eth-crypto'
-import { SocialClient } from 'SocialClient'
-import { PresenceType, UpdateUserStatus, CurrentUserStatus, SocialId } from 'types'
+import { SocialClient } from '../../src/SocialClient'
+import { PresenceType, UpdateUserStatus, CurrentUserStatus, SocialId } from '../../src/types'
 import { TestEnvironment, loadTestEnvironment } from './TestEnvironments'
 import { sleep } from '../utils/Utils'
+import 'isomorphic-fetch'
+globalThis.global = globalThis as any
 
 chai.use(sinonChai)
 const expect = chai.expect

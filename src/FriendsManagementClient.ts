@@ -1,11 +1,12 @@
-import { MatrixClient } from 'matrix-js-sdk/lib/client'
+import { ClientEvent, MatrixClient } from 'matrix-js-sdk/lib/client'
 import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { SocialId, ConversationType, FriendshipRequest } from './types'
 import { FriendsManagementAPI } from './FriendsManagementAPI'
 import { getConversationTypeFromRoom, getLastFriendshipEventInRoom } from './Utils'
 import { SocialClient } from './SocialClient'
-import { ClientEvent, EventType, Room, RoomEvent } from 'matrix-js-sdk'
 import { SyncState } from 'matrix-js-sdk/lib/sync'
+import { EventType } from 'matrix-js-sdk/lib/@types/event'
+import { Room, RoomEvent } from 'matrix-js-sdk/lib/models/room'
 
 enum FriendshipStatus {
     NOT_FRIENDS = 'not friends',
@@ -22,6 +23,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         FriendshipStatus.REQUEST_SENT_BY_ME_PENDING
     ]
 
+    // @internal
     constructor(private readonly matrixClient: MatrixClient, private readonly socialClient: SocialClient) {
         // Listen to when the sync is finishes, and join all rooms I was invited to
         const resolveOnSync = async (state: SyncState) => {
@@ -34,7 +36,6 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             }
         }
         matrixClient.on(ClientEvent.Sync, resolveOnSync)
-
     }
 
     /*
@@ -60,7 +61,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
 
     private getRoomIdByFriendId(friendId: SocialId): string | undefined {
         const rooms = this.matrixClient.getVisibleRooms()
-        return rooms.map((room) => room.guessDMUserId()).find((userId) => userId === friendId)
+        return rooms.map(room => room.guessDMUserId()).find(userId => userId === friendId)
     }
 
     getAllFriends(): SocialId[] {
