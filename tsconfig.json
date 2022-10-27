@@ -8,7 +8,6 @@
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
-    "declarationDir": "decl",
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "noImplicitAny": false,

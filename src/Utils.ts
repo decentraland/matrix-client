@@ -19,6 +19,7 @@ import { MemoryStore } from 'matrix-js-sdk/lib/store/memory'
 import { MatrixScheduler } from 'matrix-js-sdk/lib/scheduler'
 import { MemoryCryptoStore } from 'matrix-js-sdk/lib/crypto/store/memory-crypto-store'
 import { SocialClient } from './SocialClient'
+import * as sdk from 'matrix-js-sdk'
 
 // just *accessing* indexedDB throws an exception in firefox with
 // indexeddb disabled.
@@ -27,7 +28,7 @@ let indexedDB: IDBFactory | undefined
 try {
     indexedDB = window.indexedDB
     localStorage = window.localStorage
-} catch (e) {}
+} catch (e) { }
 
 // @internal
 export function createClient(opts: ICreateClientOpts) {
@@ -35,10 +36,10 @@ export function createClient(opts: ICreateClientOpts) {
         opts.store ||
         new MemoryStore({
             localStorage: globalThis.localStorage
-        })
+        }) as IStore
     opts.scheduler = opts.scheduler || new MatrixScheduler()
     opts.cryptoStore = opts.cryptoStore || new MemoryCryptoStore()
-    return new MatrixClient(opts)
+    return sdk.createClient(opts)
 }
 
 // @internal
@@ -106,7 +107,7 @@ export function buildTextMessage(event: MatrixEvent, status: MessageStatus): Tex
 }
 
 // @internal
-export function getConversationTypeFromRoom(client: MatrixClient, room: any): ConversationType {
+export function getConversationTypeFromRoom(client: MatrixClient, room: Room): ConversationType {
     if (room.getType() === CHANNEL_TYPE) {
         return ConversationType.CHANNEL
     }
@@ -141,7 +142,7 @@ function isDirectRoom(client: MatrixClient, room: Room): boolean {
  * Not meant to be used in other place than Matrix event processing
  * @internal
  */
-export async function waitForNextSync(client: MatrixClient): Promise<void> {
+export async function waitSyncToFinish(client: MatrixClient): Promise<void> {
     // Listen to Sync event
     return new Promise<void>(resolve => {
         client.once(ClientEvent.Sync, () => {
@@ -168,7 +169,7 @@ export function matrixEventToBasicEventInfo(event: MatrixEvent): BasicMessageInf
 }
 
 // @internal
-export function getLastFriendshipEventInRoom(room: any, key = ''): MatrixEvent | null {
+export function getLastFriendshipEventInRoom(room: Room, key = ''): MatrixEvent | null {
     return room.currentState.getStateEvents(FRIENDSHIP_EVENT_TYPE, key)
 }
 

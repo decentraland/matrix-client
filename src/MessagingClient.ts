@@ -24,7 +24,8 @@ import {
     buildTextMessage,
     getOnlyMessagesSentByMeTimelineSetFromRoom,
     matrixEventToBasicEventInfo,
-    getConversationTypeFromRoom
+    getConversationTypeFromRoom,
+    waitSyncToFinish
 } from './Utils'
 import { ConversationCursor } from './ConversationCursor'
 import { MessagingAPI } from './MessagingAPI'
@@ -100,6 +101,7 @@ export class MessagingClient implements MessagingAPI {
         // Listen to invitations and accept them automatically
         this.matrixClient.on(RoomMemberEvent.Membership, async (_, member) => {
             if (member.membership === 'invite' && member.userId === this.socialClient.getUserId()) {
+                await waitSyncToFinish(this.matrixClient)
                 await this.joinRoom(member)
             }
         })
@@ -245,16 +247,16 @@ export class MessagingClient implements MessagingAPI {
      * @doc {membership} join | leave | invite
      */
     onChannelMembership(listener: (conversation: Conversation, membership: string) => void): void {
-        this.matrixClient.on(RoomEvent.MyMembership, (room, membership) => {
+        this.matrixClient.on(RoomEvent.MyMembership, async (room, membership) => {
             if (!room || room.getType() !== CHANNEL_TYPE) return // we only want to know about the updates related to channels
 
             // Room creators already know about this room
             if (membership === 'join' && this.socialClient.getUserId() === room.getCreator()) return
 
-            const nameEvents = room.currentState.getStateEvents(EventType.RoomName)
-            const name = nameEvents[0]?.getContent()['name']
-            const conversation = this.getRoomInformation(room).conversation
-            conversation.name = name ?? conversation.name
+            await waitSyncToFinish(this.matrixClient)
+
+            const savedRoom = this.matrixClient.getRoom(room.roomId)
+            const conversation = this.getRoomInformation(savedRoom).conversation
 
             listener(conversation, membership)
         })
@@ -264,7 +266,8 @@ export class MessagingClient implements MessagingAPI {
      * Listen to updates on the members of a channel
      */
     onChannelMembers(listener: (conversation: Conversation, members: Member[]) => void): void {
-        this.matrixClient.on(RoomStateEvent.Members, (_event, state) => {
+        this.matrixClient.on(RoomStateEvent.Members, async (_event, state) => {
+            await waitSyncToFinish(this.matrixClient)
             const room = this.matrixClient.getRoom(state.roomId)
             if (!room || room.getType() !== CHANNEL_TYPE) return // we only want to know about the updates related to channels
 
