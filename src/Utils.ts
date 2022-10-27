@@ -157,7 +157,7 @@ export function getOnlyMessagesTimelineSetFromRoom(userId: SocialId, room: Room,
 }
 
 // @internal
-export function getOnlyMessagesSentByMeTimelineSetFromRoom(client: SocialClient, room: Room) {
+export function getOnlyMessagesSentByMeTimelineSetFromRoom(client: SocialClient, room: Room | null) {
     const filter = GET_ONLY_MESSAGES_SENT_BY_ME_FILTER(client.getUserId())
     return room?.getOrCreateFilteredTimelineSet(filter)
 }
