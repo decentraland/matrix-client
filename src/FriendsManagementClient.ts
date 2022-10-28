@@ -2,7 +2,7 @@ import { ClientEvent, MatrixClient } from 'matrix-js-sdk/lib/client'
 import { MatrixEvent } from 'matrix-js-sdk/lib/models/event'
 import { SocialId, ConversationType, FriendshipRequest } from './types'
 import { FriendsManagementAPI } from './FriendsManagementAPI'
-import { getConversationTypeFromRoom, getLastFriendshipEventInRoom } from './Utils'
+import { getConversationTypeFromRoom, getLastFriendshipEventInRoom, waitSyncToFinish } from './Utils'
 import { SocialClient } from './SocialClient'
 import { SyncState } from 'matrix-js-sdk/lib/sync'
 import { EventType } from 'matrix-js-sdk/lib/@types/event'
@@ -70,6 +70,13 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             .filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
             .filter(room => this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS)
             .map(room => room.guessDMUserId())
+    }
+
+    getAllFriendsRooms(): Room[] {
+        const rooms = this.matrixClient.getVisibleRooms()
+        return rooms
+            .filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
+            .filter(room => this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS)
     }
 
     getPendingRequests(): FriendshipRequest[] {
@@ -167,7 +174,10 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     }
 
     private listenToEvent(eventToListenTo: FriendshipEvent, listener: (from: SocialId) => void): void {
-        this.matrixClient.on(RoomEvent.Timeline, (event, _, toStartOfTimeline, __, data) => {
+        this.matrixClient.on(RoomEvent.Timeline, async (event, _, toStartOfTimeline, __, data) => {
+            // wait for sync to store changes in memory before processing the event
+            await waitSyncToFinish(this.matrixClient)
+
             // Ignore anything but real-time updates at the end of the room
             if (toStartOfTimeline || !data || !data.liveEvent) return
 

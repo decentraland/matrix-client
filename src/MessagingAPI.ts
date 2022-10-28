@@ -17,11 +17,21 @@ export interface MessagingAPI {
     /** Start listening to events */
     listenToEvents(): void
 
-    /** Get all conversation the user has joined */
+    /**
+     * Get all conversation the user has joined including DMs, channels, etc
+     */
     getAllCurrentConversations(): { conversation: Conversation; unreadMessages: boolean }[]
 
-    /** Get all conversation the user has with unread messages */
+    /**
+     * Get all conversation with unread messages the user has joined including DMs, channels, etc
+     */
     getAllConversationsWithUnreadMessages(): Conversation[]
+
+    /**
+     * Get all conversation with friends the user has joined
+     * @return `conversation` & `unreadMessages` boolean that indicates whether the conversation has unread messages.
+     */
+    getAllCurrentFriendsConversations(): { conversation: Conversation; unreadMessages: boolean }[]
 
     /** Get total number of unseen messages from all conversations the user has joined */
     getTotalUnseenMessages(): number

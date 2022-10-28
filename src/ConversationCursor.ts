@@ -1,7 +1,7 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { TimelineWindow } from 'matrix-js-sdk/lib/timeline-window'
 import { EventTimeline } from 'matrix-js-sdk/lib/models/event-timeline'
-import { buildTextMessage, getOnlyMessagesTimelineSetFromRoom, waitForNextSync } from './Utils'
+import { buildTextMessage, getOnlyMessagesTimelineSetFromRoom, waitSyncToFinish } from './Utils'
 import {
     TextMessage,
     Timestamp,
@@ -77,7 +77,7 @@ export class ConversationCursor {
             let retries = 0
             while (!room && retries < 3) {
                 retries++
-                await waitForNextSync(client)
+                await waitSyncToFinish(client)
                 room = client.getRoom(roomId)
             }
             if (!room) return
