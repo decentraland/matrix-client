@@ -27,6 +27,7 @@ import { FriendsManagementClient } from './FriendsManagementClient'
 import { SocialAPI } from './SocialAPI'
 import { login } from './Utils'
 import { SyncState } from 'matrix-js-sdk/lib/sync'
+import { Room } from 'matrix-js-sdk'
 
 export type ClientLoginOptions = {
     pendingEventOrdering: 'chronological' | 'detached'
@@ -151,6 +152,9 @@ export class SocialClient implements SocialAPI {
     getAllCurrentConversations(): { conversation: Conversation; unreadMessages: boolean }[] {
         return this.messaging.getAllCurrentConversations()
     }
+    getAllCurrentFriendsConversations(): { conversation: Conversation; unreadMessages: boolean }[] {
+        return this.messaging.getAllCurrentFriendsConversations()
+    }
 
     getAllConversationsWithUnreadMessages(): Conversation[] {
         return this.messaging.getAllConversationsWithUnreadMessages()
@@ -225,6 +229,10 @@ export class SocialClient implements SocialAPI {
     //////        FRIENDS MANAGEMENT         //////
     getAllFriends(): SocialId[] {
         return this.friendsManagement.getAllFriends()
+    }
+
+    getAllFriendsRooms(): Room[] {
+        return this.friendsManagement.getAllFriendsRooms()
     }
 
     getPendingRequests(): FriendshipRequest[] {

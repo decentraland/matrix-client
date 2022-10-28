@@ -151,7 +151,9 @@ export class MessagingClient implements MessagingAPI {
         }
     }
 
-    /** Get all conversation the user has joined */
+    /**
+     * Get all conversation the user has joined including DMs, channels, etc
+     */
     getAllCurrentConversations(): { conversation: Conversation; unreadMessages: boolean }[] {
         const rooms = this.getAllRooms()
         return rooms
@@ -159,11 +161,22 @@ export class MessagingClient implements MessagingAPI {
             .map(room => this.getRoomInformation(room))
     }
 
-    /** Get all conversation the user has joined */
+    /**
+     * Get all conversation with unread messages the user has joined including DMs, channels, etc
+     */
     getAllConversationsWithUnreadMessages(): Conversation[] {
         return this.getAllCurrentConversations()
             .filter(conv => conv.unreadMessages)
             .map((conv): Conversation => conv.conversation)
+    }
+
+    /**
+     * Get all conversation with the user's current friends
+     * @return `conversation` & `unreadMessages` boolean that indicates whether the conversation has unread messages.
+     */
+    getAllCurrentFriendsConversations(): { conversation: Conversation; unreadMessages: boolean }[] {
+        const rooms = this.socialClient.getAllFriendsRooms()
+        return rooms.map(room => this.getRoomInformation(room))
     }
 
     /** Get total number of unseen messages from all conversations the user has joined */
@@ -178,7 +191,7 @@ export class MessagingClient implements MessagingAPI {
 
     /**
      * Send a message text to a conversation.
-     * Returns the message id
+     * @returns the message id
      */
     async sendMessageTo(conversationId: ConversationId, message: string): Promise<MessageId> {
         const { event_id } = await this.matrixClient.sendTextMessage(conversationId, message)
@@ -318,7 +331,8 @@ export class MessagingClient implements MessagingAPI {
         return undefined
     }
 
-    /** Returns a cursor located on the given message. If there is no given message, then it is
+    /**
+     * Returns a cursor located on the given message. If there is no given message, then it is
      * located at the end of the conversation.
      */
     getCursorOnMessage(
