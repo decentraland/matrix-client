@@ -72,6 +72,13 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             .map(room => room.guessDMUserId())
     }
 
+    getAllFriendsRooms(): Room[] {
+        const rooms = this.matrixClient.getVisibleRooms()
+        return rooms
+            .filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
+            .filter(room => this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS)
+    }
+
     getPendingRequests(): FriendshipRequest[] {
         const rooms = this.matrixClient.getVisibleRooms()
         return rooms

@@ -1,7 +1,9 @@
+import { Room } from 'matrix-js-sdk'
 import { SocialId, FriendshipRequest } from './types'
 
 export interface FriendsManagementAPI {
     getAllFriends(): SocialId[]
+    getAllFriendsRooms(): Room[]
     getPendingRequests(): FriendshipRequest[]
     isUserMyFriend(userId: SocialId): boolean
 

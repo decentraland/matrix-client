@@ -28,15 +28,15 @@ let indexedDB: IDBFactory | undefined
 try {
     indexedDB = window.indexedDB
     localStorage = window.localStorage
-} catch (e) { }
+} catch (e) {}
 
 // @internal
 export function createClient(opts: ICreateClientOpts) {
     opts.store =
         opts.store ||
-        new MemoryStore({
+        (new MemoryStore({
             localStorage: globalThis.localStorage
-        }) as IStore
+        }) as IStore)
     opts.scheduler = opts.scheduler || new MatrixScheduler()
     opts.cryptoStore = opts.cryptoStore || new MemoryCryptoStore()
     return sdk.createClient(opts)
