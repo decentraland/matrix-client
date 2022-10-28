@@ -18,6 +18,7 @@ import { IndexedDBStore } from 'matrix-js-sdk/lib/store/indexeddb'
 import { MemoryStore } from 'matrix-js-sdk/lib/store/memory'
 import { MatrixScheduler } from 'matrix-js-sdk/lib/scheduler'
 import { MemoryCryptoStore } from 'matrix-js-sdk/lib/crypto/store/memory-crypto-store'
+import { IndexedDBCryptoStore } from 'matrix-js-sdk/lib/crypto/store/indexeddb-crypto-store'
 import { SocialClient } from './SocialClient'
 import * as sdk from 'matrix-js-sdk'
 
@@ -67,22 +68,35 @@ export async function login(
     }
 
     // Create the client
-    const matrixClient: MatrixClient = createClient({
+    const loginClient: MatrixClient = createClient({
         ...createOpts,
         baseUrl: synapseUrl,
         timelineSupport: true,
         useAuthorizationHeader: true,
         store
     })
-
     // Actual login
-    await matrixClient.login('m.login.decentraland', {
+    const response = await loginClient.login('m.login.decentraland', {
         identifier: {
             type: 'm.id.user',
             user: ethAddress.toLowerCase()
         },
         timestamp: timestamp.toString(),
         auth_chain: authChain
+    })
+
+    loginClient.stopClient();
+
+    const matrixClient = createClient({
+        ...createOpts,
+        baseUrl: synapseUrl,
+        timelineSupport: true,
+        useAuthorizationHeader: true,
+        deviceId: response.device_id,
+        accessToken: response.access_token,
+        userId: response.user_id,
+        cryptoStore: new IndexedDBCryptoStore(indexedDB!, `matrix-crypto:${ethAddress}:${synapseUrl}`),
+        store,
     })
 
     return matrixClient

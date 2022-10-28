@@ -78,13 +78,31 @@ export class SocialClient implements SocialAPI {
             options?.createOpts
         )
 
+        // Set up Crypto basics
+        await matrixClient.initCrypto()
+        // 
+        matrixClient.setGlobalErrorOnUnknownDevices(false)
+        // Download our keys
+        await matrixClient.downloadKeys([matrixClient.getUserId()!], true)
+        // Verify device if needed
+        const device = matrixClient.getStoredDevice(matrixClient.getUserId()!, matrixClient.getDeviceId());
+        if (device?.isUnverified()) {
+            console.log('MatrixClient: SocialClient: Verifying own device')
+            await matrixClient.setDeviceKnown(matrixClient.getUserId()!, matrixClient.getDeviceId(), true);
+            await matrixClient.setDeviceVerified(matrixClient.getUserId()!, matrixClient.getDeviceId(), true)
+        }
+
         // Listen to initial sync
         const waitForInitialSync = new Promise<void>(resolve => {
-            const resolveOnSync = (state: SyncState) => {
+            const resolveOnSync = async (state: SyncState) => {
                 if (state === 'SYNCING') {
+                    // Upload our keys
+                    console.log('MatrixClient: SocialClient: Uploading keys')
+                    await matrixClient.uploadKeys()
+                    console.log('MatrixClient: SocialClient: Uploaded keys')
                     resolve(void 0)
                     // remove this listener, otherwhise, it'll be listening all the session and calling an invalid function
-                    matrixClient.removeListener(ClientEvent.Sync, resolveOnSync)
+                    matrixClient.removeListener(ClientEvent.Sync, resolveOnSync);
                     return
                 }
             }
@@ -99,6 +117,7 @@ export class SocialClient implements SocialAPI {
 
         // Wait for sync from cache + incremental sync
         await waitForInitialSync
+        console.log('MatrixClient: SocialClient: AWAITED')
 
         // Starting listening to new events after initial sync
         socialClient.listenToEvents()
