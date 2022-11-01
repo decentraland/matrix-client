@@ -64,6 +64,7 @@ export interface SearchChannelsResponse {
 export type CursorOptions = {
     limit?: number // Maximum number of events to keep at once. If more events are retrieved via pagination requests, excess events will be dropped from the other end of the window.
     initialSize?: number
+    isCryptoEnabled?: boolean
 }
 
 export type FriendshipRequest = {
