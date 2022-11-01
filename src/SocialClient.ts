@@ -25,7 +25,7 @@ import { SessionManagementClient } from './SessionManagementClient'
 import { FriendsManagementAPI } from './FriendsManagementAPI'
 import { FriendsManagementClient } from './FriendsManagementClient'
 import { SocialAPI } from './SocialAPI'
-import { login } from './Utils'
+import { login, storeCurrentUserDevice, storeUserAccessToken } from './Utils'
 import { SyncState } from 'matrix-js-sdk/lib/sync'
 import { Room } from 'matrix-js-sdk'
 
@@ -42,8 +42,8 @@ export class SocialClient implements SocialAPI {
     private readonly messaging: MessagingAPI
     // @internal
     private readonly friendsManagement: FriendsManagementAPI
-
-    private constructor(matrixClient: MatrixClient) {
+    
+    private constructor(matrixClient: MatrixClient, readonly isCryptoEnabled: boolean) {
         this.sessionManagement = new SessionManagementClient(matrixClient, this)
         this.friendsManagement = new FriendsManagementClient(matrixClient, this)
         this.messaging = new MessagingClient(matrixClient, this)
@@ -58,7 +58,8 @@ export class SocialClient implements SocialAPI {
         ethAddress: EthAddress,
         timestamp: Timestamp,
         authChain: AuthChain,
-        options?: Partial<ClientLoginOptions> | undefined
+        enableCrypto: boolean,
+        options?: Partial<ClientLoginOptions> | undefined,
     ): Promise<SocialClient> {
         // Destructure options
         const _options: IStartClientOpts = {
@@ -74,32 +75,35 @@ export class SocialClient implements SocialAPI {
             ethAddress,
             timestamp,
             authChain,
+            enableCrypto,
             options?.getLocalStorage,
             options?.createOpts
         )
 
-        // Set up Crypto basics
-        await matrixClient.initCrypto()
-        // 
-        matrixClient.setGlobalErrorOnUnknownDevices(false)
-        // Download our keys
-        await matrixClient.downloadKeys([matrixClient.getUserId()!], true)
-        // Verify device if needed
-        const device = matrixClient.getStoredDevice(matrixClient.getUserId()!, matrixClient.getDeviceId());
-        if (device?.isUnverified()) {
-            console.log('MatrixClient: SocialClient: Verifying own device')
-            await matrixClient.setDeviceKnown(matrixClient.getUserId()!, matrixClient.getDeviceId(), true);
-            await matrixClient.setDeviceVerified(matrixClient.getUserId()!, matrixClient.getDeviceId(), true)
+        if (enableCrypto) {
+            // Set up Crypto basics
+            await matrixClient.initCrypto()
+            matrixClient.setGlobalErrorOnUnknownDevices(false)
+            // Download keys
+            await matrixClient.downloadKeys([matrixClient.getUserId()!], true)
+            // Verify device if needed
+            const device = matrixClient.getStoredDevice(matrixClient.getUserId()!, matrixClient.getDeviceId());
+            if (device?.isUnverified()) {
+                console.log('MatrixClient: SocialClient: Verifying own device')
+                await matrixClient.setDeviceKnown(matrixClient.getUserId()!, matrixClient.getDeviceId(), true);
+                await matrixClient.setDeviceVerified(matrixClient.getUserId()!, matrixClient.getDeviceId(), true)
+            }
         }
+
 
         // Listen to initial sync
         const waitForInitialSync = new Promise<void>(resolve => {
             const resolveOnSync = async (state: SyncState) => {
                 if (state === 'SYNCING') {
-                    // Upload our keys
-                    console.log('MatrixClient: SocialClient: Uploading keys')
-                    await matrixClient.uploadKeys()
-                    console.log('MatrixClient: SocialClient: Uploaded keys')
+                    if (enableCrypto) {
+                        // Upload our keys
+                        await matrixClient.uploadKeys()
+                    }
                     resolve(void 0)
                     // remove this listener, otherwhise, it'll be listening all the session and calling an invalid function
                     matrixClient.removeListener(ClientEvent.Sync, resolveOnSync);
@@ -110,17 +114,26 @@ export class SocialClient implements SocialAPI {
         })
 
         // Create the client before starting the matrix client, so our event hooks can detect all events during the initial sync
-        const socialClient = new SocialClient(matrixClient)
+        const socialClient = new SocialClient(matrixClient, enableCrypto)
 
         // Start the client
         await matrixClient.startClient(_options)
 
         // Wait for sync from cache + incremental sync
         await waitForInitialSync
-        console.log('MatrixClient: SocialClient: AWAITED')
 
         // Starting listening to new events after initial sync
         socialClient.listenToEvents()
+
+        if (enableCrypto) {
+            // Export device in order to store it
+            const device = await matrixClient.exportDevice();
+            storeCurrentUserDevice(ethAddress, device)
+            
+            // Export token in order to store it
+            const accessToken = matrixClient.getAccessToken();
+            storeUserAccessToken(ethAddress, accessToken!)
+        }
 
         return socialClient
     }
@@ -216,21 +229,21 @@ export class SocialClient implements SocialAPI {
         messageId?: MessageId,
         options?: CursorOptions
     ): Promise<ConversationCursor | undefined> {
-        return this.messaging.getCursorOnMessage(conversationId, messageId, options)
+        return this.messaging.getCursorOnMessage(conversationId, messageId, {...options, isCryptoEnabled: this.isCryptoEnabled})
     }
 
     getCursorOnLastRead(
         conversationId: ConversationId,
         options?: CursorOptions
     ): Promise<ConversationCursor | undefined> {
-        return this.messaging.getCursorOnLastRead(conversationId, options)
+        return this.messaging.getCursorOnLastRead(conversationId, {...options, isCryptoEnabled: this.isCryptoEnabled})
     }
 
     getCursorOnLastMessage(
         conversationId: ConversationId,
         options?: CursorOptions
     ): Promise<ConversationCursor | undefined> {
-        return this.messaging.getCursorOnLastMessage(conversationId, options)
+        return this.messaging.getCursorOnLastMessage(conversationId,  {...options, isCryptoEnabled: this.isCryptoEnabled})
     }
 
     createDirectConversation(userId: SocialId): Promise<Conversation> {
