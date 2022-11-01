@@ -7,7 +7,6 @@ import {
     SocialId,
     TextMessage,
     MessageType,
-    MessageStatus,
     MessageId,
     CursorOptions,
     ConversationId,
@@ -21,11 +20,12 @@ import {
 } from './types'
 import {
     findEventInRoom,
-    buildTextMessage,
     getOnlyMessagesSentByMeTimelineSetFromRoom,
     matrixEventToBasicEventInfo,
     getConversationTypeFromRoom,
-    waitSyncToFinish
+    waitSyncToFinish,
+    handleMessage,
+    isRoomEncrypted
 } from './Utils'
 import { ConversationCursor } from './ConversationCursor'
 import { MessagingAPI } from './MessagingAPI'
@@ -36,7 +36,7 @@ import { EventType } from 'matrix-js-sdk/lib/@types/event'
 import { RoomStateEvent } from 'matrix-js-sdk/lib/models/room-state'
 import { Preset, Visibility } from 'matrix-js-sdk/lib/@types/partials'
 import { ICreateRoomOpts } from 'matrix-js-sdk/lib/@types/requests'
-import { CryptoEvent } from 'matrix-js-sdk/lib/crypto'
+import { IRoomTimelineData } from 'matrix-js-sdk'
 
 // TODO: Delete this when matrix-client exports the actual one
 interface IPublicRoomsResponse {
@@ -60,9 +60,17 @@ function validateRegexChannelId(channelId: string) {
 
 const CHANNEL_RESERVED_IDS = ['nearby']
 
+type OnMessageParams = {
+    event: MatrixEvent, 
+    room: Room | undefined, 
+    toStartOfTimeline: boolean | undefined, 
+    data: IRoomTimelineData 
+}
+
 export class MessagingClient implements MessagingAPI {
     private readonly lastSentMessage: Map<ConversationId, BasicMessageInfo> = new Map()
     private static readonly ROOM_CRYPTO_CONFIG = { algorithm: 'm.megolm.v1.aes-sha2' };
+    private readonly encryptedEvents = new Map<string, OnMessageParams>();
 
     // @internal
     constructor(private readonly matrixClient: MatrixClient, private readonly socialClient: SocialClient) {
@@ -76,15 +84,7 @@ export class MessagingClient implements MessagingAPI {
                         const member = room.getMember(this.socialClient.getUserId())
                         return this.joinRoom(member)
                     });
-                const encryptedRoom = rooms.filter(this.isRoomEncrypted)
                 await Promise.all(join)
-                console.log('MatrixClient: once() - encrytedroom: ', encryptedRoom.length)
-                await Promise.all(encryptedRoom.map(room => this.verifyDevices(room)))
-                console.log('MatrixClient: once() - sending shared history keys: ', encryptedRoom.length)
-                await Promise.all(encryptedRoom.map(room => {
-                    matrixClient.sendSharedHistoryKeys(room.roomId, room.getMembers().map(mem => mem.userId))
-                }))
-                console.log('MatrixClient: once() - sent shared history keys: ', encryptedRoom.length)
 
                 // remove this listener, otherwhise, it'll be listening all the session and calling an invalid function
                 matrixClient.removeListener(ClientEvent.Sync, resolveOnSync)
@@ -115,12 +115,6 @@ export class MessagingClient implements MessagingAPI {
                 await waitSyncToFinish(this.matrixClient)
                 await this.joinRoom(member)
             }
-        })
-
-        // Listen to key request room
-        this.matrixClient.on(CryptoEvent.RoomKeyRequest, (event) => {
-            console.log('MatrixClient: Room Key Request - event: ', event);
-            event.share();
         })
     }
 
@@ -245,46 +239,49 @@ export class MessagingClient implements MessagingAPI {
      * Listen to new messages
      */
     onMessage(listener: (conversation: Conversation, message: TextMessage) => void): void {
-        this.matrixClient.on(MatrixEventEvent.Decrypted, (event) => {
-            if (event.isDecryptionFailure()) {
+        this.matrixClient.on(RoomEvent.Timeline, async (event, room, toStartOfTimeline, _, data) => {
+            if (event.isEncrypted()) {
+                // it'll be handled by Decrypted event.
+                // we should handle encrypted message in this way because we are not sure if the client
+                // has all data (like keys) to decrypt the message when the message event turns up.
+                // due to that we should wait for the decryption because the client will be doing some stuff
+                // to get all the necessary data to decrypt the message.
+                console.log('MatrixClient: Event Timeline: Setting event in cache: ', event.getId(), this.encryptedEvents.size)
+                this.encryptedEvents.set(event.getId(), { event, room, toStartOfTimeline, data })
+                console.log('MatrixClient: Event Timeline: Regeetiing event: ', this.encryptedEvents.get(event.getId()), this.encryptedEvents.size)
                 return;
             }
 
-            console.log('MatrixClient: DecryptedEvent: ', event)
+            const result = handleMessage(this.matrixClient, event, room, toStartOfTimeline, data);
+
+            if (!result) return
+
+            listener(result.conversation, result.message)
         })
 
-
-        this.matrixClient.on(RoomEvent.Timeline, async (matrixEvent, room, toStartOfTimeline, _, data) => {
-            if (
-                matrixEvent.getType() !== 'm.room.message' || // Make sure that it is in fact a message
-                matrixEvent.getContent().msgtype !== MessageType.TEXT || // Make sure that the message is of type text
-                matrixEvent.getSender() === this.socialClient.getUserId()
-            ) {
-                console.log('MatrixClient: onMessage() - about to return ', matrixEvent)
-                const event = await this.matrixClient.crypto!.decryptEvent(matrixEvent);
-                console.log('MatrixClient: onMessage() - after decrypting... ', event)
-                // Don't raise an matrixEvent if I was the sender
-                return
+        this.matrixClient.on(MatrixEventEvent.Decrypted, async (event) => {
+            if (event.isDecryptionFailure() || !event.getId()) {
+                return;
             }
 
-            // Ignore anything but real-time updates at the end of the room
-            if (toStartOfTimeline || !data || !data.liveEvent) return
+            console.log('MatrixClient: Trying Getting: ', event, event.getId(), this.encryptedEvents.size)
 
-            // Just listen to the unfiltered timeline, so we don't raise the same message more than once
-            if (data.timeline.getFilter()) return
+            const timelineEvent = this.encryptedEvents.get(event.getId())
 
-            if (!room) return
+            console.log('MatrixClient: Got cached event: ', event.getId(), timelineEvent)
 
-            const conversation = {
-                type: getConversationTypeFromRoom(this.matrixClient, room),
-                id: room.roomId
-            }
+            if (timelineEvent) {
+                const result = handleMessage(this.matrixClient, event, timelineEvent.room, timelineEvent.toStartOfTimeline, timelineEvent.data);
 
-            const message: TextMessage = buildTextMessage(matrixEvent, MessageStatus.UNREAD)
+                console.log('MatrixClient: Result timeline: ', result)
 
-            console.log('MatrixClient: onMessage() - message: ', message)
+                if (!result) return
 
-            listener(conversation, message)
+                this.encryptedEvents.delete(event.getId())
+                listener(result.conversation, result.message)
+            } else {
+                throw new Error('Missing data to display a message')
+            }            
         })
     }
 
@@ -639,15 +636,10 @@ export class MessagingClient implements MessagingAPI {
                 })
                 roomId = creationResult.room_id
                 created = true
-                console.log('MatrixClient: getOrCreateConversation(): Sending State event')
-                await this.matrixClient.sendStateEvent(roomId, 'm.room.encryption', MessagingClient.ROOM_CRYPTO_CONFIG)
-                console.log('MatrixClient: getOrCreateConversation(): Sent State event')
-                console.log('MatrixClient: getOrCreateConversation(): Encrypting room')
-                await this.matrixClient.setRoomEncryption(roomId, MessagingClient.ROOM_CRYPTO_CONFIG)
-                console.log('MatrixClient: getOrCreateConversation(): Encrypted room')
-                console.log('MatrixClient: getOrCreateConversation(): Sending shared keys')
-                await this.matrixClient.sendSharedHistoryKeys(roomId, userIds) // TODO: Send it on init tooo 
-                console.log('MatrixClient: getOrCreateConversation(): Sent shared keys')
+                if (this.socialClient.isCryptoEnabled) {
+                    await this.matrixClient.sendStateEvent(roomId, 'm.room.encryption', MessagingClient.ROOM_CRYPTO_CONFIG)
+                    await this.matrixClient.setRoomEncryption(roomId, MessagingClient.ROOM_CRYPTO_CONFIG)
+                }
             }
         }
 
@@ -675,53 +667,15 @@ export class MessagingClient implements MessagingAPI {
             await this.addDirectRoomToUser(event.getSender(), member.roomId)
         }
         const room  = await this.matrixClient.joinRoom(member.roomId)
-        // if (this.isRoomEncrypted(room)) {
-
-        // }
-        const members = await room.getEncryptionTargetMembers();
-        console.log('MatrixClient: joinRoom() - sharing keys...')
-        await this.matrixClient.sendSharedHistoryKeys(member.roomId, members.map(u => u.userId))
-        console.log('MatrixClient: joinRoom() - shared keys...')
-
-        // if (!room) {
-        //     console.log('MatrixClient: joinRoom() - room was not found through getRoom() - ', member.roomId)
-        //     return;
-        // }
-
-        // if (this.isRoomEncrypted(room)){
-        //     console.log('MatrixClient: joinRoom() - getStateEvents() - encryptEvent')
-        //     console.log('MatrixClient: Encrypting rooom')
-        //     await this.matrixClient.setRoomEncryption(member.roomId, MessagingClient.ROOM_CRYPTO_CONFIG);
-        // }
-    }
-
-    private async verifyDevices(room: Room) {
-        console.log('MatrixClient: veirfyDevices() - Verifying devices...')
-        const e2eMembers = await room.getEncryptionTargetMembers();
-        const devices = await this.matrixClient.downloadKeys(e2eMembers.map((u) => u.userId))
-        for (const member of e2eMembers) {
-            // if (member.userId === this.matrixClient.getUserId()) continue;
-            for (const deviceId in devices[member.userId]) {
-                console.log('MatrixClient: veirfyDevices() - ', member.userId, deviceId, ' verified')
-                await this.matrixClient.setDeviceKnown(member.userId, deviceId, true);
-                await this.matrixClient.setDeviceVerified(member.userId, deviceId, true);
-            }
-            // const devices = this.matrixClient.getStoredDevicesForUser(member.userId);
-            // for (const device of devices) {
-            //     console.log('DEVICE: ', device)
-            //     if(device.isUnverified() || !device.isKnown()) {
-            //         console.log('MatrixClient: veirfyDevices() - ', member.userId, device.deviceId, ' verified')
-            //         await this.matrixClient.setDeviceKnown(member.userId, device.deviceId, true);
-            //         await this.matrixClient.setDeviceVerified(member.userId, device.deviceId, true);
-            //     }
-            // }
+        if (this.socialClient.isCryptoEnabled && isRoomEncrypted(room)) {
+            await this.matrixClient.setRoomEncryption(member.roomId, MessagingClient.ROOM_CRYPTO_CONFIG)
+            const members = (await room.getEncryptionTargetMembers())
+                .filter((member) => member.userId !== this.matrixClient.getUserId())
+                .map((member) => member.userId);
+            await this.matrixClient.sendSharedHistoryKeys(member.roomId, members)
         }
     }
-
-    private isRoomEncrypted(room: Room) {
-        return !!room.currentState.getStateEvents('m.room.encryption', '')
-    }
-
+    
     private buildAliasForConversationWithUsers(userIds: (SocialId | MatrixIdLocalpart)[]): string {
         if (userIds.length < 2) {
             throw new Error('Conversation must have two users or more.')
