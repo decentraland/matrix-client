@@ -11,6 +11,7 @@ import {
     BasicMessageInfo,
     SocialId
 } from './types'
+import { IClearEvent } from 'matrix-js-sdk'
 
 /**
  * This class can be used to navigate a conversation's history. You can load more messages
@@ -21,21 +22,34 @@ export class ConversationCursor {
     private static DEFAULT_INITIAL_SIZE = 20
 
     private constructor(
+        private readonly client: MatrixClient,
         private readonly roomId: string,
         private readonly window: TimelineWindow,
-        private readonly lastReadMessageTimestampFetch: (roomId: string) => BasicMessageInfo | undefined
+        private readonly lastReadMessageTimestampFetch: (roomId: string) => BasicMessageInfo | undefined,
+        private readonly isCryptoEnabled: boolean
     ) {}
 
-    getMessages(): TextMessage[] {
+    async getMessages(): Promise<TextMessage[]> {
         const latestReadTimestamp: Timestamp | undefined = this.lastReadMessageTimestampFetch(this.roomId)?.timestamp
 
         const events = this.window.getEvents()
-        return events.map(event =>
-            buildTextMessage(
-                event,
-                latestReadTimestamp && event.getTs() <= latestReadTimestamp ? MessageStatus.READ : MessageStatus.UNREAD
-            )
-        )
+        const parsedEvents: TextMessage[] = []
+        for (const event of events) {
+            let clearEvent: IClearEvent | undefined;
+            if (this.isCryptoEnabled && event.isEncrypted() && !event.isDecryptionFailure() && !event.getClearContent()) {
+                try {
+                    clearEvent = (await this.client.crypto!.decryptEvent(event)).clearEvent
+                } catch (error) {
+                }
+            }
+            parsedEvents.push(buildTextMessage(
+                event, 
+                latestReadTimestamp && event.getTs() <= latestReadTimestamp ? MessageStatus.READ : MessageStatus.UNREAD, 
+                clearEvent
+            ))
+        }
+
+        return parsedEvents
     }
 
     canExtendInDirection(direction: CursorDirection): boolean {
@@ -100,7 +114,7 @@ export class ConversationCursor {
                 windowSize = window.getEvents().length
             }
 
-            return new ConversationCursor(roomId, window, lastReadMessageTimestampFetch)
+            return new ConversationCursor(client, roomId, window, lastReadMessageTimestampFetch, options?.isCryptoEnabled || false)
         } catch (err) {
             return
         }
