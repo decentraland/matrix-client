@@ -51,7 +51,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Attempt to login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain, opts)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain, true, opts)
 
         await expect(loginResult).to.be.rejected
     })
@@ -62,7 +62,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Attempt to login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain, opts)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain, true, opts)
 
         await expect(loginResult).to.be.rejected
     })
@@ -74,7 +74,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         // Attempt to login
         const now = Date.now()
         const { ethAddress, authChain } = getLoginData(now)
-        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, now - ms('2m'), authChain, opts)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, now - ms('2m'), authChain, true, opts)
 
         await expect(loginResult).to.be.rejected
     })
@@ -86,7 +86,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         // Attempt to login
         const now = Date.now()
         const { ethAddress, authChain } = getLoginData(now)
-        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, now + ms('3m'), authChain, opts)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, now + ms('3m'), authChain, true,  opts)
 
         await expect(loginResult).to.be.rejected
     })
@@ -97,7 +97,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Attempt to login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain.slice(1), opts)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain.slice(1), true, opts)
 
         await expect(loginResult).to.be.rejected
     })
@@ -108,7 +108,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Attempt to login
         const { timestamp, authChain } = getLoginData()
-        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), 'someEthAddress', timestamp, authChain, opts)
+        const loginResult = SocialClient.loginToServer(synapseContainer.getAddress(), 'someEthAddress', timestamp, authChain, true, opts)
 
         await expect(loginResult).to.be.rejected
     })
@@ -119,7 +119,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Login
         const { ethAddress, timestamp, authChain } = getLoginData()
-        const client = await SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain, opts)
+        const client = await SocialClient.loginToServer(synapseContainer.getAddress(), ethAddress, timestamp, authChain, true, opts)
 
         assertLoginWasSuccessful(ethAddress, client)
 
@@ -137,7 +137,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
         // Login
         const { timestamp, authChain } = getLoginData(Date.now(), identity)
 
-        const client = await SocialClient.loginToServer(synapseContainer.getAddress(), identity.address, timestamp, authChain, opts)
+        const client = await SocialClient.loginToServer(synapseContainer.getAddress(), identity.address, timestamp, authChain, true, opts)
 
         // Assert login was successful
         assertLoginWasSuccessful(identity.address, client)
@@ -147,7 +147,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
         // Login again
         const { timestamp: timestamp2, authChain: authChain2 } = getLoginData(Date.now(), identity)
-        const client2 = await SocialClient.loginToServer(synapseContainer.getAddress(), identity.address, timestamp2, authChain2, opts)
+        const client2 = await SocialClient.loginToServer(synapseContainer.getAddress(), identity.address, timestamp2, authChain2, true, opts)
 
         // Assert login was successful
         assertLoginWasSuccessful(identity.address, client2)

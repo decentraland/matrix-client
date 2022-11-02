@@ -28,7 +28,7 @@ const getLocalStorage = () => new LocalStorage('.storage')
 
 export async function loginWithIdentity(serverUrl: string, identity, options?: Partial<ClientLoginOptions>) {
     const { ethAddress, timestamp, authChain } = getDataToLogin(Date.now(), identity)
-    const client = await SocialClient.loginToServer(serverUrl, ethAddress, timestamp, authChain, {
+    const client = await SocialClient.loginToServer(serverUrl, ethAddress, timestamp, authChain, true, {
         ...options,
         getLocalStorage,
         createOpts: {
@@ -39,7 +39,7 @@ export async function loginWithIdentity(serverUrl: string, identity, options?: P
 
 export async function createUser(serverUrl: string, identity): Promise<SocialId> {
     const { ethAddress, timestamp, authChain } = getDataToLogin(Date.now(), identity)
-    const matrixClient = await login(serverUrl, ethAddress, timestamp, authChain, getLocalStorage, {
+    const matrixClient = await login(serverUrl, ethAddress, timestamp, authChain, true, getLocalStorage, {
     })
     const userId = matrixClient.getUserId()
     await matrixClient.logout()
