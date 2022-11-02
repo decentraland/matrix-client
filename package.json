@@ -46,6 +46,7 @@
   "homepage": "https://github.com/decentraland/matrix-client#readme",
   "dependencies": {
     "@dcl/crypto": "^3.0.1",
+    "@matrix-org/olm": "https://gitlab.matrix.org/api/v4/projects/27/packages/npm/@matrix-org/olm/-/@matrix-org/olm-3.2.8.tgz",
     "matrix-js-sdk": "^21.0.0"
   },
   "devDependencies": {

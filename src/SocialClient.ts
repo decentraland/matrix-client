@@ -1,3 +1,5 @@
+globalThis.Olm = require('@matrix-org/olm/olm_legacy');
+
 import { ClientEvent, IStartClientOpts, MatrixClient, PendingEventOrdering } from 'matrix-js-sdk/lib/client'
 import { AuthChain, EthAddress } from '@dcl/crypto'
 import {
