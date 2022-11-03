@@ -172,7 +172,7 @@ export class MessagingClient implements MessagingAPI {
 
     /**
      * Get all conversation with the user's current friends
-     * @return `conversation` & `unreadMessages` boolean that indicates whether the conversation has unread messages.
+     * @returns `conversation` & `unreadMessages` boolean that indicates whether the conversation has unread messages.
      */
     getAllCurrentFriendsConversations(): { conversation: Conversation; unreadMessages: boolean }[] {
         const rooms = this.socialClient.getAllFriendsRooms()

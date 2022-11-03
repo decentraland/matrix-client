@@ -3,6 +3,7 @@ import { SocialId, FriendshipRequest } from './types'
 
 export interface FriendsManagementAPI {
     getAllFriends(): SocialId[]
+    // @internal
     getAllFriendsRooms(): Room[]
     getPendingRequests(): FriendshipRequest[]
     isUserMyFriend(userId: SocialId): boolean
