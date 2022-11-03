@@ -72,6 +72,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             .map(room => room.guessDMUserId())
     }
 
+    // @internal
     getAllFriendsRooms(): Room[] {
         const rooms = this.matrixClient.getVisibleRooms()
         return rooms

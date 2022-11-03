@@ -29,7 +29,7 @@ export interface MessagingAPI {
 
     /**
      * Get all conversation with friends the user has joined
-     * @return `conversation` & `unreadMessages` boolean that indicates whether the conversation has unread messages.
+     * @returns `conversation` & `unreadMessages` boolean that indicates whether the conversation has unread messages.
      */
     getAllCurrentFriendsConversations(): { conversation: Conversation; unreadMessages: boolean }[]
 

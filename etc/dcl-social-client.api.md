@@ -47,7 +47,7 @@ export class ChannelsError extends Error {
 
 // @public (undocumented)
 export type ClientLoginOptions = {
-    pendingEventOrdering: "chronological" | "detached";
+    pendingEventOrdering: 'chronological' | 'detached';
     disablePresence: boolean;
     initialSyncLimit: number;
     getLocalStorage?: () => Storage;
@@ -218,6 +218,11 @@ export class SocialClient implements SocialAPI {
     getAllConversationsWithUnreadMessages(): Conversation[];
     // (undocumented)
     getAllCurrentConversations(): {
+        conversation: Conversation;
+        unreadMessages: boolean;
+    }[];
+    // (undocumented)
+    getAllCurrentFriendsConversations(): {
         conversation: Conversation;
         unreadMessages: boolean;
     }[];

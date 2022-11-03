@@ -231,6 +231,7 @@ export class SocialClient implements SocialAPI {
         return this.friendsManagement.getAllFriends()
     }
 
+    // @internal
     getAllFriendsRooms(): Room[] {
         return this.friendsManagement.getAllFriendsRooms()
     }
