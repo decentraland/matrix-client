@@ -67,7 +67,7 @@ export class MessagingClient implements MessagingAPI {
         // Listen to when the sync is finishes, and join all rooms I was invited to
         const resolveOnSync = async (state: SyncState) => {
             if (state === 'SYNCING') {
-                const members = []
+                const members: RoomMember[] = []
                 const rooms = this.getAllRooms()
                 const join: Promise<void>[] = rooms
                     .filter(room => room.getMyMembership() === 'invite') // Consider rooms that I have been invited to
@@ -705,8 +705,6 @@ export class MessagingClient implements MessagingAPI {
                 }
             }
         })
-
-        console.log(`JULIETA addDirectRoomToUser - setAccountData directRoomMap: ${JSON.stringify(directRoomMap)}`)
 
         await this.matrixClient.setAccountData('m.direct', directRoomMap)
     }
