@@ -110,7 +110,7 @@ export class MessagingClient implements MessagingAPI {
         this.matrixClient.on(RoomMemberEvent.Membership, async (_, member) => {
             if (member.membership === 'invite' && member.userId === this.socialClient.getUserId()) {
                 await waitSyncToFinish(this.matrixClient)
-                //TODO JULI:
+
                 await this.addDirectRoomsToUser([member])
 
                 await this.joinRoom(member)
@@ -400,10 +400,11 @@ export class MessagingClient implements MessagingAPI {
     /** Get or create a direct conversation with the given user */
     async createDirectConversation(userId: SocialId): Promise<Conversation> {
         const { conversation, created } = await this.getOrCreateConversation(ConversationType.DIRECT, [userId])
-        // TODO JULI!
+
         if (created) {
             await this.addDirectRoomToUser(userId, conversation.id)
         }
+
         return conversation
     }
 
@@ -634,11 +635,11 @@ export class MessagingClient implements MessagingAPI {
         return this.getAllRooms().filter(room => room.getCanonicalAlias() === alias)[0]
     }
 
-    // TODO JULI!
     private async joinRoom(member: RoomMember | null): Promise<void> {
         if (!member) {
             return
         }
+
         await this.matrixClient.joinRoom(member.roomId)
     }
 
@@ -687,7 +688,6 @@ export class MessagingClient implements MessagingAPI {
         await this.matrixClient.setAccountData('m.direct', directRoomMap)
     }
 
-    // TODO JULI!
     private async addDirectRoomsToUser(members: RoomMember[]): Promise<void> {
         // The documentation specifies that we should store a map from user to direct rooms in the 'm.direct' event
         // However, we only support having one direct room to each user, so the list will only have one element
