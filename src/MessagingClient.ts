@@ -74,7 +74,7 @@ export class MessagingClient implements MessagingAPI {
                     .map(room => {
                         const member = room.getMember(this.socialClient.getUserId())
                         if (member) {
-                            members.push()
+                            members.push(member)
                         }
                         return this.joinRoom(member)
                     })
