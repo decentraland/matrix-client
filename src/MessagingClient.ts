@@ -67,14 +67,22 @@ export class MessagingClient implements MessagingAPI {
         // Listen to when the sync is finishes, and join all rooms I was invited to
         const resolveOnSync = async (state: SyncState) => {
             if (state === 'SYNCING') {
+                const members: RoomMember[] = []
                 const rooms = this.getAllRooms()
                 const join: Promise<void>[] = rooms
                     .filter(room => room.getMyMembership() === 'invite') // Consider rooms that I have been invited to
                     .map(room => {
                         const member = room.getMember(this.socialClient.getUserId())
+                        if (member) {
+                            members.push(member)
+                        }
                         return this.joinRoom(member)
                     })
+
+                await this.addDirectRoomsToUser(members)
+
                 await Promise.all(join)
+
                 // remove this listener, otherwhise, it'll be listening all the session and calling an invalid function
                 matrixClient.removeListener(ClientEvent.Sync, resolveOnSync)
             }
@@ -102,6 +110,9 @@ export class MessagingClient implements MessagingAPI {
         this.matrixClient.on(RoomMemberEvent.Membership, async (_, member) => {
             if (member.membership === 'invite' && member.userId === this.socialClient.getUserId()) {
                 await waitSyncToFinish(this.matrixClient)
+
+                await this.addDirectRoomsToUser([member])
+
                 await this.joinRoom(member)
             }
         })
@@ -389,9 +400,11 @@ export class MessagingClient implements MessagingAPI {
     /** Get or create a direct conversation with the given user */
     async createDirectConversation(userId: SocialId): Promise<Conversation> {
         const { conversation, created } = await this.getOrCreateConversation(ConversationType.DIRECT, [userId])
+
         if (created) {
             await this.addDirectRoomToUser(userId, conversation.id)
         }
+
         return conversation
     }
 
@@ -626,12 +639,7 @@ export class MessagingClient implements MessagingAPI {
         if (!member) {
             return
         }
-        const event = member.events.member
-        const memberContent = event?.getContent()
-        const isDirect = memberContent?.membership === 'invite' && memberContent?.is_direct
-        if (event && isDirect) {
-            await this.addDirectRoomToUser(event.getSender(), member.roomId)
-        }
+
         await this.matrixClient.joinRoom(member.roomId)
     }
 
@@ -673,8 +681,31 @@ export class MessagingClient implements MessagingAPI {
         // However, we only support having one direct room to each user, so the list will only have one element
         const mDirectEvent = this.matrixClient.getAccountData('m.direct')
         const directRoomMap = mDirectEvent ? mDirectEvent.getContent() : {}
+
         if (directRoomMap[userId]?.includes(roomId)) return
+
         directRoomMap[userId] = [roomId]
+        await this.matrixClient.setAccountData('m.direct', directRoomMap)
+    }
+
+    private async addDirectRoomsToUser(members: RoomMember[]): Promise<void> {
+        // The documentation specifies that we should store a map from user to direct rooms in the 'm.direct' event
+        // However, we only support having one direct room to each user, so the list will only have one element
+        const mDirectEvent = this.matrixClient.getAccountData('m.direct')
+        const directRoomMap = mDirectEvent ? mDirectEvent.getContent() : {}
+
+        members.map(member => {
+            const event = member.events.member
+            const memberContent = event?.getContent()
+            const isDirect = memberContent?.membership === 'invite' && memberContent?.is_direct
+            if (event && isDirect) {
+                const userId = event.getSender()
+                if (!directRoomMap[userId]?.includes(member.roomId)) {
+                    directRoomMap[userId] = [member.roomId]
+                }
+            }
+        })
+
         await this.matrixClient.setAccountData('m.direct', directRoomMap)
     }
 

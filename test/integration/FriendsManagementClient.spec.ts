@@ -11,6 +11,7 @@ globalThis.global = globalThis as any
 chai.use(sinonChai)
 const expect = chai.expect
 
+// TODO: We should add a test for the concurrent update errors #97
 describe('Integration - Friends Management Client', () => {
 
     const testEnv: TestEnvironment = loadTestEnvironment()

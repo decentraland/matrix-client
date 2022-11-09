@@ -39,6 +39,7 @@ export interface MessagingAPI {
     getProfileInfo(userId: string): Promise<ProfileInfo>
 
     getMemberInfo(roomId: string, userId: string): ProfileInfo
+
     /**
      * Send a text message  to a conversation.
      * Returns the message id
