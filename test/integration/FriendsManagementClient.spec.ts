@@ -1,4 +1,3 @@
-
 import chai from 'chai'
 import sinonChai from 'sinon-chai'
 import sinon from 'sinon'
@@ -13,7 +12,6 @@ const expect = chai.expect
 
 // TODO: We should add a test for the concurrent update errors #97
 describe('Integration - Friends Management Client', () => {
-
     const testEnv: TestEnvironment = loadTestEnvironment()
 
     it(`When a friendship request is sent, then the other user listens to the event, and both see the pending request`, async () => {
@@ -43,6 +41,39 @@ describe('Integration - Friends Management Client', () => {
         // Check that they both see the request, but that they are not friends yet
         assertPendingRequest(client1, client2)
         assertNoFriends(client1, client2)
+    })
+
+    it(`When a friendship request with a message is sent, then the other user listens to the event, and both see the pending request`, async () => {
+        const client1 = await testEnv.getRandomClient()
+        const client2 = await testEnv.getRandomClient()
+
+        // Set listeners
+        const spy1 = sinon.spy()
+        const spy2 = sinon.spy()
+        client1.onFriendshipRequest(spy1)
+        client2.onFriendshipRequest(spy2)
+
+        // Check that neither of the clients report having friendship requests
+        assertNoPendingRequests(client1, client2)
+        assertNoFriends(client1, client2)
+
+        // Ask for friendship
+        const message = 'hey Pizark, I would love to get in touch with you.'
+        await client1.addAsFriend(client2.getUserId(), message)
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that only client 2 received the request event
+        expect(spy1).to.not.have.been.called
+        assertEventWasReceived(spy2, client1)
+
+        // Check that they both see the request, but that they are not friends yet
+        assertPendingRequest(client1, client2)
+        assertNoFriends(client1, client2)
+
+        // Check message
+        assertMessageFromPendingRequest(client1, client2, message)
     })
 
     it(`When a friendship request is canceled, then the other user listens to the cancellation event and both stop seeing the pending request`, async () => {
@@ -225,14 +256,15 @@ describe('Integration - Friends Management Client', () => {
         expect(fromPendingRequests.length).to.equal(1)
         expect(toPendingRequests.length).to.equal(1)
 
-        const [ fromPendingRequest ] = fromPendingRequests
-        const [ toPendingRequest ] = toPendingRequests
+        const [fromPendingRequest] = fromPendingRequests
+        const [toPendingRequest] = toPendingRequests
 
         expect(fromPendingRequest.from).to.equal(toPendingRequest.from)
         expect(fromPendingRequest.to).to.equal(toPendingRequest.to)
         expect(fromPendingRequest.to).to.equal(to.getUserId())
         expect(fromPendingRequest.createdAt).not.to.equal(null)
         expect(typeof fromPendingRequest.createdAt).to.equal(typeof 1)
+        expect(fromPendingRequest.message).to.equal(toPendingRequest.message)
     }
 
     function assertNoPendingRequests(...clients: SocialClient[]): void {
@@ -267,4 +299,14 @@ describe('Integration - Friends Management Client', () => {
         expect(sender).to.equal(expectedSender.getUserId())
     }
 
+    function assertMessageFromPendingRequest(from: SocialClient, to: SocialClient, message?: string) {
+        const fromPendingRequests = from.getPendingRequests()
+        const toPendingRequests = to.getPendingRequests()
+
+        const [fromPendingRequest] = fromPendingRequests
+        const [toPendingRequest] = toPendingRequests
+
+        expect(fromPendingRequest.message).to.equal(toPendingRequest.message)
+        expect(fromPendingRequest.message).to.equal(message)
+    }
 })
