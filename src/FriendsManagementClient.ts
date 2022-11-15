@@ -88,10 +88,22 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             .filter(([, status]) => FriendsManagementClient.PENDING_STATUSES.includes(status))
             .map(([room, status]) => {
                 const other = room.guessDMUserId()
+                const event = getLastFriendshipEventInRoom(room)
+                const message: string | undefined = event?.getContent().message
                 if (status === FriendshipStatus.REQUEST_SENT_BY_ME_PENDING) {
-                    return { from: this.socialClient.getUserId(), to: other, createdAt: room.timeline[0].getTs() }
+                    return {
+                        from: this.socialClient.getUserId(),
+                        to: other,
+                        createdAt: room.timeline[0].getTs(),
+                        message
+                    }
                 } else {
-                    return { to: this.socialClient.getUserId(), from: other, createdAt: room.timeline[0].getTs() }
+                    return {
+                        to: this.socialClient.getUserId(),
+                        from: other,
+                        createdAt: room.timeline[0].getTs(),
+                        message
+                    }
                 }
             })
     }
