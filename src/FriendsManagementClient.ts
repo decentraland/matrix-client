@@ -101,12 +101,12 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return friends.includes(userId)
     }
 
-    async addAsFriend(userId: SocialId): Promise<void> {
+    async addAsFriend(userId: SocialId, message?: string): Promise<void> {
         return this.actByStatus(
             userId,
             // Send request
             this.action(FriendshipStatus.NOT_FRIENDS, userId =>
-                this.sendFriendshipEvent(FriendshipEvent.REQUEST, userId)
+                this.sendFriendshipEvent(FriendshipEvent.REQUEST, userId, message)
             ),
 
             // Approve friendship
@@ -154,7 +154,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         )
     }
 
-    onFriendshipRequest(listener: (requestedBy: SocialId) => void): void {
+    onFriendshipRequest(listener: (requestedBy: SocialId, message?: string) => void): void {
         return this.listenToEvent(FriendshipEvent.REQUEST, listener)
     }
 
@@ -174,7 +174,10 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return this.listenToEvent(FriendshipEvent.DELETE, listener)
     }
 
-    private listenToEvent(eventToListenTo: FriendshipEvent, listener: (from: SocialId) => void): void {
+    private listenToEvent(
+        eventToListenTo: FriendshipEvent,
+        listener: (from: SocialId, message?: string) => void
+    ): void {
         this.matrixClient.on(RoomEvent.Timeline, async (event, _, toStartOfTimeline, __, data) => {
             // wait for sync to store changes in memory before processing the event
             await waitSyncToFinish(this.matrixClient)
@@ -186,17 +189,17 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             if (data.timeline.getFilter()) return
 
             if (event.getType() === FRIENDSHIP_EVENT_TYPE && event.getStateKey() === '') {
-                const { type } = event.getContent()
+                const { type, message } = event.getContent()
                 if (type === eventToListenTo && event.getSender() !== this.socialClient.getUserId()) {
-                    listener(event.getSender())
+                    listener(event.getSender(), message)
                 }
             }
         })
     }
 
-    private async sendFriendshipEvent(event: FriendshipEvent, otherUser: SocialId): Promise<void> {
+    private async sendFriendshipEvent(event: FriendshipEvent, otherUser: SocialId, message?: string): Promise<void> {
         const { id: roomId } = await this.socialClient.createDirectConversation(otherUser)
-        const content = { type: event }
+        const content = { type: event, message }
         await this.matrixClient.sendStateEvent(roomId, FRIENDSHIP_EVENT_TYPE, content, '')
         await this.matrixClient.sendStateEvent(roomId, FRIENDSHIP_EVENT_TYPE, content, this.socialClient.getUserId())
     }
