@@ -89,7 +89,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             .map(([room, status]) => {
                 const other = room.guessDMUserId()
                 const event = getLastFriendshipEventInRoom(room)
-                const message: string | undefined = event?.getContent().message
+                const message: string | undefined = event?.getContent().message //
                 if (status === FriendshipStatus.REQUEST_SENT_BY_ME_PENDING) {
                     return {
                         from: this.socialClient.getUserId(),
