@@ -446,9 +446,22 @@ export class MessagingClient implements MessagingAPI {
         }
     }
 
-    /** Join a channel */
+    /**
+     * Join a channel
+     * @param roomIdOrChannelAlias the room id or name of the channel.
+     */
     async joinChannel(roomIdOrChannelAlias: string): Promise<void> {
         try {
+            // The doc says you can pass the room ID or room alias to join, but that's not true -.-
+            // Technically we can validate if we have received a name with the regular expression
+            const isAlias = validateRegexChannelId(roomIdOrChannelAlias)
+            if (isAlias) {
+                const room = await this.getChannelByName(roomIdOrChannelAlias)
+                if (!room) {
+                    throw new ChannelsError(ChannelErrorKind.JOIN)
+                }
+                roomIdOrChannelAlias = room.id
+            }
             await this.matrixClient.joinRoom(roomIdOrChannelAlias)
         } catch (error) {
             throw new ChannelsError(ChannelErrorKind.JOIN)
