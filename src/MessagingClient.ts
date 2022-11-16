@@ -456,11 +456,7 @@ export class MessagingClient implements MessagingAPI {
             // Technically we can validate if we have received a name with the regular expression
             const isAlias = validateRegexChannelId(roomIdOrChannelAlias)
             if (isAlias) {
-                const room = await this.getChannelByName(roomIdOrChannelAlias)
-                if (!room) {
-                    throw new ChannelsError(ChannelErrorKind.JOIN)
-                }
-                roomIdOrChannelAlias = room.id
+                roomIdOrChannelAlias = `#${roomIdOrChannelAlias}:${this.matrixClient.getDomain()}`
             }
             await this.matrixClient.joinRoom(roomIdOrChannelAlias)
         } catch (error) {
