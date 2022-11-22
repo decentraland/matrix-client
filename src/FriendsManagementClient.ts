@@ -113,7 +113,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return friends.includes(userId)
     }
 
-    async addAsFriend(userId: SocialId, message?: string): Promise<void> {
+    async addAsFriend(userId: SocialId, message?: string | undefined): Promise<void> {
         return this.actByStatus(
             userId,
             // Send request
