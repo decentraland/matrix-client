@@ -448,7 +448,7 @@ export class MessagingClient implements MessagingAPI {
 
     /**
      * Join a channel
-     * @param roomIdOrChannelAlias the room id (`!channel-name:domain`) or name of the channel (`channel-name`).
+     * @param roomIdOrChannelAlias - the room id (`!channel-name:domain`) or name of the channel (`channel-name`).
      */
     async joinChannel(roomIdOrChannelAlias: string): Promise<void> {
         try {

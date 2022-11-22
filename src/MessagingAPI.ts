@@ -124,7 +124,7 @@ export interface MessagingAPI {
 
     /**
      * Join a channel
-     * @param roomIdOrChannelAlias the room id (`!channel-name:domain`) or name of the channel (`channel-name`).
+     * @param roomIdOrChannelAlias - the room id (`!channel-name:domain`) or name of the channel (`channel-name`).
      */
     joinChannel(roomIdOrChannelAlias: string): Promise<void>
 
