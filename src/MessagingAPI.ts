@@ -122,7 +122,10 @@ export interface MessagingAPI {
      */
     getChannelByName(alias: string): Promise<Conversation | undefined>
 
-    /** Join a channel */
+    /**
+     * Join a channel
+     * @param roomIdOrChannelAlias - the room id (`!channel-name:domain`) or name of the channel (`channel-name`).
+     */
     joinChannel(roomIdOrChannelAlias: string): Promise<void>
 
     /** Leave a channel */
