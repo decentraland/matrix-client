@@ -169,7 +169,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         )
     }
 
-    onFriendshipRequest(listener: (requestedBy: SocialId, message?: string) => void): void {
+    onFriendshipRequest(listener: (requestedBy: SocialId, message?: string | undefined) => void): void {
         return this.listenToEvent(FriendshipEvent.REQUEST, listener)
     }
 

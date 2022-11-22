@@ -204,7 +204,7 @@ export interface SocialAPI extends FriendsManagementAPI, MessagingAPI, SessionMa
 // @public (undocumented)
 export class SocialClient implements SocialAPI {
     // (undocumented)
-    addAsFriend(userId: SocialId, message?: string): Promise<void>;
+    addAsFriend(userId: SocialId, message?: string | undefined): Promise<void>;
     // (undocumented)
     approveFriendshipRequestFrom(userId: SocialId): Promise<void>;
     // (undocumented)
@@ -284,7 +284,7 @@ export class SocialClient implements SocialAPI {
     // (undocumented)
     onFriendshipDeletion(listener: (deletedBy: SocialId) => void): void;
     // (undocumented)
-    onFriendshipRequest(listener: (requestedBy: SocialId, message?: string) => void): void;
+    onFriendshipRequest(listener: (requestedBy: SocialId, message?: string | undefined) => void): void;
     // (undocumented)
     onFriendshipRequestApproval(listener: (approvedBy: SocialId) => void): void;
     // (undocumented)
