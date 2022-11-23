@@ -70,6 +70,7 @@ export type FriendshipRequest = {
     from: SocialId
     to: SocialId
     createdAt: number
+    message?: string
 }
 
 export type UpdateUserStatus = {

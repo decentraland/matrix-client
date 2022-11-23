@@ -244,8 +244,8 @@ export class SocialClient implements SocialAPI {
         return this.friendsManagement.isUserMyFriend(userId)
     }
 
-    addAsFriend(userId: SocialId): Promise<void> {
-        return this.friendsManagement.addAsFriend(userId)
+    addAsFriend(userId: SocialId, message?: string | undefined): Promise<void> {
+        return this.friendsManagement.addAsFriend(userId, message)
     }
 
     deleteFriendshipWith(userId: SocialId): Promise<void> {
@@ -264,7 +264,7 @@ export class SocialClient implements SocialAPI {
         return this.friendsManagement.cancelFriendshipRequestTo(userId)
     }
 
-    onFriendshipRequest(listener: (requestedBy: SocialId) => void): void {
+    onFriendshipRequest(listener: (requestedBy: SocialId, message?: string | undefined) => void): void {
         return this.friendsManagement.onFriendshipRequest(listener)
     }
 
