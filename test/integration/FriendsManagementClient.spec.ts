@@ -43,7 +43,7 @@ describe('Integration - Friends Management Client', () => {
         assertNoFriends(client1, client2)
     })
 
-    it(`When a friendship request with a message is sent, then the other user listens to the event, and both see the pending request`, async () => {
+    it(`When a friendship request is sent with a message, the other user listens to the event and both see the pending request with the message`, async () => {
         const client1 = await testEnv.getRandomClient()
         const client2 = await testEnv.getRandomClient()
 
@@ -74,6 +74,58 @@ describe('Integration - Friends Management Client', () => {
 
         // Check message
         assertMessageFromPendingRequest(client1, client2, message)
+    })
+
+    it(`When a friendship request is sent with a message, the request is rejected and then sent again, but this time without a message.`, async () => {
+        const client1 = await testEnv.getRandomClient()
+        const client2 = await testEnv.getRandomClient()
+
+        // Set listeners
+        const spy1 = sinon.spy()
+        const spy2 = sinon.spy()
+        client1.onFriendshipRequest(spy1)
+        client2.onFriendshipRequest(spy2)
+
+        // Check that neither of the clients report having friendship requests
+        assertNoPendingRequests(client1, client2)
+        assertNoFriends(client1, client2)
+
+        // Ask for friendship
+        const message = 'hey Pizark, I would love to get in touch with you.'
+        await client1.addAsFriend(client2.getUserId(), message)
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Assert that only client 2 received the request event
+        expect(spy1).to.not.have.been.called
+        assertEventWasReceived(spy2, client1)
+
+        // Check that they both see the request, but that they are not friends yet
+        assertPendingRequest(client1, client2)
+        assertNoFriends(client1, client2)
+
+        // Check message
+        assertMessageFromPendingRequest(client1, client2, message)
+
+        // Reject friendship
+        client2.rejectFriendshipRequestFrom(client1.getUserId())
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Check that neither of the clients report having friendship requests
+        assertNoPendingRequests(client1, client2)
+        assertNoFriends(client1, client2)
+
+        // Ask for friendship
+        await client1.addAsFriend(client2.getUserId())
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Check message
+        assertMessageFromPendingRequest(client1, client2, undefined)
     })
 
     it(`When a friendship request is canceled, then the other user listens to the cancellation event and both stop seeing the pending request`, async () => {
