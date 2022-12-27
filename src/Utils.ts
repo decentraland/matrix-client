@@ -97,22 +97,12 @@ export function findEventInRoom(client: MatrixClient, roomId: string, eventId: s
 
 // @internal
 export function buildTextMessage(event: MatrixEvent, status: MessageStatus): TextMessage {
-    if (event.event.type === 'org.decentraland.friendship') {
-        return {
-            text: event.getContent().message,
-            timestamp: event.getTs(),
-            sender: event.getSender(),
-            status: status,
-            id: event.getId()
-        }
-    } else {
-        return {
-            text: event.getContent().body,
-            timestamp: event.getTs(),
-            sender: event.getSender(),
-            status: status,
-            id: event.getId()
-        }
+    return {
+        text: event.getContent().body,
+        timestamp: event.getTs(),
+        sender: event.getSender(),
+        status: status,
+        id: event.getId()
     }
 }
 

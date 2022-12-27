@@ -92,7 +92,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
                 // we ask for the friendship event of the requester
                 const key = sentByMe ? this.socialClient.getUserId() : other
                 const event = getLastFriendshipEventInRoom(room, key)
-                const message: string | undefined = event?.getContent().message
+                const message: string | undefined = event?.getContent().body
                 if (sentByMe) {
                     return {
                         from: this.socialClient.getUserId(),
@@ -204,9 +204,9 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             if (data.timeline.getFilter()) return
 
             if (event.getType() === FRIENDSHIP_EVENT_TYPE && event.getStateKey() === '') {
-                const { type, message } = event.getContent()
+                const { type, body } = event.getContent()
                 if (type === eventToListenTo && event.getSender() !== this.socialClient.getUserId()) {
-                    listener(event.getSender(), message)
+                    listener(event.getSender(), body)
                 }
             }
         })
@@ -214,7 +214,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
 
     private async sendFriendshipEvent(event: FriendshipEvent, otherUser: SocialId, message?: string): Promise<void> {
         const { id: roomId } = await this.socialClient.createDirectConversation(otherUser)
-        const content = { type: event, message }
+        const content = { type: event, body: message }
         await this.matrixClient.sendStateEvent(roomId, FRIENDSHIP_EVENT_TYPE, content, '')
         await this.matrixClient.sendStateEvent(roomId, FRIENDSHIP_EVENT_TYPE, content, this.socialClient.getUserId())
     }
