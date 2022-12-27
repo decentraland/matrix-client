@@ -341,7 +341,7 @@ describe('Integration - Conversation cursor', () => {
         // Get conversation
         const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
 
-        // Send messages
+        // Send messages from Message #2 to Message #5
         await sendMessages(sender, conversationId, 2, 5)
 
         // Wait for sync
@@ -371,7 +371,7 @@ describe('Integration - Conversation cursor', () => {
         // Make sure we read all the expected messages
         expect(messages.length).to.be.equal(6)
         expect(lastRequestMesssage.length).to.be.equal(1)
-        assertMessagesAre(messages, 0, 5)
+        assertMessagesAre(messages, 1, 6) // Assert sent messages from Message #1 to Message #6
     })
 
     function assertMessagesStatusIs(messages: TextMessage[], from: number, to: number, expectedStatus: MessageStatus) {
