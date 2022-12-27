@@ -327,7 +327,7 @@ describe('Integration - Conversation cursor', () => {
         expect(requestMesssageYes.length).to.be.equal(1)
     })
 
-    it(`When the cursor is used, the reported messages are as expected, including the message sent in the request event`, async () => {
+    it(`When a cursor is used, the reported messages are as expected, including the message sent in the second request event that comes after any pre-existing messages`, async () => {
         const sender = await testEnv.getRandomClient()
         const receiver = await testEnv.getRandomClient()
 
