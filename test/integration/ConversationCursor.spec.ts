@@ -1,4 +1,3 @@
-
 import chai from 'chai'
 import { SocialClient } from '../../src/SocialClient'
 import { TextMessage, MessageStatus, CursorDirection, ConversationId } from '../../src/types'
@@ -10,7 +9,6 @@ globalThis.global = globalThis as any
 const expect = chai.expect
 
 describe('Integration - Conversation cursor', () => {
-
     const testEnv: TestEnvironment = loadTestEnvironment()
 
     it(`When using a cursor on a specific message, the reported messages are the expected`, async () => {
@@ -252,6 +250,83 @@ describe('Integration - Conversation cursor', () => {
         assertMessagesAre(cursor.getMessages(), 5, 14)
     })
 
+    it.only(`When using a cursor, the reported messages are the expected including the one sent in the request event`, async () => {
+        const sender = await testEnv.getRandomClient()
+        const receiver = await testEnv.getRandomClient()
+
+        // Ask for friendship
+        const message = 'hey Pizark, I would love to get in touch with you.'
+        await sender.addAsFriend(receiver.getUserId(), message)
+
+        // Approve friendship
+        receiver.approveFriendshipRequestFrom(sender.getUserId())
+
+        // Get conversation
+        const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
+
+        // Send messages
+        await sendMessages(sender, conversationId, 0, 4)
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Get cursor on last message
+        const cursor = await receiver.getCursorOnLastMessage(conversationId)
+
+        if (!cursor) return
+
+        // Read the messages
+        const messages = cursor.getMessages()
+        const requestMesssage = messages.filter(msg => msg.text.includes(message))
+
+        // Make sure we read all the expected messages
+        expect(messages.length).to.be.equal(5)
+        expect(requestMesssage.length).to.be.equal(1)
+    })
+
+    it.only(`When using a cursor, the reported messages are the expected including the one sent in the request event`, async () => {
+        const sender = await testEnv.getRandomClient()
+        const receiver = await testEnv.getRandomClient()
+
+        // Ask for friendship
+        const message = 'hey Martha, I would love to get in touch with you.'
+        await sender.addAsFriend(receiver.getUserId(), message)
+
+        // Approve friendship
+        receiver.approveFriendshipRequestFrom(sender.getUserId())
+
+        // Get conversation
+        const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
+
+        // Send messages
+        await sendMessages(sender, conversationId, 0, 4)
+
+        // Wait for sync
+        await sleep('1s')
+
+        // Get cursor on last message
+        const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 3, limit: 3 })
+
+        if (!cursor) return
+
+        // Read the messages
+        const firstPage = cursor.getMessages()
+        const requestMesssageNo = firstPage.filter(msg => msg.text.includes(message))
+
+        // Make sure we read the expected messages
+        expect(firstPage.length).to.be.equal(3)
+        expect(requestMesssageNo.length).to.be.equal(0)
+
+        // Move the cursor backwards
+        await cursor.moveInDirection(CursorDirection.BACKWARDS, 10)
+        const secondPage = cursor.getMessages()
+        const requestMesssageYes = secondPage.filter(msg => msg.text.includes(message))
+
+        // Make sure we read all the expected messages
+        expect(secondPage.length).to.be.equal(3)
+        expect(requestMesssageYes.length).to.be.equal(1)
+    })
+
     function assertMessagesStatusIs(messages: TextMessage[], from: number, to: number, expectedStatus: MessageStatus) {
         for (let i = from; i <= to; i++) {
             expect(messages[i].status).to.equal(expectedStatus)
@@ -269,10 +344,14 @@ describe('Integration - Conversation cursor', () => {
         return `Message #${index}`
     }
 
-    async function sendMessages(sender: SocialClient, conversationId: ConversationId, from: number, amount: number): Promise<void> {
+    async function sendMessages(
+        sender: SocialClient,
+        conversationId: ConversationId,
+        from: number,
+        amount: number
+    ): Promise<void> {
         for (let i = 0; i < amount; i++) {
             await sender.sendMessageTo(conversationId, getMessageTextForIndex(from + i))
         }
     }
-
 })

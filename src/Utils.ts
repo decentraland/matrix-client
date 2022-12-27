@@ -97,12 +97,22 @@ export function findEventInRoom(client: MatrixClient, roomId: string, eventId: s
 
 // @internal
 export function buildTextMessage(event: MatrixEvent, status: MessageStatus): TextMessage {
-    return {
-        text: event.getContent().body,
-        timestamp: event.getTs(),
-        sender: event.getSender(),
-        status: status,
-        id: event.getId()
+    if (event.event.type === 'org.decentraland.friendship') {
+        return {
+            text: event.getContent().message,
+            timestamp: event.getTs(),
+            sender: event.getSender(),
+            status: status,
+            id: event.getId()
+        }
+    } else {
+        return {
+            text: event.getContent().body,
+            timestamp: event.getTs(),
+            sender: event.getSender(),
+            status: status,
+            id: event.getId()
+        }
     }
 }
 
@@ -164,6 +174,12 @@ export function getOnlyMessagesSentByMeTimelineSetFromRoom(client: SocialClient,
 }
 
 // @internal
+export function getMessagesAndFriendshipEventsTimelineSetFromRoom(userId: SocialId, room: Room, limit?: number) {
+    const filter = GET_MESSAGES_AND_FRIENDSHIP_EVENTS_FILTER(userId, limit)
+    return room?.getOrCreateFilteredTimelineSet(filter)
+}
+
+// @internal
 export function matrixEventToBasicEventInfo(event: MatrixEvent): BasicMessageInfo {
     return { id: event.getId(), timestamp: event.getTs() }
 }
@@ -191,6 +207,16 @@ const GET_ONLY_MESSAGES_SENT_BY_ME_FILTER = (userId: SocialId, limit?: number) =
                 limit: limit ?? 30,
                 senders: [userId],
                 types: ['m.room.message']
+            }
+        }
+    })
+
+const GET_MESSAGES_AND_FRIENDSHIP_EVENTS_FILTER = (userId: SocialId, limit?: number) =>
+    Filter.fromJson(userId, 'ONLY_FRIENDSHIP_EVENTS_FILTER', {
+        room: {
+            timeline: {
+                limit: limit ?? 30,
+                types: ['m.room.message', 'org.decentraland.friendship']
             }
         }
     })
