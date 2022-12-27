@@ -327,53 +327,6 @@ describe('Integration - Conversation cursor', () => {
         expect(requestMesssageYes.length).to.be.equal(1)
     })
 
-    it(`When a cursor is used, the reported messages are as expected, including the message sent in the second request event that comes after any pre-existing messages`, async () => {
-        const sender = await testEnv.getRandomClient()
-        const receiver = await testEnv.getRandomClient()
-
-        // Ask for friendship
-        const message = 'Message #1'
-        await sender.addAsFriend(receiver.getUserId(), message)
-
-        // Approve friendship
-        receiver.approveFriendshipRequestFrom(sender.getUserId())
-
-        // Get conversation
-        const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
-
-        // Send messages from Message #2 to Message #5
-        await sendMessages(sender, conversationId, 2, 5)
-
-        // Wait for sync
-        await sleep('1s')
-
-        // Detele friendship
-        receiver.deleteFriendshipWith(sender.getUserId())
-
-        // Wait for sync
-        await sleep('1s')
-
-        // Ask for friendship again
-        const messageAfterDelete = 'Message #6'
-        await sender.addAsFriend(receiver.getUserId(), messageAfterDelete)
-
-        // Approve friendship
-        receiver.approveFriendshipRequestFrom(sender.getUserId())
-
-        // Get cursor on last message
-        const cursor = await receiver.getCursorOnLastMessage(conversationId)
-        if (!cursor) return
-
-        // Read the messages
-        const messages = cursor.getMessages()
-        const lastRequestMesssage = messages.filter(msg => msg.text.includes(messageAfterDelete))
-
-        // Make sure we read all the expected messages
-        expect(messages.length).to.be.equal(6)
-        expect(lastRequestMesssage.length).to.be.equal(1)
-        assertMessagesAre(messages, 1, 6) // Assert sent messages from Message #1 to Message #6
-    })
-
     function assertMessagesStatusIs(messages: TextMessage[], from: number, to: number, expectedStatus: MessageStatus) {
         for (let i = from; i <= to; i++) {
             expect(messages[i].status).to.equal(expectedStatus)
