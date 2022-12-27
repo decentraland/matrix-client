@@ -250,7 +250,7 @@ describe('Integration - Conversation cursor', () => {
         assertMessagesAre(cursor.getMessages(), 5, 14)
     })
 
-    it(`When using a cursor, the reported messages are the expected including the one sent in the request event`, async () => {
+    it(`When the cursor is used, the reported messages are as expected, including the message sent in the request event`, async () => {
         const sender = await testEnv.getRandomClient()
         const receiver = await testEnv.getRandomClient()
 
@@ -284,7 +284,7 @@ describe('Integration - Conversation cursor', () => {
         expect(requestMesssage.length).to.be.equal(1)
     })
 
-    it(`When using a cursor, the reported messages are the expected including the one sent in the request event`, async () => {
+    it(`When the cursor is moved, the reported messages are also moved along with the message sent in the request event`, async () => {
         const sender = await testEnv.getRandomClient()
         const receiver = await testEnv.getRandomClient()
 
