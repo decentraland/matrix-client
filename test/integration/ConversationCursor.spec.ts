@@ -29,7 +29,10 @@ describe('Integration - Conversation cursor', () => {
         // Get cursor on specific message
         const cursor = await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 3 })
 
-        if (!cursor) return
+        if (!cursor) {
+            expect(cursor).to.be.not.empty
+            return
+        }
 
         // Read the messages
         const messages = cursor.getMessages()
@@ -59,7 +62,10 @@ describe('Integration - Conversation cursor', () => {
         // Get cursor on specific message
         const cursor = await receiver.getCursorOnMessage(conversationId, undefined, { initialSize: 3 })
 
-        if (!cursor) return
+        if (!cursor) {
+            expect(cursor).to.be.not.empty
+            return
+        }
 
         // Read the messages
         const messages = cursor.getMessages()
@@ -93,7 +99,10 @@ describe('Integration - Conversation cursor', () => {
         // Get cursor on specific message
         const cursor = await receiver.getCursorOnLastRead(conversationId, { initialSize: 3 })
 
-        if (!cursor) return
+        if (!cursor) {
+            expect(cursor).to.be.not.empty
+            return
+        }
 
         // Read the messages
         const messages = cursor.getMessages()
@@ -122,7 +131,10 @@ describe('Integration - Conversation cursor', () => {
         // Get cursor on last message
         const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 10 })
 
-        if (!cursor) return
+        if (!cursor) {
+            expect(cursor).to.be.not.empty
+            return
+        }
 
         // Read the messages
         const messages = cursor.getMessages()
@@ -160,7 +172,10 @@ describe('Integration - Conversation cursor', () => {
         // Get cursor on last message
         const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 5, limit: 5 })
 
-        if (!cursor) return
+        if (!cursor) {
+            expect(cursor).to.be.not.empty
+            return
+        }
 
         // Assert that the available messages are the expected ones
         assertMessagesAre(cursor.getMessages(), 15, 19)
@@ -232,7 +247,10 @@ describe('Integration - Conversation cursor', () => {
         // Get cursor on last message
         const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 20 })
 
-        if (!cursor) return
+        if (!cursor) {
+            expect(cursor).to.be.not.empty
+            return
+        }
 
         // Assert that the available messages are the expected ones
         assertMessagesAre(cursor.getMessages(), 0, 19)
@@ -273,7 +291,10 @@ describe('Integration - Conversation cursor', () => {
         // Get cursor on last message
         const cursor = await receiver.getCursorOnLastMessage(conversationId)
 
-        if (!cursor) return
+        if (!cursor) {
+            expect(cursor).to.be.not.empty
+            return
+        }
 
         // Read the messages
         const messages = cursor.getMessages()
@@ -307,7 +328,10 @@ describe('Integration - Conversation cursor', () => {
         // Get cursor on last message
         const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 3, limit: 3 })
 
-        if (!cursor) return
+        if (!cursor) {
+            expect(cursor).to.be.not.empty
+            return
+        }
 
         // Read the messages
         const firstPage = cursor.getMessages()
