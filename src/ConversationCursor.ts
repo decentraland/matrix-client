@@ -82,16 +82,19 @@ export class ConversationCursor {
             }
             if (!room) return
 
-            const timelineSet = getMessagesAndFriendshipEventsTimelineSetFromRoom(userId, room, limit)
+            let timelineSet = getMessagesAndFriendshipEventsTimelineSetFromRoom(userId, room, limit)
 
-            // We filter all friendship events to only keep those that are requests and have a state key, which indicates that the event was sent by the requester.
+            // We filter all friendship events to only keep those that are requests, have a message body
+            // and have a state key, which indicates that the event was sent by the requester.
             timelineSet
                 .getLiveTimeline()
                 .getEvents()
                 .filter(
                     event =>
                         event.event.type === 'org.decentraland.friendship' &&
-                        (event.event.content?.type !== 'request' || !event.event.state_key)
+                        (event.event.content?.type !== 'request' ||
+                            !event.event.state_key ||
+                            !event.event.content?.body)
                 )
                 .forEach(event => {
                     if (typeof event.event.event_id === 'string') {
