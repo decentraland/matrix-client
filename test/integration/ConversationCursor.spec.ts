@@ -27,19 +27,19 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on specific message
-        const cursor = await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 3 })
+        const cursor = (await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 3 }))!
 
         expect(cursor).to.be.not.empty
 
         // Read the messages
-        const messages = cursor!.getMessages()
+        const messages = cursor.getMessages()
 
         // Assert that the messages are the expected ones
         assertMessagesAre(messages, 9, 11)
 
         // Make sure that extension possibilities are correct
-        expect(cursor!.canExtendInDirection(CursorDirection.FORWARDS)).to.be.true
-        expect(cursor!.canExtendInDirection(CursorDirection.BACKWARDS)).to.be.true
+        expect(cursor.canExtendInDirection(CursorDirection.FORWARDS)).to.be.true
+        expect(cursor.canExtendInDirection(CursorDirection.BACKWARDS)).to.be.true
     })
 
     it(`When using a cursor on an undefined message, the reported messages are the expected`, async () => {
@@ -57,19 +57,19 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on specific message
-        const cursor = await receiver.getCursorOnMessage(conversationId, undefined, { initialSize: 3 })
+        const cursor = (await receiver.getCursorOnMessage(conversationId, undefined, { initialSize: 3 }))!
 
         expect(cursor).to.be.not.empty
 
         // Read the messages
-        const messages = cursor!.getMessages()
+        const messages = cursor.getMessages()
 
         // Assert that the messages are the expected ones (the last ones)
         assertMessagesAre(messages, 17, 19)
 
         // Make sure that extension possibilities are correct
-        expect(cursor!.canExtendInDirection(CursorDirection.FORWARDS)).to.be.false
-        expect(cursor!.canExtendInDirection(CursorDirection.BACKWARDS)).to.be.true
+        expect(cursor.canExtendInDirection(CursorDirection.FORWARDS)).to.be.false
+        expect(cursor.canExtendInDirection(CursorDirection.BACKWARDS)).to.be.true
     })
 
     it(`When using a cursor on the last read message, the reported messages are the expected`, async () => {
@@ -91,19 +91,19 @@ describe('Integration - Conversation cursor', () => {
         await receiver.markAsRead(conversationId, messageId)
 
         // Get cursor on specific message
-        const cursor = await receiver.getCursorOnLastRead(conversationId, { initialSize: 3 })
+        const cursor = (await receiver.getCursorOnLastRead(conversationId, { initialSize: 3 }))!
 
         expect(cursor).to.be.not.empty
 
         // Read the messages
-        const messages = cursor!.getMessages()
+        const messages = cursor.getMessages()
 
         // Assert that the messages are the expected ones
         assertMessagesAre(messages, 9, 11)
 
         // Make sure that extension possibilities are correct
-        expect(cursor!.canExtendInDirection(CursorDirection.FORWARDS)).to.be.true
-        expect(cursor!.canExtendInDirection(CursorDirection.BACKWARDS)).to.be.true
+        expect(cursor.canExtendInDirection(CursorDirection.FORWARDS)).to.be.true
+        expect(cursor.canExtendInDirection(CursorDirection.BACKWARDS)).to.be.true
     })
 
     it(`When using a cursor on the last message, the reported messages are the expected`, async () => {
@@ -120,19 +120,19 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on last message
-        const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 10 })
+        const cursor = (await receiver.getCursorOnLastMessage(conversationId, { initialSize: 10 }))!
 
         expect(cursor).to.be.not.empty
 
         // Read the messages
-        const messages = cursor!.getMessages()
+        const messages = cursor.getMessages()
 
         // Assert that the messages are the last 10
         assertMessagesAre(messages, 10, 19)
 
         // Make sure that extension possibilities are correct
-        expect(cursor!.canExtendInDirection(CursorDirection.FORWARDS)).to.be.false
-        expect(cursor!.canExtendInDirection(CursorDirection.BACKWARDS)).to.be.true
+        expect(cursor.canExtendInDirection(CursorDirection.FORWARDS)).to.be.false
+        expect(cursor.canExtendInDirection(CursorDirection.BACKWARDS)).to.be.true
 
         // Send a new message
         await sendMessages(sender, conversationId, 20, 1)
@@ -141,7 +141,7 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Make sure that now I can extend forward
-        expect(cursor!.canExtendInDirection(CursorDirection.FORWARDS)).to.be.true
+        expect(cursor.canExtendInDirection(CursorDirection.FORWARDS)).to.be.true
     })
 
     it(`When moving the cursor around, reported messages are also moved`, async () => {
@@ -158,24 +158,24 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on last message
-        const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 5, limit: 5 })
+        const cursor = (await receiver.getCursorOnLastMessage(conversationId, { initialSize: 5, limit: 5 }))!
 
         expect(cursor).to.be.not.empty
 
         // Assert that the available messages are the expected ones
-        assertMessagesAre(cursor!.getMessages(), 15, 19)
+        assertMessagesAre(cursor.getMessages(), 15, 19)
 
         // Move 12 messages back
-        await cursor!.moveInDirection(CursorDirection.BACKWARDS, 12)
+        await cursor.moveInDirection(CursorDirection.BACKWARDS, 12)
 
         // Assert that the available messages are the expected ones
-        assertMessagesAre(cursor!.getMessages(), 3, 7)
+        assertMessagesAre(cursor.getMessages(), 3, 7)
 
         // Move 7 messages forward
-        await cursor!.moveInDirection(CursorDirection.FORWARDS, 7)
+        await cursor.moveInDirection(CursorDirection.FORWARDS, 7)
 
         // Assert that the available messages are the expected ones
-        assertMessagesAre(cursor!.getMessages(), 10, 14)
+        assertMessagesAre(cursor.getMessages(), 10, 14)
     })
 
     it(`When getting messages, the read status is calculated correctly`, async () => {
@@ -194,8 +194,8 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursors that reads all the messages
-        const senderCursor = await sender.getCursorOnMessage(conversationId, messageId, { initialSize: 20 })
-        const receiverCursor = await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 20 })
+        const senderCursor = (await sender.getCursorOnMessage(conversationId, messageId, { initialSize: 20 }))!
+        const receiverCursor = (await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 20 }))!
 
         if (!senderCursor || !receiverCursor) return
 
@@ -203,8 +203,8 @@ describe('Integration - Conversation cursor', () => {
         await receiver.markAsRead(conversationId, messageId)
 
         // Read the messages
-        const senderMessages = senderCursor!.getMessages()
-        const receiverMessages = receiverCursor!.getMessages()
+        const senderMessages = senderCursor.getMessages()
+        const receiverMessages = receiverCursor.getMessages()
 
         // Assert that the messages are the expected ones
         assertMessagesAre(senderMessages, 0, 19)
@@ -230,24 +230,24 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on last message
-        const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 20 })
+        const cursor = (await receiver.getCursorOnLastMessage(conversationId, { initialSize: 20 }))!
 
         expect(cursor).to.be.not.empty
 
         // Assert that the available messages are the expected ones
-        assertMessagesAre(cursor!.getMessages(), 0, 19)
+        assertMessagesAre(cursor.getMessages(), 0, 19)
 
         // Remove the 5 oldest messages
-        cursor!.removeFromCursor(5, true)
+        cursor.removeFromCursor(5, true)
 
         // Assert that the available messages are the expected ones
-        assertMessagesAre(cursor!.getMessages(), 5, 19)
+        assertMessagesAre(cursor.getMessages(), 5, 19)
 
         // Remove the 5 newest messages
-        cursor!.removeFromCursor(5, false)
+        cursor.removeFromCursor(5, false)
 
         // Assert that the available messages are the expected ones
-        assertMessagesAre(cursor!.getMessages(), 5, 14)
+        assertMessagesAre(cursor.getMessages(), 5, 14)
     })
 
     it(`When the cursor is used, the reported messages are as expected, including the message sent in the request event`, async () => {
@@ -271,12 +271,12 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on last message
-        const cursor = await receiver.getCursorOnLastMessage(conversationId)
+        const cursor = (await receiver.getCursorOnLastMessage(conversationId))!
 
         expect(cursor).to.be.not.empty
 
         // Read the messages
-        const messages = cursor!.getMessages()
+        const messages = cursor.getMessages()
         const requestMesssage = messages.filter(msg => msg.text.includes(message))
 
         // Make sure we read all the expected messages
@@ -305,12 +305,12 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on last message
-        const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 3, limit: 3 })
+        const cursor = (await receiver.getCursorOnLastMessage(conversationId, { initialSize: 3, limit: 3 }))!
 
         expect(cursor).to.be.not.empty
 
         // Read the messages
-        const firstPage = cursor!.getMessages()
+        const firstPage = cursor.getMessages()
         const requestMesssageNo = firstPage.filter(msg => msg.text.includes(message))
 
         // Make sure we read the expected messages
@@ -318,8 +318,8 @@ describe('Integration - Conversation cursor', () => {
         expect(requestMesssageNo.length).to.be.equal(0)
 
         // Move the cursor backwards
-        await cursor!.moveInDirection(CursorDirection.BACKWARDS, 10)
-        const secondPage = cursor!.getMessages()
+        await cursor.moveInDirection(CursorDirection.BACKWARDS, 10)
+        const secondPage = cursor.getMessages()
         const requestMesssageYes = secondPage.filter(msg => msg.text.includes(message))
 
         // Make sure we read all the expected messages
