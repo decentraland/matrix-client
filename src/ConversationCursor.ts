@@ -86,7 +86,7 @@ export class ConversationCursor {
 
             // We filter all friendship events to only keep those that are requests, have a message body
             // and have a state key, which indicates that the event was sent by the requester.
-            timelineSet
+            const eventsToFilterOut = timelineSet
                 .getLiveTimeline()
                 .getEvents()
                 .filter(
@@ -96,11 +96,10 @@ export class ConversationCursor {
                             !event.event.state_key ||
                             !event.event.content?.body)
                 )
-                .forEach(event => {
-                    if (typeof event.event.event_id === 'string') {
-                        timelineSet.removeEvent(event.event.event_id)
-                    }
-                })
+
+            eventsToFilterOut.forEach(event => {
+                timelineSet.removeEvent(event.getId())
+            })
 
             const window = new TimelineWindow(client, timelineSet, { windowLimit: limit })
             await window.load(initialEventId, initialSize)
