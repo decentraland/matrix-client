@@ -271,17 +271,24 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on last message
-        const cursor = (await receiver.getCursorOnLastMessage(conversationId))!
+        const cursorReceiver = (await receiver.getCursorOnLastMessage(conversationId))!
+        const cursorSender = (await sender.getCursorOnLastMessage(conversationId))!
 
-        expect(cursor).to.be.not.empty
+        expect(cursorReceiver).to.be.not.empty
+        expect(cursorSender).to.be.not.empty
 
         // Read the messages
-        const messages = cursor.getMessages()
-        const requestMesssage = messages.filter(msg => msg.text.includes(message))
+        const messagesReceiver = cursorReceiver.getMessages()
+        const messagesSender = cursorSender.getMessages()
+
+        const requestMesssageReceiver = messagesReceiver.filter(msg => msg.text.includes(message))
+        const requestMesssageSender = messagesSender.filter(msg => msg.text.includes(message))
 
         // Make sure we read all the expected messages
-        expect(messages.length).to.be.equal(5)
-        expect(requestMesssage.length).to.be.equal(1)
+        expect(messagesReceiver.length).to.be.equal(5)
+        expect(messagesSender.length).to.be.equal(5)
+        expect(requestMesssageReceiver.length).to.be.equal(1)
+        expect(requestMesssageSender.length).to.be.equal(1)
     })
 
     it(`When the cursor is moved, the reported messages are also moved along with the message sent in the request event`, async () => {
