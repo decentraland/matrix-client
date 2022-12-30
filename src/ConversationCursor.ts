@@ -84,7 +84,7 @@ export class ConversationCursor {
 
             let timelineSet = getMessagesAndFriendshipEventsTimelineSetFromRoom(userId, room, limit)
 
-            // We filter all friendship events to only keep those that are requests, have a message body
+            // We filter out all friendship events to only keep those that are requests, have a message body
             // and have a state key, which indicates that the event was sent by the requester.
             const eventsToFilterOut = timelineSet
                 .getLiveTimeline()
