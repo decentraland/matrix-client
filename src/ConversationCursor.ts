@@ -89,13 +89,10 @@ export class ConversationCursor {
             const eventsToFilterOut = timelineSet
                 .getLiveTimeline()
                 .getEvents()
-                .filter(
-                    event =>
-                        event.event.type === 'org.decentraland.friendship' &&
-                        (event.event.content?.type !== 'request' ||
-                            !event.event.state_key ||
-                            !event.event.content?.body)
-                )
+                .filter(event => {
+                    event.getType() === 'org.decentraland.friendship' &&
+                        (event.getContent().type !== 'request' || !event.getStateKey() || !event.getContent().body)
+                })
 
             eventsToFilterOut.forEach(event => {
                 timelineSet.removeEvent(event.getId())
