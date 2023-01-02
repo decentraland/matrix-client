@@ -1,7 +1,12 @@
 import { MatrixClient } from 'matrix-js-sdk/lib/client'
 import { TimelineWindow } from 'matrix-js-sdk/lib/timeline-window'
 import { EventTimeline } from 'matrix-js-sdk/lib/models/event-timeline'
-import { buildTextMessage, getMessagesAndFriendshipEventsTimelineSetFromRoom, waitSyncToFinish } from './Utils'
+import {
+    buildTextMessage,
+    calculateEventsToFilterOut,
+    getMessagesAndFriendshipEventsTimelineSetFromRoom,
+    waitSyncToFinish
+} from './Utils'
 import {
     TextMessage,
     Timestamp,
@@ -11,7 +16,6 @@ import {
     BasicMessageInfo,
     SocialId
 } from './types'
-import { MatrixEvent } from 'matrix-js-sdk'
 
 /**
  * This class can be used to navigate a conversation's history. You can load more messages
@@ -94,9 +98,7 @@ export class ConversationCursor {
 
             let timelineSet = getMessagesAndFriendshipEventsTimelineSetFromRoom(userId, room, limit)
 
-            let eventsToFilterOut = ConversationCursor.calculateEventsToFilterOut(
-                timelineSet.getLiveTimeline().getEvents()
-            )
+            let eventsToFilterOut = calculateEventsToFilterOut(timelineSet.getLiveTimeline().getEvents())
 
             const window = new TimelineWindow(client, timelineSet, { windowLimit: limit })
             await window.load(initialEventId, initialSize)
@@ -107,7 +109,7 @@ export class ConversationCursor {
             while (windowSize < initialSize && gotResults) {
                 gotResults = await window.paginate(EventTimeline.BACKWARDS, initialSize - windowSize)
 
-                eventsToFilterOut = ConversationCursor.calculateEventsToFilterOut(window.getEvents())
+                eventsToFilterOut = calculateEventsToFilterOut(window.getEvents())
 
                 windowSize = window.getEvents().length - eventsToFilterOut
             }
@@ -116,7 +118,7 @@ export class ConversationCursor {
             while (windowSize < initialSize && gotResults) {
                 gotResults = await window.paginate(EventTimeline.FORWARDS, initialSize - windowSize)
 
-                eventsToFilterOut = ConversationCursor.calculateEventsToFilterOut(window.getEvents())
+                eventsToFilterOut = calculateEventsToFilterOut(window.getEvents())
 
                 windowSize = window.getEvents().length - eventsToFilterOut
             }
@@ -137,19 +139,5 @@ export class ConversationCursor {
         }
 
         return ConversationCursor.DEFAULT_LIMIT
-    }
-
-    /**
-     * We filter out all friendship events that are not requests, does not have a message body
-     * or does not have a state key.
-     * @param events
-     * @returns the length of the filtered array
-     */
-    private static calculateEventsToFilterOut(events: MatrixEvent[]): number {
-        return events.filter(
-            event =>
-                event.event.type === 'org.decentraland.friendship' &&
-                (event.event.content?.type !== 'request' || !event.event.state_key || !event.event.content?.body)
-        ).length
     }
 }
