@@ -222,15 +222,7 @@ export function eventsToFilterOut(events: MatrixEvent[]): number {
     return events.filter(event => {
         return (
             event.event.type === 'org.decentraland.friendship' &&
-            (event.event.content?.type !== 'request' ||
-                isEmptyString(event.event.state_key) ||
-                isEmptyString(event.event.content?.body) ||
-                !event.event.state_key ||
-                !event.event.content?.body)
+            (event.event.content?.type !== 'request' || !event.event.state_key || !event.event.content?.body)
         )
     }).length
-}
-
-function isEmptyString(str?: string): boolean {
-    return str?.trim() === '' || !str
 }
