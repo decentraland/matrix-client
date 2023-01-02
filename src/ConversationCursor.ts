@@ -11,6 +11,7 @@ import {
     BasicMessageInfo,
     SocialId
 } from './types'
+import { MatrixEvent } from 'matrix-js-sdk'
 
 /**
  * This class can be used to navigate a conversation's history. You can load more messages
@@ -29,7 +30,16 @@ export class ConversationCursor {
     getMessages(): TextMessage[] {
         const latestReadTimestamp: Timestamp | undefined = this.lastReadMessageTimestampFetch(this.roomId)?.timestamp
 
-        const events = this.window.getEvents()
+        // We filter out all friendship events to only keep those that are requests, have a message body
+        // and have a state key, which indicates that the event was sent by the requester.
+        const events = this.window
+            .getEvents()
+            .filter(
+                event =>
+                    event.event.type === 'm.room.message' ||
+                    (event.event.type === 'org.decentraland.friendship' &&
+                        (event.event.content?.type === 'request' || event.event.state_key || event.event.content?.body))
+            )
         return events.map(event =>
             buildTextMessage(
                 event,
@@ -84,38 +94,31 @@ export class ConversationCursor {
 
             let timelineSet = getMessagesAndFriendshipEventsTimelineSetFromRoom(userId, room, limit)
 
-            // We filter out all friendship events to only keep those that are requests, have a message body
-            // and have a state key, which indicates that the event was sent by the requester.
-            const eventsToFilterOut = timelineSet
-                .getLiveTimeline()
-                .getEvents()
-                .filter(
-                    event =>
-                        event.event.type === 'org.decentraland.friendship' &&
-                        (event.event.content?.type !== 'request' ||
-                            !event.event.state_key ||
-                            !event.event.content?.body)
-                )
-
-            eventsToFilterOut.forEach(event => {
-              timelineSet.getTimelineForEvent(event.getId())?.removeEvent(event.getId())
-            })
+            let eventsToFilterOut = ConversationCursor.calculateEventsToFilterOut(
+                timelineSet.getLiveTimeline().getEvents()
+            )
 
             const window = new TimelineWindow(client, timelineSet, { windowLimit: limit })
             await window.load(initialEventId, initialSize)
 
             // It could happen that the initial size of the window isn't respected. That's why we will try to fix it
-            let windowSize = window.getEvents().length
+            let windowSize = window.getEvents().length - eventsToFilterOut
             let gotResults = true
             while (windowSize < initialSize && gotResults) {
                 gotResults = await window.paginate(EventTimeline.BACKWARDS, initialSize - windowSize)
-                windowSize = window.getEvents().length
+
+                eventsToFilterOut = ConversationCursor.calculateEventsToFilterOut(window.getEvents())
+
+                windowSize = window.getEvents().length - eventsToFilterOut
             }
 
             gotResults = true
             while (windowSize < initialSize && gotResults) {
                 gotResults = await window.paginate(EventTimeline.FORWARDS, initialSize - windowSize)
-                windowSize = window.getEvents().length
+
+                eventsToFilterOut = ConversationCursor.calculateEventsToFilterOut(window.getEvents())
+
+                windowSize = window.getEvents().length - eventsToFilterOut
             }
 
             return new ConversationCursor(roomId, window, lastReadMessageTimestampFetch)
@@ -134,5 +137,19 @@ export class ConversationCursor {
         }
 
         return ConversationCursor.DEFAULT_LIMIT
+    }
+
+    /**
+     * We filter out all friendship events that are not requests, does not have a message body
+     * or does not have a state key.
+     * @param events
+     * @returns the length of the filtered array
+     */
+    private static calculateEventsToFilterOut(events: MatrixEvent[]): number {
+        return events.filter(
+            event =>
+                event.event.type === 'org.decentraland.friendship' &&
+                (event.event.content?.type !== 'request' || !event.event.state_key || !event.event.content?.body)
+        ).length
     }
 }

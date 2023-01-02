@@ -305,7 +305,7 @@ describe('Integration - Conversation cursor', () => {
         // Get conversation
         const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
 
-        // Send messages
+        // Send messages (from Message #0 to Message #3)
         await sendMessages(sender, conversationId, 0, 4)
 
         // Wait for sync
@@ -330,7 +330,7 @@ describe('Integration - Conversation cursor', () => {
         const requestMesssageYes = secondPage.filter(msg => msg.text.includes(message))
 
         // Make sure we read all the expected messages
-        expect(secondPage.length).to.be.equal(3)
+        expect(secondPage.length).to.be.equal(2)
         expect(requestMesssageYes.length).to.be.equal(1)
     })
 
