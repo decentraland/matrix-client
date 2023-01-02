@@ -216,11 +216,21 @@ const GET_MESSAGES_AND_FRIENDSHIP_EVENTS_FILTER = (userId: SocialId, limit?: num
  * or does not have a state key.
  * @param events
  * @returns the length of the filtered array
+ * @internal
  */
-export function calculateEventsToFilterOut(events: MatrixEvent[]): number {
-    return events.filter(
-        event =>
+export function eventsToFilterOut(events: MatrixEvent[]): number {
+    return events.filter(event => {
+        return (
             event.event.type === 'org.decentraland.friendship' &&
-            (event.event.content?.type !== 'request' || !event.event.state_key || !event.event.content?.body)
-    ).length
+            (event.event.content?.type !== 'request' ||
+                isEmptyString(event.event.state_key) ||
+                isEmptyString(event.event.content?.body) ||
+                !event.event.state_key ||
+                !event.event.content?.body)
+        )
+    }).length
+}
+
+function isEmptyString(str?: string): boolean {
+    return str?.trim() === '' || !str
 }

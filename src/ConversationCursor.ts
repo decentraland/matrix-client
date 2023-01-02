@@ -3,7 +3,7 @@ import { TimelineWindow } from 'matrix-js-sdk/lib/timeline-window'
 import { EventTimeline } from 'matrix-js-sdk/lib/models/event-timeline'
 import {
     buildTextMessage,
-    calculateEventsToFilterOut,
+    eventsToFilterOut,
     getMessagesAndFriendshipEventsTimelineSetFromRoom,
     waitSyncToFinish
 } from './Utils'
@@ -36,14 +36,16 @@ export class ConversationCursor {
 
         // We filter out all friendship events to only keep those that are requests, have a message body
         // and have a state key, which indicates that the event was sent by the requester.
-        const events = this.window
-            .getEvents()
-            .filter(
-                event =>
-                    event.event.type === 'm.room.message' ||
-                    (event.event.type === 'org.decentraland.friendship' &&
-                        (event.event.content?.type === 'request' || event.event.state_key || event.event.content?.body))
+        const events = this.window.getEvents().filter(event => {
+            return (
+                event.getType() === 'm.room.message' ||
+                (event.getType() === 'org.decentraland.friendship' &&
+                    event.event.content?.type === 'request' &&
+                    event.event.state_key &&
+                    event.event.content?.body)
             )
+        })
+
         return events.map(event =>
             buildTextMessage(
                 event,
@@ -98,29 +100,29 @@ export class ConversationCursor {
 
             let timelineSet = getMessagesAndFriendshipEventsTimelineSetFromRoom(userId, room, limit)
 
-            let eventsToFilterOut = calculateEventsToFilterOut(timelineSet.getLiveTimeline().getEvents())
+            let eventsToFilter = eventsToFilterOut(timelineSet.getLiveTimeline().getEvents())
 
             const window = new TimelineWindow(client, timelineSet, { windowLimit: limit })
             await window.load(initialEventId, initialSize)
 
             // It could happen that the initial size of the window isn't respected. That's why we will try to fix it
-            let windowSize = window.getEvents().length - eventsToFilterOut
+            let windowSize = window.getEvents().length - eventsToFilter
             let gotResults = true
             while (windowSize < initialSize && gotResults) {
                 gotResults = await window.paginate(EventTimeline.BACKWARDS, initialSize - windowSize)
 
-                eventsToFilterOut = calculateEventsToFilterOut(window.getEvents())
+                eventsToFilter = eventsToFilterOut(window.getEvents())
 
-                windowSize = window.getEvents().length - eventsToFilterOut
+                windowSize = window.getEvents().length - eventsToFilter
             }
 
             gotResults = true
             while (windowSize < initialSize && gotResults) {
                 gotResults = await window.paginate(EventTimeline.FORWARDS, initialSize - windowSize)
 
-                eventsToFilterOut = calculateEventsToFilterOut(window.getEvents())
+                eventsToFilter = eventsToFilterOut(window.getEvents())
 
-                windowSize = window.getEvents().length - eventsToFilterOut
+                windowSize = window.getEvents().length - eventsToFilter
             }
 
             return new ConversationCursor(roomId, window, lastReadMessageTimestampFetch)
