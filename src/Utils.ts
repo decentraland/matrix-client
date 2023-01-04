@@ -212,17 +212,20 @@ const GET_MESSAGES_AND_FRIENDSHIP_EVENTS_FILTER = (userId: SocialId, limit?: num
     })
 
 /**
- * We filter out all friendship events that are not requests, does not have a message body
- * or does not have a state key.
+ * We only care about events that are of type `m.room.message`
+ * or `org.decentraland.friendship` that have a message body and a state key, so we filter out all other events.
  * @param events
- * @returns the length of the filtered array
+ * @returns the filtered array
  * @internal
  */
-export function eventsToFilterOut(events: MatrixEvent[]): number {
+export function filterEvents(events: MatrixEvent[]): MatrixEvent[] {
     return events.filter(event => {
         return (
-            event.event.type === 'org.decentraland.friendship' &&
-            (event.event.content?.type !== 'request' || !event.event.state_key || !event.event.content?.body)
+            event.getType() === 'm.room.message' ||
+            (event.getType() === 'org.decentraland.friendship' &&
+                event.event.content?.type === 'request' &&
+                event.event.state_key &&
+                event.event.content?.body)
         )
-    }).length
+    })
 }
