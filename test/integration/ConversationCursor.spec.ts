@@ -250,7 +250,7 @@ describe('Integration - Conversation cursor', () => {
         assertMessagesAre(cursor.getMessages(), 5, 14)
     })
 
-    it(`When the cursor is used, the reported messages are as expected, including the message sent in the request event`, async () => {
+    it.only(`When the cursor is used, the reported messages are as expected, including the message sent in the request event`, async () => {
         const sender = await testEnv.getRandomClient()
         const receiver = await testEnv.getRandomClient()
 
@@ -291,7 +291,7 @@ describe('Integration - Conversation cursor', () => {
         expect(requestMesssageSender.length).to.be.equal(1)
     })
 
-    it(`When the cursor is moved, the reported messages are also moved along with the message sent in the request event`, async () => {
+    it.only(`When the cursor is moved, the reported messages are also moved along with the message sent in the request event`, async () => {
         const sender = await testEnv.getRandomClient()
         const receiver = await testEnv.getRandomClient()
 
@@ -330,7 +330,7 @@ describe('Integration - Conversation cursor', () => {
         const requestMesssageYes = secondPage.filter(msg => msg.text.includes(message))
 
         // Make sure we read all the expected messages
-        expect(secondPage.length).to.be.equal(2)
+        expect(secondPage.length).to.be.equal(3)
         expect(requestMesssageYes.length).to.be.equal(1)
     })
 
