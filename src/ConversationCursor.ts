@@ -29,9 +29,7 @@ export class ConversationCursor {
     getMessages(): TextMessage[] {
         const latestReadTimestamp: Timestamp | undefined = this.lastReadMessageTimestampFetch(this.roomId)?.timestamp
 
-        // We only want messages from events that are of type m.room.message or org.decentraland.friendship and have a message body and a state key
         const events = this.window.getEvents()
-
         return events.map(event =>
             buildTextMessage(
                 event,
@@ -112,14 +110,12 @@ export class ConversationCursor {
             let gotResults = true
             while (windowSize < initialSize && gotResults) {
                 gotResults = await window.paginate(EventTimeline.BACKWARDS, initialSize - windowSize)
-
                 windowSize = window.getEvents().length
             }
 
             gotResults = true
             while (windowSize < initialSize && gotResults) {
                 gotResults = await window.paginate(EventTimeline.FORWARDS, initialSize - windowSize)
-
                 windowSize = window.getEvents().length
             }
 
