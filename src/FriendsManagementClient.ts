@@ -8,6 +8,9 @@ import { SyncState } from 'matrix-js-sdk/lib/sync'
 import { EventType } from 'matrix-js-sdk/lib/@types/event'
 import { Room, RoomEvent } from 'matrix-js-sdk/lib/models/room'
 
+import fetch from 'node-fetch'
+
+
 enum FriendshipStatus {
     NOT_FRIENDS = 'not friends',
     REQUEST_SENT_BY_ME_PENDING = 'request sent my me pending',
@@ -64,12 +67,21 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return rooms.map(room => room.guessDMUserId()).find(userId => userId === friendId)
     }
 
+    /**
+     * @deprecated use getAllFriendsAddresses()
+     */
     getAllFriends(): SocialId[] {
         const rooms = this.matrixClient.getVisibleRooms()
         return rooms
             .filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
             .filter(room => this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS)
             .map(room => room.guessDMUserId())
+    }
+
+    async getAllFriendsAddresses(): Promise<{address: String}[]> {
+        const url = new URL(`${this.matrixClient.baseUrl}/v1/friendships/${this.matrixClient.getUserId()}`)
+        const response =  await (await fetch(url)).json()
+        return response.friends
     }
 
     // @internal

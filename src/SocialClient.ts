@@ -227,8 +227,16 @@ export class SocialClient implements SocialAPI {
     }
 
     //////        FRIENDS MANAGEMENT         //////
+
+    /**
+     * @deprecated use getAllFriendsAddresses()
+     */
     getAllFriends(): SocialId[] {
         return this.friendsManagement.getAllFriends()
+    }
+
+    getAllFriendsAddresses(): Promise<{address: String}[]> {
+        return this.friendsManagement.getAllFriendsAddresses()
     }
 
     // @internal
