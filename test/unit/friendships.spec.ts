@@ -45,17 +45,7 @@ function mockResponseOf(url: string, headers: HeadersInit, response: any) {
   throw new Error("Function not implemented.")
 }
 
-
 function mockErrorResponseOf(url: string, headers: HeadersInit, errorCode: number) {
   throw new Error("Function not implemented.")
 }
 
-export function mockModule<T extends { [K: string]: any }>(moduleToMock: T, defaultMockValuesForMock: Partial<{ [K in keyof T]: T[K] }>) {
-  return (sandbox: sinon.SinonSandbox, returnOverrides?: Partial<{ [K in keyof T]: T[K] }>): void => {
-    const functions = Object.keys(moduleToMock);
-    const returns = returnOverrides || {};
-    functions.forEach((f) => {
-      sandbox.stub(moduleToMock, f).callsFake(returns[f] || defaultMockValuesForMock[f]);
-    });
-  };
-}
