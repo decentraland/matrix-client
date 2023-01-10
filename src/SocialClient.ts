@@ -38,15 +38,21 @@ export type ClientLoginOptions = {
 }
 
 export class SocialClient implements SocialAPI {
+    private readonly baseUrl: string
     private readonly sessionManagement: SessionManagementAPI
     private readonly messaging: MessagingAPI
     // @internal
     private readonly friendsManagement: FriendsManagementAPI
 
-    private constructor(matrixClient: MatrixClient) {
+    private constructor(matrixClient: MatrixClient, socialServiceUrl: string) {
         this.sessionManagement = new SessionManagementClient(matrixClient, this)
         this.friendsManagement = new FriendsManagementClient(matrixClient, this)
         this.messaging = new MessagingClient(matrixClient, this)
+        this.baseUrl = socialServiceUrl
+    }
+
+    getBaseUrl(): string {
+        return this.baseUrl;
     }
 
     listenToEvents(): void {
@@ -235,7 +241,7 @@ export class SocialClient implements SocialAPI {
         return this.friendsManagement.getAllFriends()
     }
 
-    getAllFriendsAddresses(): Promise<{address: String}[]> {
+    getAllFriendsAddresses(): Promise<String[]> {
         return this.friendsManagement.getAllFriendsAddresses()
     }
 

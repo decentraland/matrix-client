@@ -6,7 +6,7 @@ export interface FriendsManagementAPI {
      * @deprecated use getAllFriendsAddresses()
      */
     getAllFriends(): SocialId[]
-    getAllFriendsAddresses(): Promise<{address: String}[]>
+    getAllFriendsAddresses(): Promise<String[]>
     // @internal
     getAllFriendsRooms(): Room[]
     getPendingRequests(): FriendshipRequest[]
