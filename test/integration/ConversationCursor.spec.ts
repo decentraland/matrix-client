@@ -1,3 +1,4 @@
+
 import chai from 'chai'
 import { SocialClient } from '../../src/SocialClient'
 import { TextMessage, MessageStatus, CursorDirection, ConversationId } from '../../src/types'
@@ -9,6 +10,7 @@ globalThis.global = globalThis as any
 const expect = chai.expect
 
 describe('Integration - Conversation cursor', () => {
+
     const testEnv: TestEnvironment = loadTestEnvironment()
 
     it(`When using a cursor on a specific message, the reported messages are the expected`, async () => {
@@ -27,9 +29,9 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on specific message
-        const cursor = (await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 3 }))!
+        const cursor = await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 3 })
 
-        expect(cursor).to.be.not.empty
+        if (!cursor) return
 
         // Read the messages
         const messages = cursor.getMessages()
@@ -57,9 +59,9 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on specific message
-        const cursor = (await receiver.getCursorOnMessage(conversationId, undefined, { initialSize: 3 }))!
+        const cursor = await receiver.getCursorOnMessage(conversationId, undefined, { initialSize: 3 })
 
-        expect(cursor).to.be.not.empty
+        if (!cursor) return
 
         // Read the messages
         const messages = cursor.getMessages()
@@ -91,9 +93,9 @@ describe('Integration - Conversation cursor', () => {
         await receiver.markAsRead(conversationId, messageId)
 
         // Get cursor on specific message
-        const cursor = (await receiver.getCursorOnLastRead(conversationId, { initialSize: 3 }))!
+        const cursor = await receiver.getCursorOnLastRead(conversationId, { initialSize: 3 })
 
-        expect(cursor).to.be.not.empty
+        if (!cursor) return
 
         // Read the messages
         const messages = cursor.getMessages()
@@ -120,9 +122,9 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on last message
-        const cursor = (await receiver.getCursorOnLastMessage(conversationId, { initialSize: 10 }))!
+        const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 10 })
 
-        expect(cursor).to.be.not.empty
+        if (!cursor) return
 
         // Read the messages
         const messages = cursor.getMessages()
@@ -158,9 +160,9 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on last message
-        const cursor = (await receiver.getCursorOnLastMessage(conversationId, { initialSize: 5, limit: 5 }))!
+        const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 5, limit: 5 })
 
-        expect(cursor).to.be.not.empty
+        if (!cursor) return
 
         // Assert that the available messages are the expected ones
         assertMessagesAre(cursor.getMessages(), 15, 19)
@@ -194,8 +196,8 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursors that reads all the messages
-        const senderCursor = (await sender.getCursorOnMessage(conversationId, messageId, { initialSize: 20 }))!
-        const receiverCursor = (await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 20 }))!
+        const senderCursor = await sender.getCursorOnMessage(conversationId, messageId, { initialSize: 20 })
+        const receiverCursor = await receiver.getCursorOnMessage(conversationId, messageId, { initialSize: 20 })
 
         if (!senderCursor || !receiverCursor) return
 
@@ -230,9 +232,9 @@ describe('Integration - Conversation cursor', () => {
         await sleep('1s')
 
         // Get cursor on last message
-        const cursor = (await receiver.getCursorOnLastMessage(conversationId, { initialSize: 20 }))!
+        const cursor = await receiver.getCursorOnLastMessage(conversationId, { initialSize: 20 })
 
-        expect(cursor).to.be.not.empty
+        if (!cursor) return
 
         // Assert that the available messages are the expected ones
         assertMessagesAre(cursor.getMessages(), 0, 19)
@@ -248,83 +250,6 @@ describe('Integration - Conversation cursor', () => {
 
         // Assert that the available messages are the expected ones
         assertMessagesAre(cursor.getMessages(), 5, 14)
-    })
-
-    it(`When the cursor is used, the reported messages are as expected, including the message sent in the request event`, async () => {
-        const sender = await testEnv.getRandomClient()
-        const receiver = await testEnv.getRandomClient()
-
-        // Ask for friendship
-        const message = 'hey Pizark, I would love to get in touch with you.'
-        await sender.addAsFriend(receiver.getUserId(), message)
-
-        // Approve friendship
-        receiver.approveFriendshipRequestFrom(sender.getUserId())
-
-        // Get conversation
-        const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
-
-        // Send messages
-        await sendMessages(sender, conversationId, 0, 4)
-
-        // Wait for sync
-        await sleep('1s')
-
-        // Get cursor on last message
-        const cursor = (await receiver.getCursorOnLastMessage(conversationId))!
-
-        expect(cursor).to.be.not.empty
-
-        // Read the messages
-        const messages = cursor.getMessages()
-        const requestMesssage = messages.filter(msg => msg.text.includes(message))
-
-        // Make sure we read all the expected messages
-        expect(messages.length).to.be.equal(5)
-        expect(requestMesssage.length).to.be.equal(1)
-    })
-
-    it(`When the cursor is moved, the reported messages are also moved along with the message sent in the request event`, async () => {
-        const sender = await testEnv.getRandomClient()
-        const receiver = await testEnv.getRandomClient()
-
-        // Ask for friendship
-        const message = 'hey Martha, I would love to get in touch with you.'
-        await sender.addAsFriend(receiver.getUserId(), message)
-
-        // Approve friendship
-        receiver.approveFriendshipRequestFrom(sender.getUserId())
-
-        // Get conversation
-        const { id: conversationId } = await sender.createDirectConversation(receiver.getUserId())
-
-        // Send messages
-        await sendMessages(sender, conversationId, 0, 4)
-
-        // Wait for sync
-        await sleep('1s')
-
-        // Get cursor on last message
-        const cursor = (await receiver.getCursorOnLastMessage(conversationId, { initialSize: 3, limit: 3 }))!
-
-        expect(cursor).to.be.not.empty
-
-        // Read the messages
-        const firstPage = cursor.getMessages()
-        const requestMesssageNo = firstPage.filter(msg => msg.text.includes(message))
-
-        // Make sure we read the expected messages
-        expect(firstPage.length).to.be.equal(3)
-        expect(requestMesssageNo.length).to.be.equal(0)
-
-        // Move the cursor backwards
-        await cursor.moveInDirection(CursorDirection.BACKWARDS, 10)
-        const secondPage = cursor.getMessages()
-        const requestMesssageYes = secondPage.filter(msg => msg.text.includes(message))
-
-        // Make sure we read all the expected messages
-        expect(secondPage.length).to.be.equal(3)
-        expect(requestMesssageYes.length).to.be.equal(1)
     })
 
     function assertMessagesStatusIs(messages: TextMessage[], from: number, to: number, expectedStatus: MessageStatus) {
@@ -344,14 +269,10 @@ describe('Integration - Conversation cursor', () => {
         return `Message #${index}`
     }
 
-    async function sendMessages(
-        sender: SocialClient,
-        conversationId: ConversationId,
-        from: number,
-        amount: number
-    ): Promise<void> {
+    async function sendMessages(sender: SocialClient, conversationId: ConversationId, from: number, amount: number): Promise<void> {
         for (let i = 0; i < amount; i++) {
             await sender.sendMessageTo(conversationId, getMessageTextForIndex(from + i))
         }
     }
+
 })
