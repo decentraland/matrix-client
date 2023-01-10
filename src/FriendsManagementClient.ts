@@ -86,11 +86,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         if (!userId || !token) {
             return []
         }
-        try {
-            return await getFriendsFromSocialService(baseUrl, userId, token)
-        } catch { 
-            return []
-        }
+        return await getFriendsFromSocialService(baseUrl, userId, token)
     }
 
     // @internal
@@ -341,7 +337,13 @@ enum FriendshipEvent {
 export async function getFriendsFromSocialService(baseUrl: string, userId: string, auth: string): Promise<String[]> {
     const url = new URL(`${baseUrl}/v1/friendships/${userId}`)
     const requestHeaders = [['Authorization', `Bearer ${auth}`]]
-    const response = await (await fetch(url, { headers: requestHeaders })).json()
-    return response.friends.map(f => f.address)
+    const remoteResponse = await fetch(url, { headers: requestHeaders })
+    if (remoteResponse.ok) { 
+        try {
+            const response = await (remoteResponse).json()
+            return response.friends.map(f => f.address)
+        } catch { }
+    }
+    return []
 }
 
