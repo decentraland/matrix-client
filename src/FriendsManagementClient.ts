@@ -342,7 +342,9 @@ export async function getFriendsFromSocialService(baseUrl: string, userId: strin
         try {
             const response = await (remoteResponse).json()
             return response.friends.map(f => f.address)
-        } catch { }
+        } catch(e) {
+            console.error(e)
+        }
     }
     return []
 }
