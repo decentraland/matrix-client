@@ -38,21 +38,15 @@ export type ClientLoginOptions = {
 }
 
 export class SocialClient implements SocialAPI {
-    private readonly baseUrl: string
     private readonly sessionManagement: SessionManagementAPI
     private readonly messaging: MessagingAPI
     // @internal
     private readonly friendsManagement: FriendsManagementAPI
 
-    private constructor(matrixClient: MatrixClient, socialServiceUrl: string) {
+    private constructor(matrixClient: MatrixClient) {
         this.sessionManagement = new SessionManagementClient(matrixClient, this)
         this.friendsManagement = new FriendsManagementClient(matrixClient, this)
         this.messaging = new MessagingClient(matrixClient, this)
-        this.baseUrl = socialServiceUrl
-    }
-
-    getBaseUrl(): string {
-        return this.baseUrl;
     }
 
     listenToEvents(): void {

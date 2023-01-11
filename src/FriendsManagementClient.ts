@@ -79,8 +79,8 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     }
 
     async getAllFriendsAddresses(): Promise<String[]> {
-        const baseUrl = this.socialClient.getBaseUrl()
-        const userId = this.matrixClient.getUserId()?.replace("@", "")
+        const baseUrl = this.matrixClient.baseUrl
+        const userId = this.matrixClient.getUserId()
 
         const token = this.matrixClient.getAccessToken()
         if (!userId || !token) {

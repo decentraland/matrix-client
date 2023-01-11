@@ -8,7 +8,7 @@ import { loginWithIdentity, createUser } from '../utils/Utils'
 import { SocialId } from '../../src/types'
 
 /**
- * Almost every test on this project will need to set up a synapse server, a catalyst server, a social server
+ * Almost every test on this project will need to set up a synapse server, a catalyst server
  * and create clients. Then, when the test is over, the servers and clients will need to be stopped.
  * In order to avoid repeating the code over and over again, we will group everything here.
  */
