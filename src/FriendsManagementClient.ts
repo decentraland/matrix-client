@@ -341,7 +341,7 @@ export async function getFriendsFromSocialService(baseUrl: string, userId: strin
     if (remoteResponse.ok) { 
         try {
             const response = await (remoteResponse).json()
-            return response.friends.map(f => f.address)
+            return response.friendships.map(f => f.address)
         } catch(e) {
             console.error(e)
         }

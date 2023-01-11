@@ -23,8 +23,14 @@ describe('friendships from social server', () => {
     describe('when there are friendships', () => {
       it('should return the array of friendships', async () => {
         const friends = await getFriendsFromSocialService(baseUrl, anotherUserId, validToken)
-        
-        expect(friends).to.equal(['0xc0ffee254729296a45a3885639AC7E10F9d54979', '0x86F842D7Ea37EbEC6248eF1652E7DB971C631CCC'])})
+        const expectedFriends = [
+          '0xc0ffee254729296a45a3885639AC7E10F9d54979',
+          '0x86F842D7Ea37EbEC6248eF1652E7DB971C631CCC'
+        ]
+
+        expect(friends).to.have.members(expectedFriends)
+        expect(expectedFriends).to.have.members(friends)
+      })
     })
   }) 
 
@@ -44,20 +50,18 @@ function mockSocialServer(userId: string, validToken: string, anotherUserId: str
 
   // No friends userId
   server.get(`/v1/friendships/${userId}`, (req, res) => {
-    if (req.headers['Authorization'] != `Bearer ${validToken}`) {
-      res.sendStatus(401)
-    } else { 
+    if (isValidToken(req)) {
       res.jsonp({
         "friendships": []
       })
+    } else {
+      res.sendStatus(401)
     }
   })
 
   // Two friends anotherUserId
   server.get(`/v1/friendships/${anotherUserId}`, (req, res) => {
-    if (req.headers['Authorization'] != `Bearer ${validToken}`) {
-      res.sendStatus(401)
-    } else {
+    if (isValidToken(req)) {
       res.jsonp({
         "friendships": [
           {
@@ -68,9 +72,15 @@ function mockSocialServer(userId: string, validToken: string, anotherUserId: str
           }
         ]
       })
+    } else {
+      res.sendStatus(401)
     }
   })
 
   server.listen(PORT, () => console.log(`JSON Server is running on port ${PORT}`))
+
+  function isValidToken(req) {
+    return req.headers && req.headers['authorization'] === `Bearer ${validToken}`
+  }
 }
 
