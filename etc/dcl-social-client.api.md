@@ -230,9 +230,7 @@ export class SocialClient implements SocialAPI {
     // @deprecated (undocumented)
     getAllFriends(): SocialId[];
     // (undocumented)
-    getAllFriendsAddresses(): Promise<{
-        address: String;
-    }[]>;
+    getAllFriendsAddresses(): Promise<String[]>;
     // (undocumented)
     getChannel(roomId: string): Conversation | undefined;
     // (undocumented)
