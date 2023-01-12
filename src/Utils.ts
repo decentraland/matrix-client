@@ -73,7 +73,7 @@ export async function login(
         timelineSupport: true,
         useAuthorizationHeader: true,
         store,
-        userId: ethAddress.toLowerCase()
+        userId: `@${ethAddress.toLowerCase()}:decentraland.org` 
     })
 
     // Actual login
