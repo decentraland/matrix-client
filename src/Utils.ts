@@ -67,12 +67,13 @@ export async function login(
     }
 
     // Create the client
-    const matrixClient: MatrixClient = createClient({
+    let matrixClient: MatrixClient = createClient({
         ...createOpts,
         baseUrl: synapseUrl,
         timelineSupport: true,
         useAuthorizationHeader: true,
-        store
+        store,
+        userId: ethAddress.toLowerCase()
     })
 
     // Actual login
