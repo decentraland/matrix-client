@@ -78,7 +78,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             .map(room => room.guessDMUserId())
     }
 
-    async getAllFriendsAddresses(): Promise<String[]> {
+    async getAllFriendsAddresses(): Promise<string[]> {
         const baseUrl = this.matrixClient.baseUrl
         const userId = this.matrixClient.getUserId()
 
@@ -334,7 +334,7 @@ enum FriendshipEvent {
     DELETE = 'delete' // Delete an existing friendship
 }
 
-export async function getFriendsFromSocialService(baseUrl: string, userId: string, auth: string): Promise<String[]> {
+export async function getFriendsFromSocialService(baseUrl: string, userId: string, auth: string): Promise<string[]> {
     const url = new URL(`${baseUrl}/v1/friendships/${userId}`)
     const requestHeaders = [['Authorization', `Bearer ${auth}`]]
     const remoteResponse = await fetch(url, { headers: requestHeaders })
