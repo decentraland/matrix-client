@@ -235,7 +235,7 @@ export class SocialClient implements SocialAPI {
         return this.friendsManagement.getAllFriends()
     }
 
-    getAllFriendsAddresses(): Promise<String[]> {
+    getAllFriendsAddresses(): Promise<string[]> {
         return this.friendsManagement.getAllFriendsAddresses()
     }
 
