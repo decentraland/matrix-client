@@ -8,6 +8,9 @@ import { SyncState } from 'matrix-js-sdk/lib/sync'
 import { EventType } from 'matrix-js-sdk/lib/@types/event'
 import { Room, RoomEvent } from 'matrix-js-sdk/lib/models/room'
 
+import fetch from 'node-fetch'
+
+
 enum FriendshipStatus {
     NOT_FRIENDS = 'not friends',
     REQUEST_SENT_BY_ME_PENDING = 'request sent my me pending',
@@ -64,12 +67,26 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return rooms.map(room => room.guessDMUserId()).find(userId => userId === friendId)
     }
 
+    /**
+     * @deprecated use getAllFriendsAddresses()
+     */
     getAllFriends(): SocialId[] {
         const rooms = this.matrixClient.getVisibleRooms()
         return rooms
             .filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
             .filter(room => this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS)
             .map(room => room.guessDMUserId())
+    }
+
+    async getAllFriendsAddresses(): Promise<string[]> {
+        const baseUrl = this.matrixClient.baseUrl
+        const userId = this.matrixClient.getUserId()
+
+        const token = this.matrixClient.getAccessToken()
+        if (!userId || !token) {
+            return []
+        }
+        return await getFriendsFromSocialService(baseUrl, userId, token)
     }
 
     // @internal
@@ -316,3 +333,19 @@ enum FriendshipEvent {
     REJECT = 'reject', // Reject a friendship request
     DELETE = 'delete' // Delete an existing friendship
 }
+
+export async function getFriendsFromSocialService(baseUrl: string, userId: string, auth: string): Promise<string[]> {
+    const url = new URL(`${baseUrl}/v1/friendships/${userId}`)
+    const requestHeaders = [['Authorization', `Bearer ${auth}`]]
+    const remoteResponse = await fetch(url, { headers: requestHeaders })
+    if (remoteResponse.ok) { 
+        try {
+            const response = await (remoteResponse).json()
+            return response.friendships.map(f => f.address)
+        } catch(e) {
+            console.error(e)
+        }
+    }
+    return []
+}
+

@@ -2,7 +2,11 @@ import { Room } from 'matrix-js-sdk'
 import { SocialId, FriendshipRequest } from './types'
 
 export interface FriendsManagementAPI {
+    /**
+     * @deprecated use getAllFriendsAddresses()
+     */
     getAllFriends(): SocialId[]
+    getAllFriendsAddresses(): Promise<String[]>
     // @internal
     getAllFriendsRooms(): Room[]
     getPendingRequests(): FriendshipRequest[]

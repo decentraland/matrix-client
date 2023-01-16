@@ -227,8 +227,10 @@ export class SocialClient implements SocialAPI {
         conversation: Conversation;
         unreadMessages: boolean;
     }[];
-    // (undocumented)
+    // @deprecated (undocumented)
     getAllFriends(): SocialId[];
+    // (undocumented)
+    getAllFriendsAddresses(): Promise<String[]>;
     // (undocumented)
     getChannel(roomId: string): Conversation | undefined;
     // (undocumented)
