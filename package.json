@@ -67,7 +67,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "cli-progress": "^3.8.0",
-    "dcl-tslint-config-standard": "^1.0.1",
+    "dcl-tslint-config-standard": "^3.0.0",
     "dockerode": "^3.2.0",
     "eth-crypto": "^1.5.2",
     "fs-extra": "^9.0.0",
