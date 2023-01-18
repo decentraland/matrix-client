@@ -8,9 +8,6 @@ import { SyncState } from 'matrix-js-sdk/lib/sync'
 import { EventType } from 'matrix-js-sdk/lib/@types/event'
 import { Room, RoomEvent } from 'matrix-js-sdk/lib/models/room'
 
-import fetch from 'node-fetch'
-
-
 enum FriendshipStatus {
     NOT_FRIENDS = 'not friends',
     REQUEST_SENT_BY_ME_PENDING = 'request sent my me pending',
@@ -336,7 +333,7 @@ enum FriendshipEvent {
 
 export async function getFriendsFromSocialService(baseUrl: string, userId: string, auth: string): Promise<string[]> {
     const url = new URL(`${baseUrl}/v1/friendships/${userId}`)
-    const requestHeaders = [['Authorization', `Bearer ${auth}`]]
+    const requestHeaders = [['Authorization', `Bearer ${auth}`]] as [string, string][]
     const remoteResponse = await fetch(url, { headers: requestHeaders })
     if (remoteResponse.ok) { 
         try {
