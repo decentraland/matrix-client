@@ -97,14 +97,14 @@ export interface MessagingAPI {
     /**
      * Get optional message body param for friend requests
      * in a friendship between two timestamps if any
-     * @param friendshipId
-     * @param timestampFrom
-     * @param timestampTo
+     * @param friendshipId -
+     * @param timestampFrom -
+     * @param timestampTo -
      */
     getFriendRequestMessageBody(
         friendshipId: string,
         timestampFrom: number,
-        timestampTo: number
+        timestampTo?: number | undefined
     ): Promise<TextMessage[]>
 
     /** Get or create a direct conversation with the given user */
@@ -137,7 +137,7 @@ export interface MessagingAPI {
 
     /**
      * Join a channel
-     * @param roomIdOrChannelAlias - the room id (`!channel-name:domain`) or name of the channel (`channel-name`).
+     * @param roomIdOrChannelAlias - the room id or name of the channel (`channel-name`).
      */
     joinChannel(roomIdOrChannelAlias: string): Promise<void>
 

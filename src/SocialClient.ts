@@ -217,7 +217,7 @@ export class SocialClient implements SocialAPI {
     getFriendRequestMessageBody(
         friendshipId: string,
         timestampFrom: number,
-        timestampTo: number
+        timestampTo?: number | undefined
     ): Promise<TextMessage[]> {
         return this.messaging.getFriendRequestMessageBody(friendshipId, timestampFrom, timestampTo)
     }
