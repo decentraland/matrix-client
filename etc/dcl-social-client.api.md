@@ -246,7 +246,7 @@ export class SocialClient implements SocialAPI {
     // (undocumented)
     getDomain(): string;
     // (undocumented)
-    getFriendRequestMessageBody(friendshipId: string, timestampFrom: number, timestampTo: number): Promise<TextMessage[]>;
+    getFriendRequestMessageBody(friendshipId: string, timestampFrom: number, timestampTo?: number | undefined): Promise<TextMessage[]>;
     // (undocumented)
     getLastReadMessage(conversationId: ConversationId): BasicMessageInfo | undefined;
     // (undocumented)
