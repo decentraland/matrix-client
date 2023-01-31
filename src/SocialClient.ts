@@ -214,14 +214,6 @@ export class SocialClient implements SocialAPI {
         return this.messaging.getCursorOnLastMessage(conversationId, options)
     }
 
-    getFriendRequestMessageBody(
-        friendshipId: string,
-        timestampFrom: number,
-        timestampTo: number
-    ): Promise<TextMessage[]> {
-        return this.messaging.getFriendRequestMessageBody(friendshipId, timestampFrom, timestampTo)
-    }
-
     createDirectConversation(userId: SocialId): Promise<Conversation> {
         return this.messaging.createDirectConversation(userId)
     }

@@ -397,27 +397,6 @@ export class MessagingClient implements MessagingAPI {
         )
     }
 
-    /**
-     * Get optional message body param for friend requests
-     * in a friendship between two timestamps if any
-     * @param friendshipId
-     * @param timestampFrom
-     * @param timestampTo
-     */
-    async getFriendRequestMessageBody(
-        friendshipId: string,
-        timestampFrom: number,
-        timestampTo?: number
-    ): Promise<TextMessage[]> {
-        const baseUrl = this.matrixClient.baseUrl
-        const token = this.matrixClient.getAccessToken()
-        if (!friendshipId || !timestampFrom || !token) {
-            return []
-        }
-
-        return await getFriendRequestMessages(baseUrl, token, friendshipId, timestampFrom, timestampTo)
-    }
-
     /** Get or create a direct conversation with the given user */
     async createDirectConversation(userId: SocialId): Promise<Conversation> {
         const { conversation, created } = await this.getOrCreateConversation(ConversationType.DIRECT, [userId])
@@ -469,14 +448,13 @@ export class MessagingClient implements MessagingAPI {
 
     /**
      * Join a channel
-     * @param roomIdOrChannelAlias - the room id or name of the channel (`channel-name`).
+     * @param roomIdOrChannelAlias - the room id (`!channel-name:domain`) or name of the channel (`channel-name`).
      */
     async joinChannel(roomIdOrChannelAlias: string): Promise<void> {
         try {
             // Technically we can validate if we have received a name with the regular expression
             const isAlias = validateRegexChannelId(roomIdOrChannelAlias)
             if (isAlias) {
-                // If alias then parse to `!channel-name:domain`
                 roomIdOrChannelAlias = `#${roomIdOrChannelAlias}:${this.matrixClient.getDomain()}`
             }
             await this.matrixClient.joinRoom(roomIdOrChannelAlias)
@@ -797,36 +775,3 @@ export class UnknownUsersError extends Error {
 }
 
 type MatrixIdLocalpart = string
-
-export async function getFriendRequestMessages(
-    baseUrl: string,
-    auth: string,
-    friendshipId: string,
-    timestampFrom: number,
-    timestampTo?: number | undefined
-): Promise<TextMessage[]> {
-    const url = new URL(`${baseUrl}/v1/friendships/${friendshipId}/request-events/messages`)
-    const requestHeaders = [['Authorization', `Bearer ${auth}`]] as [string, string][]
-    const requestBody = JSON.stringify({
-        timestampFrom,
-        timestampTo: timestampTo ? timestampTo : Date.now()
-    })
-
-    const remoteResponse = await fetch(url, { headers: requestHeaders, body: requestBody })
-
-    if (remoteResponse.ok) {
-        try {
-            const response = await remoteResponse.json()
-            return response.messagesRequesEvents.map(message => ({
-                id: '',
-                timestamp: message.timestamp,
-                text: message.body,
-                sender: message.actingUser,
-                status: MessageStatus.READ
-            }))
-        } catch (e) {
-            console.error(e)
-        }
-    }
-    return []
-}

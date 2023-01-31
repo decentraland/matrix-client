@@ -94,19 +94,6 @@ export interface MessagingAPI {
         options?: CursorOptions
     ): Promise<ConversationCursor | undefined>
 
-    /**
-     * Get optional message body param for friend requests
-     * in a friendship between two timestamps if any
-     * @param friendshipId
-     * @param timestampFrom
-     * @param timestampTo
-     */
-    getFriendRequestMessageBody(
-        friendshipId: string,
-        timestampFrom: number,
-        timestampTo: number
-    ): Promise<TextMessage[]>
-
     /** Get or create a direct conversation with the given user */
     createDirectConversation(userId: SocialId): Promise<Conversation>
 

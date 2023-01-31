@@ -335,13 +335,14 @@ export async function getFriendsFromSocialService(baseUrl: string, userId: strin
     const url = new URL(`${baseUrl}/v1/friendships/${userId}`)
     const requestHeaders = [['Authorization', `Bearer ${auth}`]] as [string, string][]
     const remoteResponse = await fetch(url, { headers: requestHeaders })
-    if (remoteResponse.ok) {
+    if (remoteResponse.ok) { 
         try {
-            const response = await remoteResponse.json()
+            const response = await (remoteResponse).json()
             return response.friendships.map(f => f.address)
-        } catch (e) {
+        } catch(e) {
             console.error(e)
         }
     }
     return []
 }
+

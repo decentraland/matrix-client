@@ -5,7 +5,6 @@
     "target": "es2017",
     "lib": ["es2017", "dom"],
     "sourceMap": true,
-    "inlineSources": true,
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
