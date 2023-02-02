@@ -3,7 +3,7 @@ import jsonServer from 'json-server'
 import { getFriendRequestMessages } from '../../src/MessagingClient'
 import { MessageStatus, TextMessage } from '../../src/types'
 
-describe.only('friendships from social server', () => {
+describe('Friend requests messaging from social server', () => {
     const PORT = 3130
     const baseUrl = `http://localhost:${PORT}`
     const friendshipId = '0xabcdefg'
@@ -11,17 +11,17 @@ describe.only('friendships from social server', () => {
     const validToken = 'someToken'
     mockSocialServer(friendshipId, validToken, anotherfriendshipId, PORT)
 
-    describe('when valid token', () => {
-        describe('when no friendships', () => {
-            it('should return an empty array', async () => {
+    describe('When valid token', () => {
+        context('When no friend requests with non-empty messages', () => {
+            it('Should return an empty array', async () => {
                 const messages = await getFriendRequestMessages(baseUrl, validToken, friendshipId)
 
                 expect(messages).to.be.empty
             })
         })
 
-        describe('when there are friendships', () => {
-            it('should return the array of friendships', async () => {
+        context('When friend requests with non-empty messages', () => {
+            it('Should return the array of text messages', async () => {
                 const messages = await getFriendRequestMessages(baseUrl, validToken, anotherfriendshipId)
                 const excpectedMessagesRequestEvents: TextMessage[] = [
                     {
