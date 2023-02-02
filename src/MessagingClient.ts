@@ -401,21 +401,15 @@ export class MessagingClient implements MessagingAPI {
      * Get optional message body param for friend requests
      * in a friendship between two timestamps if any
      * @param friendshipId
-     * @param timestampFrom
-     * @param timestampTo
      */
-    async getFriendRequestMessageBody(
-        friendshipId: string,
-        timestampFrom: number,
-        timestampTo?: number
-    ): Promise<TextMessage[]> {
+    async getFriendRequestMessageBody(friendshipId: string): Promise<TextMessage[]> {
         const baseUrl = this.matrixClient.baseUrl
         const token = this.matrixClient.getAccessToken()
-        if (!friendshipId || !timestampFrom || !token) {
+        if (!friendshipId || !token) {
             return []
         }
 
-        return await getFriendRequestMessages(baseUrl, token, friendshipId, timestampFrom, timestampTo)
+        return await getFriendRequestMessages(baseUrl, token, friendshipId)
     }
 
     /** Get or create a direct conversation with the given user */
@@ -801,29 +795,25 @@ type MatrixIdLocalpart = string
 export async function getFriendRequestMessages(
     baseUrl: string,
     auth: string,
-    friendshipId: string,
-    timestampFrom: number,
-    timestampTo?: number | undefined
+    friendshipId: string
 ): Promise<TextMessage[]> {
     const url = new URL(`${baseUrl}/v1/friendships/${friendshipId}/request-events/messages`)
     const requestHeaders = [['Authorization', `Bearer ${auth}`]] as [string, string][]
-    const requestBody = JSON.stringify({
-        timestampFrom,
-        timestampTo: timestampTo ? timestampTo : Date.now()
-    })
-
-    const remoteResponse = await fetch(url, { headers: requestHeaders, body: requestBody })
+    const remoteResponse = await fetch(url, { headers: requestHeaders })
 
     if (remoteResponse.ok) {
         try {
             const response = await remoteResponse.json()
-            return response.messagesRequesEvents.map(message => ({
-                id: '',
-                timestamp: message.timestamp,
-                text: message.body,
-                sender: message.actingUser,
-                status: MessageStatus.READ
-            }))
+            return response.messagesRequestEvents.map(
+                message =>
+                    ({
+                        text: message.body,
+                        timestamp: message.timestamp,
+                        sender: message.actingUser,
+                        status: MessageStatus.READ,
+                        id: message.friendshipId
+                    } as TextMessage)
+            )
         } catch (e) {
             console.error(e)
         }

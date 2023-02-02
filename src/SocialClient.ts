@@ -215,11 +215,9 @@ export class SocialClient implements SocialAPI {
     }
 
     getFriendRequestMessageBody(
-        friendshipId: string,
-        timestampFrom: number,
-        timestampTo?: number | undefined
+        friendshipId: string
     ): Promise<TextMessage[]> {
-        return this.messaging.getFriendRequestMessageBody(friendshipId, timestampFrom, timestampTo)
+        return this.messaging.getFriendRequestMessageBody(friendshipId)
     }
 
     createDirectConversation(userId: SocialId): Promise<Conversation> {
