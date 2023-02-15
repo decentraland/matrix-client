@@ -345,8 +345,7 @@ enum FriendshipEvent {
     DELETE = 'delete' // Delete an existing friendship
 }
 
-export async function getFriendsFromSocialService(baseUrl: string, userId: string, auth: string): Promise<string[]> {
-    const url = new URL(`${baseUrl}/v1/friendships/${userId}`)
+async function makeSocialServiceRequest(url: URL, auth: string): Promise<string[]> {
     const requestHeaders = [['Authorization', `Bearer ${auth}`]] as [string, string][]
     const remoteResponse = await fetch(url, { headers: requestHeaders })
     if (remoteResponse.ok) {
@@ -358,6 +357,11 @@ export async function getFriendsFromSocialService(baseUrl: string, userId: strin
         }
     }
     return []
+}
+
+export async function getFriendsFromSocialService(baseUrl: string, userId: string, auth: string): Promise<string[]> {
+    const url = new URL(`${baseUrl}/v1/friendships/${userId}`)
+    return makeSocialServiceRequest(url, auth)
 }
 
 /**
@@ -372,15 +376,5 @@ export async function getMutualFriendsFromSocialService(
     auth: string
 ): Promise<string[]> {
     const url = new URL(`${baseUrl}/v1/friendships/${userId}/mutuals`)
-    const requestHeaders = [['Authorization', `Bearer ${auth}`]] as [string, string][]
-    const remoteResponse = await fetch(url, { headers: requestHeaders })
-    if (remoteResponse.ok) {
-        try {
-            const response = await remoteResponse.json()
-            return response.friendships.map(f => f.address)
-        } catch (e) {
-            console.error(e)
-        }
-    }
-    return []
+    return makeSocialServiceRequest(url, auth)
 }
