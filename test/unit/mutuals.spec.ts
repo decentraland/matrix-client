@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { getFriendsFromSocialService, getMutualFriendsFromSocialService } from '../../src/FriendsManagementClient'
 import { mockSocialServer } from './socialServerMock'
 
-describe.only('mutual friends from social server', () => {
+describe('mutual friends from social server', () => {
     const PORT = 3130
     const baseUrl = `http://localhost:${PORT}`
     const userId = '0xabcdefg'
