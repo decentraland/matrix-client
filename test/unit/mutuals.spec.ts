@@ -1,9 +1,9 @@
 import { expect } from 'chai'
 import jsonServer from 'json-server'
-import { getFriendsFromSocialService } from '../../src/FriendsManagementClient'
+import { getFriendsFromSocialService, getMutualFriendsFromSocialService } from '../../src/FriendsManagementClient'
 
-describe('friendships from social server', () => {
-    const PORT = 3131
+describe.only('mutual friends from social server', () => {
+    const PORT = 3130
     const baseUrl = `http://localhost:${PORT}`
     const userId = '0xabcdefg'
     const anotherUserId = '0xhijklmn'
@@ -12,24 +12,24 @@ describe('friendships from social server', () => {
     mockSocialServer(userId, validToken, anotherUserId, PORT)
 
     describe('when valid token', () => {
-        context('when no friendships', () => {
+        context('when there are no mutuals', () => {
             it('should return an empty array', async () => {
-                const friends = await getFriendsFromSocialService(baseUrl, userId, validToken)
+                const mutuals = await getMutualFriendsFromSocialService(baseUrl, userId, validToken)
 
-                expect(friends).to.be.empty
+                expect(mutuals).to.be.empty
             })
         })
 
-        context('when there are friendships', () => {
-            it('should return the array of friendships', async () => {
-                const friends = await getFriendsFromSocialService(baseUrl, anotherUserId, validToken)
-                const expectedFriends = [
+        context('when there are mutuals', () => {
+            it('should return the array of addresses', async () => {
+                const mutuals = await getMutualFriendsFromSocialService(baseUrl, anotherUserId, validToken)
+                const expectedMutuals = [
                     '0xc0ffee254729296a45a3885639AC7E10F9d54979',
                     '0x86F842D7Ea37EbEC6248eF1652E7DB971C631CCC'
                 ]
 
-                expect(friends).to.have.members(expectedFriends)
-                expect(expectedFriends).to.have.members(friends)
+                expect(mutuals).to.have.members(expectedMutuals)
+                expect(expectedMutuals).to.have.members(mutuals)
             })
         })
     })
@@ -43,11 +43,11 @@ describe('friendships from social server', () => {
     })
 })
 
-function mockSocialServer(userId: string, validToken: string, anotherUserId: string, PORT: number) {
+export function mockSocialServer(userId: string, validToken: string, anotherUserId: string, PORT: number) {
     const server = jsonServer.create()
 
-    // No friends userId
-    server.get(`/v1/friendships/${userId}`, (req, res) => {
+    // No mutuals userId
+    server.get(`/v1/friendships/${userId}/mutuals`, (req, res) => {
         if (isValidToken(req)) {
             res.jsonp({
                 friendships: []
@@ -58,7 +58,7 @@ function mockSocialServer(userId: string, validToken: string, anotherUserId: str
     })
 
     // Two friends anotherUserId
-    server.get(`/v1/friendships/${anotherUserId}`, (req, res) => {
+    server.get(`/v1/friendships/${anotherUserId}/mutuals`, (req, res) => {
         if (isValidToken(req)) {
             res.jsonp({
                 friendships: [

@@ -250,6 +250,8 @@ export class SocialClient implements SocialAPI {
     // (undocumented)
     getMemberInfo(roomId: string, userId: string): ProfileInfo;
     // (undocumented)
+    getMutualFriends(userId: SocialId): Promise<string[]>;
+    // (undocumented)
     getOrCreateChannel(channelName: string, userIds: string[]): Promise<GetOrCreateConversationResponse>;
     // (undocumented)
     getPendingRequests(): FriendshipRequest[];

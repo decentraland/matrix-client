@@ -130,6 +130,20 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return friends.includes(userId)
     }
 
+    /**
+     * Get mutual friends addresses list.
+     */
+    async getMutualFriends(userId: SocialId): Promise<string[]> {
+        const baseUrl = this.matrixClient.baseUrl
+
+        const token = this.matrixClient.getAccessToken()
+        if (!userId || !token) {
+            return []
+        }
+
+        return await getMutualFriendsFromSocialService(baseUrl, userId, token)
+    }
+
     async addAsFriend(userId: SocialId, message?: string | undefined): Promise<void> {
         return this.actByStatus(
             userId,
@@ -335,14 +349,38 @@ export async function getFriendsFromSocialService(baseUrl: string, userId: strin
     const url = new URL(`${baseUrl}/v1/friendships/${userId}`)
     const requestHeaders = [['Authorization', `Bearer ${auth}`]] as [string, string][]
     const remoteResponse = await fetch(url, { headers: requestHeaders })
-    if (remoteResponse.ok) { 
+    if (remoteResponse.ok) {
         try {
-            const response = await (remoteResponse).json()
+            const response = await remoteResponse.json()
             return response.friendships.map(f => f.address)
-        } catch(e) {
+        } catch (e) {
             console.error(e)
         }
     }
     return []
 }
 
+/**
+ * Get mutual friends addresses list.
+ * @param baseUrl - service base url.
+ * @param userId - other's user id.
+ * @param auth - access token associated with this account.
+ */
+export async function getMutualFriendsFromSocialService(
+    baseUrl: string,
+    userId: string,
+    auth: string
+): Promise<string[]> {
+    const url = new URL(`${baseUrl}/v1/friendships/${userId}/mutuals`)
+    const requestHeaders = [['Authorization', `Bearer ${auth}`]] as [string, string][]
+    const remoteResponse = await fetch(url, { headers: requestHeaders })
+    if (remoteResponse.ok) {
+        try {
+            const response = await remoteResponse.json()
+            return response.friendships.map(f => f.address)
+        } catch (e) {
+            console.error(e)
+        }
+    }
+    return []
+}
