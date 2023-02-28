@@ -36,7 +36,7 @@ describe('mutual friends from social server', () => {
 
     describe('when invalid token', () => {
         it('should return an empty array', async () => {
-            const friends = await getFriendsFromSocialService(baseUrl, userId, invalidToken)
+            const friends = await getMutualFriendsFromSocialService(baseUrl, userId, invalidToken)
 
             expect(friends).to.be.empty
         })
