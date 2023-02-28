@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import { getMutualFriendsFromSocialService } from '../../src/FriendsManagementClient'
-import { mockSocialServer } from './socialServerMock'
+import { handleEmptySocialResponse, handleOkSocialResponse } from './socialServerMock'
+import jsonServer from 'json-server'
 
 describe('mutual friends from social server', () => {
     const PORT = 3130
@@ -9,18 +10,28 @@ describe('mutual friends from social server', () => {
     const anotherUserId = '0xhijklmn'
     const validToken = 'someToken'
     const invalidToken = 'invalidToken'
-    mockSocialServer(userId, validToken, anotherUserId, PORT)
+
+    const server = jsonServer.create()
+
+    before(() => {
+        server.listen(PORT, () => console.log(`JSON Server is running on port ${PORT}`))
+    })
 
     describe('when valid token', () => {
         context('when there are no mutuals', () => {
+            server.get(`/v1/friendships/${userId}/mutuals`, (req, res) => {
+                handleEmptySocialResponse(req, res, validToken)
+            })
             it('should return an empty array', async () => {
                 const mutuals = await getMutualFriendsFromSocialService(baseUrl, userId, validToken)
-
                 expect(mutuals).to.be.empty
             })
         })
 
         context('when there are mutuals', () => {
+            server.get(`/v1/friendships/${anotherUserId}/mutuals`, (req, res) => {
+                handleOkSocialResponse(req, res, validToken)
+            })
             it('should return the array of addresses', async () => {
                 const mutuals = await getMutualFriendsFromSocialService(baseUrl, anotherUserId, validToken)
                 const expectedMutuals = [
@@ -35,10 +46,12 @@ describe('mutual friends from social server', () => {
     })
 
     describe('when invalid token', () => {
+        server.get(`/v1/friendships/${userId}/mutuals`, (req, res) => {
+            handleEmptySocialResponse(req, res, invalidToken)
+        })
         it('should return an empty array', async () => {
-            const friends = await getMutualFriendsFromSocialService(baseUrl, userId, invalidToken)
-
-            expect(friends).to.be.empty
+            const mutuals = await getMutualFriendsFromSocialService(baseUrl, userId, invalidToken)
+            expect(mutuals).to.be.empty
         })
     })
 })
