@@ -77,13 +77,12 @@ export class FriendsManagementClient implements FriendsManagementAPI {
 
     async getAllFriendsAddresses(): Promise<string[]> {
         const baseUrl = this.matrixClient.baseUrl
-        const userId = this.matrixClient.getUserId()
 
         const token = this.matrixClient.getAccessToken()
-        if (!userId || !token) {
+        if (!token) {
             return []
         }
-        return await getFriendsFromSocialService(baseUrl, userId, token)
+        return await getFriendsFromSocialService(baseUrl, token)
     }
 
     // @internal
@@ -383,8 +382,8 @@ async function makeSocialServiceRequest(url: URL, auth: string): Promise<string[
  * @param userId - user id of the logged-in user.
  * @param auth - access token associated with this account.
  */
-export async function getFriendsFromSocialService(baseUrl: string, userId: string, auth: string): Promise<string[]> {
-    const url = new URL(`${baseUrl}/v1/friendships/${userId}`)
+export async function getFriendsFromSocialService(baseUrl: string, auth: string): Promise<string[]> {
+    const url = new URL(`${baseUrl}/v1/friendships/me`)
     return makeSocialServiceRequest(url, auth)
 }
 
