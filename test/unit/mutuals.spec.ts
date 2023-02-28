@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { getFriendsFromSocialService, getMutualFriendsFromSocialService } from '../../src/FriendsManagementClient'
+import { getMutualFriendsFromSocialService } from '../../src/FriendsManagementClient'
 import { mockSocialServer } from './socialServerMock'
 
 describe('mutual friends from social server', () => {
