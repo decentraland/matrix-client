@@ -252,6 +252,10 @@ export class SocialClient implements SocialAPI {
         return this.friendsManagement.isUserMyFriend(userId)
     }
 
+    getMutualFriends(userId: SocialId): Promise<string[]> {
+        return this.friendsManagement.getMutualFriends(userId)
+    }
+
     addAsFriend(userId: SocialId, message?: string | undefined): Promise<void> {
         return this.friendsManagement.addAsFriend(userId, message)
     }

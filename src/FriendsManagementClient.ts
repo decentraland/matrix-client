@@ -77,13 +77,12 @@ export class FriendsManagementClient implements FriendsManagementAPI {
 
     async getAllFriendsAddresses(): Promise<string[]> {
         const baseUrl = this.matrixClient.baseUrl
-        const userId = this.matrixClient.getUserId()
 
         const token = this.matrixClient.getAccessToken()
-        if (!userId || !token) {
+        if (!token) {
             return []
         }
-        return await getFriendsFromSocialService(baseUrl, userId, token)
+        return await getFriendsFromSocialService(baseUrl, token)
     }
 
     // @internal
@@ -128,6 +127,20 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     isUserMyFriend(userId: SocialId): boolean {
         const friends = this.getAllFriends()
         return friends.includes(userId)
+    }
+
+    /**
+     * Get mutual friends addresses list.
+     */
+    async getMutualFriends(userId: SocialId): Promise<string[]> {
+        const baseUrl = this.matrixClient.baseUrl
+
+        const token = this.matrixClient.getAccessToken()
+        if (!userId || !token) {
+            return []
+        }
+
+        return await getMutualFriendsFromSocialService(baseUrl, userId, token)
     }
 
     async addAsFriend(userId: SocialId, message?: string | undefined): Promise<void> {
@@ -331,18 +344,60 @@ enum FriendshipEvent {
     DELETE = 'delete' // Delete an existing friendship
 }
 
-export async function getFriendsFromSocialService(baseUrl: string, userId: string, auth: string): Promise<string[]> {
-    const url = new URL(`${baseUrl}/v1/friendships/${userId}`)
+/**
+ * Execute a social service request.
+ * This function should only be used when the response from the request has the following format:
+ * ```
+ * {
+ *  "friends": [
+ *    {
+ *      "address": "0xad0a8680845B19f833e317F00CCE41967c85253a"
+ *    },
+ *    {
+ *      "address": "0x0e11577617742B33A41c416F2b55A7e41FeC4F31"
+ *    }
+ *  ]
+ * }
+ * ```
+ * @param url - url to which we're making the request.
+ * @param auth - access token associated with this account.
+ */
+async function makeSocialServiceRequest(url: URL, auth: string): Promise<string[]> {
     const requestHeaders = [['Authorization', `Bearer ${auth}`]] as [string, string][]
     const remoteResponse = await fetch(url, { headers: requestHeaders })
-    if (remoteResponse.ok) { 
+    if (remoteResponse.ok) {
         try {
-            const response = await (remoteResponse).json()
+            const response = await remoteResponse.json()
             return response.friendships.map(f => f.address)
-        } catch(e) {
+        } catch (e) {
             console.error(e)
         }
     }
     return []
 }
 
+/**
+ * Get friends addresses list of the logged-in user.
+ * @param baseUrl - service base url.
+ * @param userId - user id of the logged-in user.
+ * @param auth - access token associated with this account.
+ */
+export async function getFriendsFromSocialService(baseUrl: string, auth: string): Promise<string[]> {
+    const url = new URL(`${baseUrl}/v1/friendships/me`)
+    return makeSocialServiceRequest(url, auth)
+}
+
+/**
+ * Get mutual friends addresses list of the logged-in user and the other user.
+ * @param baseUrl - service base url.
+ * @param userId - other's user id.
+ * @param auth - access token associated with this account.
+ */
+export async function getMutualFriendsFromSocialService(
+    baseUrl: string,
+    userId: string,
+    auth: string
+): Promise<string[]> {
+    const url = new URL(`${baseUrl}/v1/friendships/${userId}/mutuals`)
+    return makeSocialServiceRequest(url, auth)
+}

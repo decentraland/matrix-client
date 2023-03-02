@@ -11,6 +11,7 @@ export interface FriendsManagementAPI {
     getAllFriendsRooms(): Room[]
     getPendingRequests(): FriendshipRequest[]
     isUserMyFriend(userId: SocialId): boolean
+    getMutualFriends(userId: SocialId): Promise<string[]>
 
     addAsFriend(userId: SocialId, message?: string | undefined): Promise<void>
     deleteFriendshipWith(userId: SocialId): Promise<void>
