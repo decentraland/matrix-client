@@ -48,8 +48,8 @@ export class SocialClient implements SocialAPI {
         this.friendsManagement = new FriendsManagementClient(matrixClient, this)
         this.messaging = new MessagingClient(matrixClient, this)
     }
-    
-    public getAccessToken(): string | null {
+
+    getAccessToken(): string | null {
         return this.sessionManagement.getAccessToken()
     }
 

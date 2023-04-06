@@ -216,6 +216,8 @@ export class SocialClient implements SocialAPI {
     // (undocumented)
     doesConversationHaveUnreadMessages(conversationId: ConversationId): boolean;
     // (undocumented)
+    getAccessToken(): string | null;
+    // (undocumented)
     getAllConversationsWithUnreadMessages(): Conversation[];
     // (undocumented)
     getAllCurrentConversations(): {
