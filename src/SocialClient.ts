@@ -49,6 +49,10 @@ export class SocialClient implements SocialAPI {
         this.messaging = new MessagingClient(matrixClient, this)
     }
 
+    getAccessToken(): string | null {
+        return this.sessionManagement.getAccessToken()
+    }
+
     listenToEvents(): void {
         this.messaging.listenToEvents()
     }

@@ -36,6 +36,10 @@ export class SessionManagementClient implements SessionManagementAPI {
         return this.matrixClient.getDomain()
     }
 
+    getAccessToken(): string | null {
+        return this.matrixClient.getAccessToken()
+    }
+
     async setProfileInfo({ displayName, avatarUrl }: ProfileInfo): Promise<void> {
         const userId = this.getUserId()
 
