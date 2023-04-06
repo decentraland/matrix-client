@@ -5,6 +5,7 @@ export interface SessionManagementAPI {
     logout(): Promise<void>
     getUserId(): SocialId
     getDomain(): string
+    getAccessToken(): string | null
 
     setProfileInfo({ displayName, avatarUrl }: ProfileInfo): Promise<void>
     setStatus(status: UpdateUserStatus): Promise<void>
