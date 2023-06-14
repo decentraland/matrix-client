@@ -30,7 +30,7 @@ describe('Integration - Client login/logout & password auth provider', () => {
 
     beforeEach(async () => {
         dockerEnv = await new DockerEnvironmentBuilder()
-            .withNetwork('some-network' + Math.random())
+            .withNetwork('some-network')
             // .withLogStreaming() Uncomment to see logs
             .build()
     })
