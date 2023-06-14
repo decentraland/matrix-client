@@ -18,7 +18,7 @@ export class CatalystContainerBuilder extends ServiceContainerBuilder<CatalystCo
         container
             .withExposedPorts(DEFAULT_PORT)
             .withWaitStrategy(Wait.forLogMessage('Lambdas Server listening'))
-            .withName('catalyst')
+            .withName('catalyst' + Math.random())
             .withCmd(['lambdas']) // We only want to use lambdas for now
     }
 
