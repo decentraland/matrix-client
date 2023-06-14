@@ -229,8 +229,6 @@ export class SocialClient implements SocialAPI {
         conversation: Conversation;
         unreadMessages: boolean;
     }[];
-    // @deprecated (undocumented)
-    getAllFriends(): SocialId[];
     // (undocumented)
     getAllFriendsAddresses(): Promise<string[]>;
     // (undocumented)
@@ -268,7 +266,7 @@ export class SocialClient implements SocialAPI {
     // (undocumented)
     isLoggedIn(): boolean;
     // (undocumented)
-    isUserMyFriend(userId: SocialId): boolean;
+    isUserMyFriend(userId: SocialId): Promise<boolean>;
     // (undocumented)
     joinChannel(roomIdOrChannelAlias: string): Promise<void>;
     // (undocumented)
