@@ -230,14 +230,7 @@ export class SocialClient implements SocialAPI {
         return this.messaging.getConversationUnreadMessages(conversationId)
     }
 
-    //////        FRIENDS MANAGEMENT         //////
-
-    /**
-     * @deprecated use getAllFriendsAddresses()
-     */
-    getAllFriends(): SocialId[] {
-        return this.friendsManagement.getAllFriends()
-    }
+    ///        FRIENDS MANAGEMENT         ///
 
     getAllFriendsAddresses(): Promise<string[]> {
         return this.friendsManagement.getAllFriendsAddresses()
@@ -252,8 +245,8 @@ export class SocialClient implements SocialAPI {
         return this.friendsManagement.getPendingRequests()
     }
 
-    isUserMyFriend(userId: SocialId): boolean {
-        return this.friendsManagement.isUserMyFriend(userId)
+    async isUserMyFriend(userId: SocialId): Promise<boolean> {
+        return await this.friendsManagement.isUserMyFriend(userId)
     }
 
     getMutualFriends(userId: SocialId): Promise<string[]> {

@@ -76,7 +76,7 @@ export class SessionManagementClient implements SessionManagementAPI {
             if (!event) return
 
             const sender = event.getSender()
-            if (sender !== this.getUserId() && socialClient.isUserMyFriend(sender)) {
+            if (sender !== this.getUserId() && await socialClient.isUserMyFriend(sender)) {
                 listener(sender, SessionManagementClient.eventToStatus(user))
             }
         })

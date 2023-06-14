@@ -328,17 +328,19 @@ describe('Integration - Friends Management Client', () => {
 
     function assertNoFriends(...clients: SocialClient[]): void {
         for (const client of clients) {
-            const myFriends = client.getAllFriends()
-            expect(myFriends).to.be.empty
+            client.getAllFriendsAddresses().then((friends) => {
+                expect(friends).to.be.empty
+             })
         }
     }
 
     function assertUsersAreFriends(client1: SocialClient, client2: SocialClient): void {
-        const client1Friends = client1.getAllFriends()
-        const client2Friends = client2.getAllFriends()
-
-        expect(client1Friends).to.contain(client2.getUserId())
-        expect(client2Friends).to.contain(client1.getUserId())
+        client1.getAllFriendsAddresses().then((friends) => 
+            expect(friends).to.contain(client2.getUserId())
+        )
+        client2.getAllFriendsAddresses().then((friends) => 
+            expect(friends).to.contain(client1.getUserId())
+        )
     }
 
     function assertEventWasReceived(spy, expectedSender: SocialClient): void {
