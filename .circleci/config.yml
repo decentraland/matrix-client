@@ -93,9 +93,6 @@ jobs:
           root: *workspace_root
           paths:
             - .
-      - run:
-          name: Semantic release
-          command: npm publish --tag 'tag-v1.26.1-beta.0'
 
   test:
     <<: *base_env
@@ -120,7 +117,7 @@ jobs:
       - update_node_version
       - run:
           name: Semantic release
-          command: npm run semantic-release
+          command: npm publish --tag 'tag-v1.26.1-beta.0'
 
 
 workflows:
@@ -141,7 +138,7 @@ workflows:
           
 
       - release:
-          <<: *master_and_tags
+          <<: *all_branches_and_tags
           requires:
             - test
             - lint
