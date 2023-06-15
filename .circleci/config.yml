@@ -107,7 +107,7 @@ jobs:
             chmod -R 777 /tmp/synapse-mount
       - run:
           name: Run tests
-          command: SYNAPSE_MOUNT_DIR=/tmp/synapse-mount npm run test
+          command: npm run semantic-release
 
   release:
     <<: *base_env
@@ -138,7 +138,7 @@ workflows:
           
 
       - release:
-          <<: *all_branches_and_tags
+          <<: *master_and_tags
           requires:
             - test
             - lint
