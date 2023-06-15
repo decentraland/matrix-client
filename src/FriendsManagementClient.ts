@@ -28,7 +28,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         // Listen to when the sync is finishes, and join all rooms I was invited to
         const resolveOnSync = async (state: SyncState) => {
             if (state === 'SYNCING') {
-                const friends = this.getAllFriends()
+                const friends = await this.getAllFriendsAddresses()
 
                 await this.fixAccountData(friends)
                 // remove this listener, otherwhise, it'll be listening all the session and calling an invalid function
@@ -62,17 +62,6 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     private getRoomIdByFriendId(friendId: SocialId): string | undefined {
         const rooms = this.matrixClient.getVisibleRooms()
         return rooms.map(room => room.guessDMUserId()).find(userId => userId === friendId)
-    }
-
-    /**
-     * @deprecated use getAllFriendsAddresses()
-     */
-    getAllFriends(): SocialId[] {
-        const rooms = this.matrixClient.getVisibleRooms()
-        return rooms
-            .filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
-            .filter(room => this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS)
-            .map(room => room.guessDMUserId())
     }
 
     async getAllFriendsAddresses(): Promise<string[]> {
@@ -124,8 +113,8 @@ export class FriendsManagementClient implements FriendsManagementAPI {
             })
     }
 
-    isUserMyFriend(userId: SocialId): boolean {
-        const friends = this.getAllFriends()
+    async isUserMyFriend(userId: SocialId): Promise<boolean> {
+        const friends = await this.getAllFriendsAddresses()
         return friends.includes(userId)
     }
 

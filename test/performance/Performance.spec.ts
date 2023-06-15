@@ -45,8 +45,8 @@ describe.skip('Performance Test', () => {
         results.set(description, `Avg response time for was '${ms(avg)}'`)
     }
 
-    it(`FriendsManagement#getAllFriends`, async () => {
-        await measure(() => client.getAllFriends(), 'FriendsManagement#getAllFriends')
+    it(`FriendsManagement#getAllFriendsAddresses`, async () => {
+        await measure(async () => await client.getAllFriendsAddresses(), 'FriendsManagement#getAllFriendsAddresses')
     })
 
     it(`FriendsManagement#getPendingRequests`, async () => {
@@ -54,8 +54,8 @@ describe.skip('Performance Test', () => {
     })
 
     it(`FriendsManagement#isUserMyFriend`, async () => {
-        const friend = client.getAllFriends()[0]
-        await measure(() => client.isUserMyFriend(friend), 'FriendsManagement#isUserMyFriend')
+        const friend = (await client.getAllFriendsAddresses())[0]
+        await measure(async () => await client.isUserMyFriend(friend), 'FriendsManagement#isUserMyFriend')
     })
 
     it(`FriendsManagement#addAsFriend`, async () => {
@@ -159,12 +159,12 @@ describe.skip('Performance Test', () => {
     })
 
     it(`Messaging#createDirectConversation`, async () => {
-        const friend = client.getAllFriends()[0]
+        const friend = (await client.getAllFriendsAddresses())[0]
         await measure(() => client.createDirectConversation(friend), 'Messaging#createDirectConversation')
     })
 
     it(`StatusManagement#getUserStatuses`, async () => {
-        const friends = client.getAllFriends()
+        const friends = await client.getAllFriendsAddresses()
         await measure(() => client.getUserStatuses(...friends), 'StatusManagement#getUserStatuses')
     })
 
