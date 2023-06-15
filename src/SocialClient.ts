@@ -246,7 +246,7 @@ export class SocialClient implements SocialAPI {
     }
 
     async isUserMyFriend(userId: SocialId): Promise<boolean> {
-        return await this.friendsManagement.isUserMyFriend(userId)
+        return this.friendsManagement.isUserMyFriend(userId)
     }
 
     getMutualFriends(userId: SocialId): Promise<string[]> {
