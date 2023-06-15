@@ -95,7 +95,7 @@ jobs:
             - .
       - run:
           name: Semantic release
-          command: npm publish --tag 'v1.26.1-beta.0'
+          command: npm publish --tag 'tag-v1.26.1-beta.0'
 
   test:
     <<: *base_env
