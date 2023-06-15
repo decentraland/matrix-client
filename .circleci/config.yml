@@ -107,7 +107,7 @@ jobs:
             chmod -R 777 /tmp/synapse-mount
       - run:
           name: Run tests
-          command: npm run semantic-release
+          command: SYNAPSE_MOUNT_DIR=/tmp/synapse-mount npm run test
 
   release:
     <<: *base_env
@@ -117,7 +117,7 @@ jobs:
       - update_node_version
       - run:
           name: Semantic release
-          command: npm publish --tag 'tag-v1.26.1-beta.0'
+          command: npm run semantic-release
 
 
 workflows:
@@ -135,7 +135,6 @@ workflows:
           <<: *all_branches_and_tags
           requires:
             - build
-          
 
       - release:
           <<: *master_and_tags
