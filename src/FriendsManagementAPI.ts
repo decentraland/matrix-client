@@ -9,15 +9,25 @@ export interface FriendsManagementAPI {
     isUserMyFriend(userId: SocialId): Promise<boolean>
     getMutualFriends(userId: SocialId): Promise<string[]>
 
+    // @deprecated
     addAsFriend(userId: SocialId, message?: string | undefined): Promise<void>
+    // @deprecated
     deleteFriendshipWith(userId: SocialId): Promise<void>
+    // @deprecated
     approveFriendshipRequestFrom(userId: SocialId): Promise<void>
+    // @deprecated
     rejectFriendshipRequestFrom(userId: SocialId): Promise<void>
+    // @deprecated
     cancelFriendshipRequestTo(userId: SocialId): Promise<void>
 
+    // @deprecated
     onFriendshipRequest(listener: (requestedBy: SocialId, message?: string | undefined) => void): void
+    // @deprecated
     onFriendshipRequestCancellation(listener: (canceledBy: SocialId) => void): void
+    // @deprecated
     onFriendshipRequestRejection(listener: (rejectedBy: SocialId) => void): void
+    // @deprecated
     onFriendshipRequestApproval(listener: (approvedBy: SocialId) => void): void
+    // @deprecated
     onFriendshipDeletion(listener: (deletedBy: SocialId) => void): void
 }
