@@ -185,9 +185,12 @@ export class MessagingClient implements MessagingAPI {
      * Get all conversation with the user's current friends
      * @returns `conversation` & `unreadMessages` boolean that indicates whether the conversation has unread messages.
      */
-    getAllCurrentFriendsConversations(): { conversation: Conversation; unreadMessages: boolean }[] {
-        const rooms = this.socialClient.getAllFriendsRooms()
+    async getAllCurrentFriendsConversations(): Promise<{ conversation: Conversation; unreadMessages: boolean} []> {
+        let allFriends = await this.socialClient.getAllFriendsAddresses();
+        allFriends = allFriends.map(a => a.toLowerCase());
+        const rooms = this.socialClient.getAllRooms()
         return rooms.map(room => this.getRoomInformation(room))
+            .filter(conv => isFriend(allFriends, conv.conversation.userIds))
     }
 
     /** Get total number of unseen messages from all conversations the user has joined */
@@ -575,7 +578,7 @@ export class MessagingClient implements MessagingAPI {
         const existsCheck = await Promise.all(
             unknownUsers.map<Promise<[string, { results: any[] }]>>(async userId => [
                 userId,
-                await this.matrixClient.searchUserDirectory({ term: this.toLocalpart(userId) })
+                await this.matrixClient.searchUserDirectory({ term: toLocalPart(userId) })
             ])
         )
         const doesNotExist: SocialId[] = existsCheck
@@ -656,20 +659,10 @@ export class MessagingClient implements MessagingAPI {
             throw new Error('Conversation must have two users or more.')
         }
         return userIds
-            .map(userId => this.toLocalpart(userId))
+            .map(userId => toLocalPart(userId))
             .filter((elem, pos, array) => array.indexOf(elem) === pos)
             .sort()
             .join('+')
-    }
-
-    private toLocalpart(userId: SocialId): MatrixIdLocalpart {
-        if (!userId.includes(':')) {
-            return userId.toLowerCase()
-        }
-        return userId
-            .split(':')[0]
-            .substring(1)
-            .toLowerCase()
     }
 
     private async undefinedIfError<T>(call: () => Promise<T>): Promise<T | undefined> {
@@ -775,3 +768,20 @@ export class UnknownUsersError extends Error {
 }
 
 type MatrixIdLocalpart = string
+
+function toLocalPart(userId: SocialId): MatrixIdLocalpart {
+    if (!userId.includes(':')) {
+        return userId.toLowerCase()
+    }
+    return userId
+        .split(':')[0]
+        .substring(1)
+        .toLowerCase()
+}
+
+function isFriend(addresses: string[], userIds: string[] | undefined): boolean {
+    if (!userIds) { 
+        return false;
+    }
+    return addresses.includes(toLocalPart(userIds[0])) || addresses.includes(toLocalPart(userIds[1])) 
+}

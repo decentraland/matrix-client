@@ -75,11 +75,10 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     }
 
     // @internal
-    getAllFriendsRooms(): Room[] {
+    getAllRooms(): Room[] {
         const rooms = this.matrixClient.getVisibleRooms()
         return rooms
             .filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
-            .filter(room => this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS)
     }
 
     getPendingRequests(): FriendshipRequest[] {

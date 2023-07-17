@@ -4,7 +4,7 @@ import { SocialId, FriendshipRequest } from './types'
 export interface FriendsManagementAPI {
     getAllFriendsAddresses(): Promise<string[]>
     // @internal
-    getAllFriendsRooms(): Room[]
+    getAllRooms(): Room[]
     getPendingRequests(): FriendshipRequest[]
     isUserMyFriend(userId: SocialId): Promise<boolean>
     getMutualFriends(userId: SocialId): Promise<string[]>
