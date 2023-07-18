@@ -110,7 +110,7 @@ export class SocialClient implements SocialAPI {
         return socialClient
     }
 
-    //////    SESSION - STATUS MANAGEMENT    //////
+    ///    SESSION - STATUS MANAGEMENT    ///
 
     isLoggedIn(): boolean {
         return this.sessionManagement.isLoggedIn()
@@ -152,11 +152,12 @@ export class SocialClient implements SocialAPI {
         return this.sessionManagement.onStatusChange(listener)
     }
 
-    //////             MESSAGING             //////
+    ///             MESSAGING             ///
     getAllCurrentConversations(): { conversation: Conversation; unreadMessages: boolean }[] {
         return this.messaging.getAllCurrentConversations()
     }
-    getAllCurrentFriendsConversations(): { conversation: Conversation; unreadMessages: boolean }[] {
+
+    async getAllCurrentFriendsConversations(): Promise<{ conversation: Conversation; unreadMessages: boolean }[]> {
         return this.messaging.getAllCurrentFriendsConversations()
     }
 
@@ -237,8 +238,8 @@ export class SocialClient implements SocialAPI {
     }
 
     // @internal
-    getAllFriendsRooms(): Room[] {
-        return this.friendsManagement.getAllFriendsRooms()
+    getAllRooms(): Room[] {
+        return this.friendsManagement.getAllRooms()
     }
 
     getPendingRequests(): FriendshipRequest[] {

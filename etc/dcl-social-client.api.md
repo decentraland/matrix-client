@@ -225,10 +225,10 @@ export class SocialClient implements SocialAPI {
         unreadMessages: boolean;
     }[];
     // (undocumented)
-    getAllCurrentFriendsConversations(): {
+    getAllCurrentFriendsConversations(): Promise<{
         conversation: Conversation;
         unreadMessages: boolean;
-    }[];
+    }[]>;
     // (undocumented)
     getAllFriendsAddresses(): Promise<string[]>;
     // (undocumented)

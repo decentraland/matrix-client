@@ -31,7 +31,7 @@ export interface MessagingAPI {
      * Get all conversation with friends the user has joined
      * @returns `conversation` & `unreadMessages` boolean that indicates whether the conversation has unread messages.
      */
-    getAllCurrentFriendsConversations(): { conversation: Conversation; unreadMessages: boolean }[]
+    getAllCurrentFriendsConversations(): Promise<{ conversation: Conversation; unreadMessages: boolean }[]>
 
     /** Get total number of unseen messages from all conversations the user has joined */
     getTotalUnseenMessages(): number

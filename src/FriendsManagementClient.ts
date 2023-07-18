@@ -75,11 +75,10 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     }
 
     // @internal
-    getAllFriendsRooms(): Room[] {
+    getAllRooms(): Room[] {
         const rooms = this.matrixClient.getVisibleRooms()
         return rooms
             .filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
-            .filter(room => this.getFriendshipStatusInRoom(room) === FriendshipStatus.FRIENDS)
     }
 
     getPendingRequests(): FriendshipRequest[] {
@@ -132,6 +131,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         return await getMutualFriendsFromSocialService(baseUrl, userId, token)
     }
 
+    // @deprecated
     async addAsFriend(userId: SocialId, message?: string | undefined): Promise<void> {
         return this.actByStatus(
             userId,
@@ -147,6 +147,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         )
     }
 
+    // @deprecated
     deleteFriendshipWith(userId: SocialId): Promise<void> {
         return this.actByStatus(
             userId,
@@ -155,6 +156,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         )
     }
 
+    // @deprecated
     approveFriendshipRequestFrom(userId: SocialId): Promise<void> {
         return this.actByStatus(
             userId,
@@ -165,6 +167,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         )
     }
 
+    // @deprecated
     rejectFriendshipRequestFrom(userId: SocialId): Promise<void> {
         return this.actByStatus(
             userId,
@@ -175,6 +178,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         )
     }
 
+    // @deprecated
     cancelFriendshipRequestTo(userId: SocialId): Promise<void> {
         return this.actByStatus(
             userId,
@@ -185,22 +189,27 @@ export class FriendsManagementClient implements FriendsManagementAPI {
         )
     }
 
+    // @deprecated
     onFriendshipRequest(listener: (requestedBy: SocialId, message?: string | undefined) => void): void {
         return this.listenToEvent(FriendshipEvent.REQUEST, listener)
     }
 
+    // @deprecated
     onFriendshipRequestCancellation(listener: (canceledBy: SocialId) => void): void {
         return this.listenToEvent(FriendshipEvent.CANCEL, listener)
     }
 
+    // @deprecated
     onFriendshipRequestRejection(listener: (rejectedBy: SocialId) => void): void {
         return this.listenToEvent(FriendshipEvent.REJECT, listener)
     }
 
+    // @deprecated
     onFriendshipRequestApproval(listener: (approvedBy: SocialId) => void): void {
         return this.listenToEvent(FriendshipEvent.ACCEPT, listener)
     }
 
+    // @deprecated
     onFriendshipDeletion(listener: (deletedBy: SocialId) => void): void {
         return this.listenToEvent(FriendshipEvent.DELETE, listener)
     }
