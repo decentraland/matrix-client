@@ -100,9 +100,9 @@ export function buildTextMessage(event: MatrixEvent, status: MessageStatus): Tex
     return {
         text: event.getContent().body,
         timestamp: event.getTs(),
-        sender: event.getSender(),
+        sender: event.getSender() || '',
         status: status,
-        id: event.getId()
+        id: event.getId() || ''
     }
 }
 
@@ -165,7 +165,7 @@ export function getOnlyMessagesSentByMeTimelineSetFromRoom(client: SocialClient,
 
 // @internal
 export function matrixEventToBasicEventInfo(event: MatrixEvent): BasicMessageInfo {
-    return { id: event.getId(), timestamp: event.getTs() }
+    return { id: event.getId() as string, timestamp: event.getTs() }
 }
 
 // @internal

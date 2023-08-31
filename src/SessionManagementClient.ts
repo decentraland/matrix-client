@@ -33,7 +33,7 @@ export class SessionManagementClient implements SessionManagementAPI {
     }
 
     getDomain(): string {
-        return this.matrixClient.getDomain()
+        return this.matrixClient.getDomain() || 'algundefaultDomain?'
     }
 
     getAccessToken(): string | null {
@@ -76,7 +76,7 @@ export class SessionManagementClient implements SessionManagementAPI {
             if (!event) return
 
             const sender = event.getSender()
-            if (sender !== this.getUserId() && await socialClient.isUserMyFriend(sender)) {
+            if (sender !== this.getUserId() && sender && (await socialClient.isUserMyFriend(sender))) {
                 listener(sender, SessionManagementClient.eventToStatus(user))
             }
         })

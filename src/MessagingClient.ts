@@ -185,11 +185,12 @@ export class MessagingClient implements MessagingAPI {
      * Get all conversation with the user's current friends
      * @returns `conversation` & `unreadMessages` boolean that indicates whether the conversation has unread messages.
      */
-    async getAllCurrentFriendsConversations(): Promise<{ conversation: Conversation; unreadMessages: boolean} []> {
-        let allFriends = await this.socialClient.getAllFriendsAddresses();
-        allFriends = allFriends.map(a => a.toLowerCase());
+    async getAllCurrentFriendsConversations(): Promise<{ conversation: Conversation; unreadMessages: boolean }[]> {
+        let allFriends = await this.socialClient.getAllFriendsAddresses()
+        allFriends = allFriends.map(a => a.toLowerCase())
         const rooms = this.socialClient.getAllRooms()
-        return rooms.map(room => this.getRoomInformation(room))
+        return rooms
+            .map(room => this.getRoomInformation(room))
             .filter(conv => isFriend(allFriends, conv.conversation.userIds))
     }
 
@@ -235,7 +236,11 @@ export class MessagingClient implements MessagingAPI {
         const roomMessages = room.timeline.filter(event => event.getType() === EventType.RoomMessage)
         const lastMessage = roomMessages[roomMessages.length - 1].getId()
 
-        await this.markAsRead(conversationId, lastMessage)
+        if (lastMessage) {
+            await this.markAsRead(conversationId, lastMessage)
+        } else {
+            return
+        }
     }
 
     /**
@@ -265,7 +270,9 @@ export class MessagingClient implements MessagingAPI {
 
             const message: TextMessage = buildTextMessage(event, MessageStatus.UNREAD)
 
-            listener(conversation, message)
+            if (message.sender && message.id) {
+                listener(conversation, message)
+            }
         })
     }
 
@@ -701,7 +708,7 @@ export class MessagingClient implements MessagingAPI {
             const isDirect = memberContent?.membership === 'invite' && memberContent?.is_direct
             if (event && isDirect) {
                 const userId = event.getSender()
-                if (!directRoomMap[userId]?.includes(member.roomId)) {
+                if (userId && !directRoomMap[userId]?.includes(member.roomId)) {
                     directRoomMap[userId] = [member.roomId]
                 }
             }
@@ -780,8 +787,8 @@ function toLocalPart(userId: SocialId): MatrixIdLocalpart {
 }
 
 function isFriend(addresses: string[], userIds: string[] | undefined): boolean {
-    if (!userIds) { 
-        return false;
+    if (!userIds) {
+        return false
     }
-    return addresses.includes(toLocalPart(userIds[0])) || addresses.includes(toLocalPart(userIds[1])) 
+    return addresses.includes(toLocalPart(userIds[0])) || addresses.includes(toLocalPart(userIds[1]))
 }
