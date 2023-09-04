@@ -234,10 +234,15 @@ export class MessagingClient implements MessagingAPI {
         }
 
         const roomMessages = room.timeline.filter(event => event.getType() === EventType.RoomMessage)
-        const lastMessage = roomMessages[roomMessages.length - 1].getId()
+        const lastMessageEvent = roomMessages[roomMessages.length - 1]
 
-        if (lastMessage) {
-            await this.markAsRead(conversationId, lastMessage)
+        if (lastMessageEvent) {
+            const messageId = lastMessageEvent.getId()
+            if (messageId) {
+                await this.markAsRead(conversationId, messageId)
+            } else {
+                return
+            }
         } else {
             return
         }
