@@ -33,7 +33,7 @@ export class SessionManagementClient implements SessionManagementAPI {
     }
 
     getDomain(): string {
-        return this.matrixClient.getDomain() || 'algundefaultDomain?'
+        return this.matrixClient.getDomain() || 'decentraland.org'
     }
 
     getAccessToken(): string | null {
