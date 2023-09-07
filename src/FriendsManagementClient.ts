@@ -77,8 +77,7 @@ export class FriendsManagementClient implements FriendsManagementAPI {
     // @internal
     getAllRooms(): Room[] {
         const rooms = this.matrixClient.getVisibleRooms()
-        return rooms
-            .filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
+        return rooms.filter(room => getConversationTypeFromRoom(this.matrixClient, room) === ConversationType.DIRECT)
     }
 
     getPendingRequests(): FriendshipRequest[] {
@@ -230,8 +229,9 @@ export class FriendsManagementClient implements FriendsManagementAPI {
 
             if (event.getType() === FRIENDSHIP_EVENT_TYPE && event.getStateKey() === '') {
                 const { type, message } = event.getContent()
-                if (type === eventToListenTo && event.getSender() !== this.socialClient.getUserId()) {
-                    listener(event.getSender(), message)
+                const sender = event.getSender()
+                if (type === eventToListenTo && sender && sender !== this.socialClient.getUserId()) {
+                    listener(sender, message)
                 }
             }
         })
